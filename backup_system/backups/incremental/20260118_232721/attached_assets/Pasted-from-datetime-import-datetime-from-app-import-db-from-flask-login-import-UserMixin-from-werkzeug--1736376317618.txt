@@ -1,0 +1,204 @@
+from datetime import datetime
+from app import db
+from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+from sqlalchemy import text, Enum
+
+logger = logging.getLogger(__name__)
+
+class User(UserMixin, db.Model):
+    __tablename__ = 'users'
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(64), unique=True, nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256))
+    weight_lbs = db.Column(db.Float, nullable=True)
+    daily_water_goal = db.Column(db.Float, default=64.0)  # Default to 64 oz (8 cups)
+    chats = db.relationship('ChatHistory', backref='user', lazy=True)
+    food_logs = db.relationship('FoodLog', backref='user', lazy=True)
+    water_logs = db.relationship('WaterLog', backref='user', lazy=True)
+    moods = db.relationship('Mood', backref='user', lazy=True)
+    journal_entries = db.relationship('JournalEntry', backref='user', lazy=True)
+    weight_logs = db.relationship('WeightLog', backref='user', lazy=True, order_by="WeightLog.timestamp.desc()")
+    posts = db.relationship('ForumPost', backref='author', lazy=True)
+    likes = db.relationship('ForumLike', backref='user', lazy=True)
+
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+
+    def calculate_water_goal(self):
+        """Calculate daily water goal based on weight"""
+        if self.weight_lbs:
+            try:
+                weight = float(self.weight_lbs)
+                return max(weight * 0.67, 64.0)  # Minimum 8 cups (64 oz)
+            except (TypeError, ValueError) as e:
+                logger.error(f"Error calculating water goal: {e}")
+                return 64.0
+        return 64.0
+
+    def update_water_goal(self):
+        """Update water goal based on current weight"""
+        try:
+            new_goal = self.calculate_water_goal()
+            if self.daily_water_goal != new_goal:
+                self.daily_water_goal = new_goal
+                db.session.commit()
+                return True
+        except Exception as e:
+            logger.error(f"Error in update_water_goal: {e}")
+            return False
+
+    def calculate_calorie_goal(self):
+        """Calculate daily calorie goal based on weight with weight loss target"""
+        if not self.weight_lbs:
+            return 2000  # Default to 2000 calories if no weight is set
+
+        # Calculate base metabolic rate (BMR)
+        # Using a simplified formula: weight in pounds * 11 for sedentary maintenance
+        base_calories = self.weight_lbs * 11
+
+        # For 2.5 lbs weight loss per week:
+        # 1 lb = 3500 calories, so 2.5 lbs = 8750 calories per week
+        # Daily deficit = 8750 / 7 ≈ 1250 calories
+        weight_loss_deficit = 1250
+
+        # Calculate target calories
+        target_calories = base_calories - weight_loss_deficit
+
+        # Ensure minimum safe calories (1500 for men, using 1500 as a general minimum)
+        MIN_SAFE_CALORIES = 1500
+        return max(round(target_calories), MIN_SAFE_CALORIES)
+
+    def get_weight_history(self):
+        """Get user's weight history in chronological order"""
+        return [log.to_dict() for log in self.weight_logs]
+
+
+class ChatHistory(db.Model):
+    __tablename__ = 'chat_history'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    response = db.Column(db.Text, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    emotion = db.Column(db.String(50))
+
+class FoodLog(db.Model):
+    __tablename__ = 'food_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    food_name = db.Column(db.String(200), nullable=False)
+    serving_size = db.Column(db.Float, nullable=False)
+    serving_unit = db.Column(db.String(50), nullable=False)
+    meal_type = db.Column(db.String(50))
+    mindful_eating_rating = db.Column(db.Integer)
+    hunger_before = db.Column(db.Integer)
+    fullness_after = db.Column(db.Integer)
+    emotional_state = db.Column(db.String(50))
+    location = db.Column(db.String(100), nullable=True)
+    notes = db.Column(db.Text)
+    calories = db.Column(db.Float)
+    protein = db.Column(db.Float)
+    carbs = db.Column(db.Float)
+    fat = db.Column(db.Float)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class WaterLog(db.Model):
+    __tablename__ = 'water_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Mood(db.Model):
+    __tablename__ = 'mood'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    mood = db.Column(db.String(50), nullable=False)
+    notes = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class JournalEntry(db.Model):
+    __tablename__ = 'journal_entry'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    mood = db.Column(db.String(50))
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class WeightLog(db.Model):
+    __tablename__ = 'weight_log'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    weight = db.Column(db.Float, nullable=False)
+    notes = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        """Convert weight log entry to dictionary format"""
+        return {
+            'id': self.id,
+            'weight': float(self.weight),  # Ensure weight is converted to float
+            'notes': self.notes,
+            'timestamp': self.timestamp.isoformat() if self.timestamp else None
+        }
+
+class WellnessQuotes(db.Model):
+    __tablename__ = 'wellness_quotes'
+    id = db.Column(db.Integer, primary_key=True)
+    quote_text = db.Column(db.Text, nullable=False)  # Changed from quote to quote_text to match database
+    author = db.Column(db.String(100))
+    category = db.Column(db.String(50), nullable=False)
+    context_tags = db.Column(db.String(200))  # Store as comma-separated string
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ForumCategory(db.Model):
+    __tablename__ = 'forum_categories'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False, unique=True)
+    description = db.Column(db.Text)
+    slug = db.Column(db.String(100), nullable=False, unique=True)
+    posts = db.relationship('ForumPost', backref='category', lazy=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class ForumPost(db.Model):
+    __tablename__ = 'forum_posts'
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(200), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    category_id = db.Column(db.Integer, db.ForeignKey('forum_categories.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    likes = db.relationship('ForumLike', backref='post', lazy=True)
+
+    @property
+    def like_count(self):
+        return len(self.likes)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'content': self.content,
+            'user_id': self.user_id,
+            'category_id': self.category_id,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'updated_at': self.updated_at.isoformat() if self.updated_at else None,
+            'like_count': self.like_count
+        }
+
+class ForumLike(db.Model):
+    __tablename__ = 'forum_likes'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    post_id = db.Column(db.Integer, db.ForeignKey('forum_posts.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (db.UniqueConstraint('user_id', 'post_id', name='unique_user_post_like'),)
