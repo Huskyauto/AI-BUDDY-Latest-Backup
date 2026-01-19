@@ -1,0 +1,466 @@
+import os
+import logging
+import json
+from datetime import datetime, timezone
+from flask import Blueprint, jsonify, current_app
+from flask_login import login_required, current_user
+from models import BiomarkerInsight
+from app import db
+from random import uniform
+import openai
+import requests
+from urllib.parse import urljoin
+
+# Configure logging with more detail
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+# Configure OpenAI client with proper error handling
+try:
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if api_key:
+        client = openai.OpenAI(api_key=api_key)
+        logger.info("OpenAI client initialized successfully")
+    else:
+        client = None
+        logger.warning("OpenAI API key not found, AI insights will be disabled")
+except Exception as e:
+    client = None
+    logger.error(f"Failed to initialize OpenAI client: {e}", exc_info=True)
+
+ring_bp = Blueprint('ring', __name__)
+
+def fetch_oura_data():
+    """Fetch real-time data from Oura Ring API"""
+    try:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        logger.info(f"[RING_DATA] Fetching Oura data at {timestamp}")
+
+        api_key = os.environ.get("OURA_API_KEY")
+        if not api_key:
+            logger.warning("[RING_DATA] Oura API key not found, using simulated data")
+            return generate_simulated_data(timestamp)
+
+        base_url = 'https://api.ouraring.com/v2/usercollection/'
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+
+        # Get daily activity data with cache prevention
+        current_date = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+        params = {
+            'start_date': current_date,
+            '_': int(datetime.now().timestamp())  # Cache buster
+        }
+
+        try:
+            response = requests.get(
+                urljoin(base_url, 'daily_activity'),
+                headers=headers,
+                params=params,
+                timeout=10
+            )
+            response.raise_for_status()
+            activity_data = response.json()
+            logger.debug(f"[RING_DATA] Oura activity response: {json.dumps(activity_data)}")
+        except Exception as e:
+            logger.error(f"[RING_DATA] Error fetching activity data: {str(e)}")
+            activity_data = {'data': []}
+
+        # Get real-time heart rate data
+        heart_params = {
+            'start_datetime': timestamp,
+            '_': int(datetime.now().timestamp())  # Cache buster
+        }
+
+        try:
+            response = requests.get(
+                urljoin(base_url, 'heartrate'), 
+                headers=headers,
+                params=heart_params,
+                timeout=10
+            )
+            response.raise_for_status()
+            heart_data = response.json()
+            logger.debug(f"[RING_DATA] Oura heart rate response: {json.dumps(heart_data)}")
+        except Exception as e:
+            logger.error(f"[RING_DATA] Error fetching heart rate data: {str(e)}")
+            heart_data = {'data': []}
+
+        # Extract and format the required metrics with fallbacks
+        activity_metrics = activity_data.get('data', [{}])[0] if activity_data.get('data') else {}
+        heart_metrics = heart_data.get('data', [{}])[0] if heart_data.get('data') else {}
+
+        data = {
+            'stress_level': activity_metrics.get('stress_level', 50),
+            'heart_rate': heart_metrics.get('bpm', 70),
+            'heart_rate_variability': heart_metrics.get('hrv', 45),
+            'skin_temperature': activity_metrics.get('average_skin_temp', 36.5),
+            'timestamp': timestamp
+        }
+
+        logger.info(f"[RING_DATA] Processed Oura data: {json.dumps(data)}")
+        return data
+
+    except Exception as e:
+        logger.error(f"[RING_DATA] Error in fetch_oura_data: {str(e)}", exc_info=True)
+        return generate_simulated_data(timestamp)
+
+def generate_simulated_data(timestamp):
+    """Generate simulated ring data for testing"""
+    return {
+        'stress_level': round(uniform(45, 55), 1),
+        'heart_rate': round(uniform(65, 75)),
+        'heart_rate_variability': round(uniform(40, 50)),
+        'skin_temperature': round(uniform(36.3, 36.7), 1),
+        'timestamp': timestamp
+    }
+
+def fetch_ultrahuman_data():
+    """Fetch real-time data from Ultrahuman Ring API"""
+    try:
+        timestamp = datetime.now(timezone.utc).isoformat()
+        logger.info(f"[RING_DATA] Fetching Ultrahuman data at {timestamp}")
+
+        api_key = os.environ.get("ULTRAHUMAN_API_KEY")
+        if not api_key:
+            logger.warning("[RING_DATA] Ultrahuman API key not found, using simulated data")
+            return generate_simulated_ultrahuman_data(timestamp)
+
+        base_url = 'https://api.ultrahuman.com/v2/'
+        headers = {
+            'Authorization': f'Bearer {api_key}',
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+
+        try:
+            params = {
+                'timestamp': timestamp,
+                '_': int(datetime.now().timestamp())  # Cache buster
+            }
+
+            response = requests.get(
+                urljoin(base_url, 'metrics/current'),
+                headers=headers,
+                params=params,
+                timeout=10
+            )
+            response.raise_for_status()
+            data = response.json()
+            logger.debug(f"[RING_DATA] Ultrahuman response: {json.dumps(data)}")
+
+            metrics = {
+                'recovery_index': data.get('recovery_score', 68),
+                'heart_rate': data.get('heart_rate', 70),
+                'heart_rate_variability': data.get('hrv', 48),
+                'skin_temperature': data.get('skin_temperature', 36.4),
+                'timestamp': timestamp
+            }
+
+            logger.info(f"[RING_DATA] Processed Ultrahuman data: {json.dumps(metrics)}")
+            return metrics
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"[RING_DATA] Error fetching Ultrahuman data: {str(e)}")
+            return generate_simulated_ultrahuman_data(timestamp)
+
+    except Exception as e:
+        logger.error(f"[RING_DATA] Error in fetch_ultrahuman_data: {str(e)}", exc_info=True)
+        return generate_simulated_ultrahuman_data(timestamp)
+
+def generate_simulated_ultrahuman_data(timestamp):
+    """Generate simulated Ultrahuman ring data for testing"""
+    return {
+        'recovery_index': round(uniform(65, 71)),
+        'heart_rate': round(uniform(65, 75)),
+        'heart_rate_variability': round(uniform(43, 53)),
+        'skin_temperature': round(uniform(36.2, 36.6), 1),
+        'timestamp': timestamp
+    }
+
+def analyze_biomarker_data(oura_data, ultrahuman_data):
+    """Analyze biomarker data and detect significant patterns"""
+    try:
+        logger.debug("Starting biomarker analysis")
+        alerts = []
+
+        # Analyze stress level from Oura with more granular thresholds
+        stress_level = oura_data.get('stress_level', 0)
+        if stress_level > 60:  # Lowered from 70
+            if stress_level > 80:
+                severity = "high"
+                description = f"Critical stress level detected at {stress_level}/100"
+            elif stress_level > 70:
+                severity = "moderate"
+                description = f"Elevated stress level at {stress_level}/100"
+            else:
+                severity = "warning"
+                description = f"Mild stress elevation at {stress_level}/100"
+
+            alerts.append({
+                'type': 'stress',
+                'severity': severity,
+                'value': stress_level,
+                'description': description
+            })
+
+        # Cross-validate HRV from both devices with more sensitive thresholds
+        oura_hrv = oura_data.get('heart_rate_variability', 45)
+        ultra_hrv = ultrahuman_data.get('heart_rate_variability', 48)
+        avg_hrv = (oura_hrv + ultra_hrv) / 2
+
+        # More granular HRV analysis
+        if avg_hrv < 50:  # Changed from 45
+            severity = "high" if avg_hrv < 35 else "moderate" if avg_hrv < 45 else "warning"
+            alerts.append({
+                'type': 'hrv',
+                'severity': severity,
+                'value': avg_hrv,
+                'description': f"Heart rate variability is {severity} at {avg_hrv:.1f}ms"
+            })
+
+        # Enhanced recovery analysis with more detailed thresholds
+        recovery_index = ultrahuman_data.get('recovery_index', 70)
+        if recovery_index < 75:  # Changed from 70
+            if recovery_index < 60:
+                severity = "high"
+                description = "Significantly reduced recovery capacity"
+            elif recovery_index < 70:
+                severity = "moderate"
+                description = "Moderately limited recovery capacity"
+            else:
+                severity = "warning"
+                description = "Slightly reduced recovery capacity"
+
+            alerts.append({
+                'type': 'recovery',
+                'severity': severity,
+                'value': recovery_index,
+                'description': f"{description}: {recovery_index}/100"
+            })
+
+        # New: Analyze temperature variations
+        temp_oura = oura_data.get('skin_temperature', 36.5)
+        temp_ultra = ultrahuman_data.get('skin_temperature', 36.5)
+        temp_diff = abs(temp_oura - temp_ultra)
+
+        if temp_diff > 0.5:
+            alerts.append({
+                'type': 'temperature',
+                'severity': 'warning',
+                'value': temp_diff,
+                'description': f"Significant temperature variation detected: {temp_diff:.1f}°C difference between sensors"
+            })
+
+        # New: Cross-metric pattern detection
+        if stress_level > 55 and avg_hrv < 45:
+            alerts.append({
+                'type': 'stress_hrv_correlation',
+                'severity': 'moderate',
+                'value': stress_level,
+                'description': "Elevated stress levels affecting heart rate variability"
+            })
+
+        logger.debug(f"Analysis complete. Found {len(alerts)} alerts")
+        return alerts
+
+    except Exception as e:
+        logger.error(f"Error analyzing biomarker data: {str(e)}", exc_info=True)
+        return []
+
+def generate_ai_insights(oura_data, ultrahuman_data, alerts):
+    """Generate AI-powered insights based on biomarker patterns"""
+    try:
+        if not client:
+            logger.warning("OpenAI client not available, skipping insights generation")
+            return None
+
+        logger.info("Starting AI insights generation")
+
+        # Create enhanced context for GPT
+        current_hour = datetime.now().hour
+        time_context = (
+            "evening" if current_hour >= 18 else 
+            "afternoon" if current_hour >= 12 else 
+            "morning"
+        )
+
+        # Enhanced context with more detailed biometric correlations
+        context = {
+            "trigger_events": [
+                {
+                    "type": alert['type'],
+                    "description": alert['description'],
+                    "severity": alert['severity'],
+                    "value": alert['value']
+                } for alert in alerts
+            ],
+            "temporal_context": {
+                "time_of_day": time_context,
+                "hour": current_hour,
+                "circadian_phase": "active" if 6 <= current_hour <= 22 else "rest"
+            },
+            "current_state": {
+                "stress_level": oura_data.get('stress_level', 50),
+                "recovery_index": ultrahuman_data.get('recovery_index', 70),
+                "hrv_average": (oura_data.get('heart_rate_variability', 45) + 
+                              ultrahuman_data.get('heart_rate_variability', 48)) / 2,
+                "temperature_delta": abs(oura_data.get('skin_temperature', 36.5) - 
+                                      ultrahuman_data.get('skin_temperature', 36.5))
+            },
+            "historical_context": {
+                "alerts_count": len(alerts),
+                "primary_concern": alerts[0]['type'] if alerts else "none",
+                "stress_hrv_correlation": any(a['type'] == 'stress_hrv_correlation' for a in alerts)
+            }
+        }
+
+        messages = [
+            {
+                "role": "system",
+                "content": """You are an expert in biometric analysis and health optimization.
+                Analyze the biomarker data considering:
+                1. Time of day and circadian rhythms
+                2. Correlations between stress, HRV, and recovery
+                3. Temperature variations and their implications
+                4. Cumulative effects of multiple metrics
+
+                Provide specific insights focusing on:
+                - Pattern recognition across metrics
+                - Time-sensitive recommendations
+                - Preventive measures
+                - Recovery optimization
+
+                Format your response with these sections without using markdown:
+                Alert Summary: Current state overview
+                Current State: Detailed analysis of metrics
+                Primary Recommendations: Immediate actions needed
+                Secondary Recommendations: Preventive measures
+                Monitoring Focus: Key metrics to watch"""
+            },
+            {
+                "role": "user",
+                "content": f"Analyze these real-time biomarker readings and provide insights:\n{json.dumps(context, indent=2)}"
+            }
+        ]
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=messages,
+                temperature=0.7
+            )
+
+            # Initialize default insights
+            insights = {
+                "alert_summary": "No significant patterns detected",
+                "current_state": "All metrics within normal ranges",
+                "primary_recommendations": ["Continue normal activities", "Stay hydrated"],
+                "secondary_recommendations": ["Monitor stress levels", "Maintain regular sleep schedule"],
+                "monitoring_focus": "Regular health maintenance"
+            }
+
+            if response.choices and response.choices[0].message:
+                content = response.choices[0].message.content
+                # Extract key sections from the response
+                if "Alert Summary:" in content:
+                    insights["alert_summary"] = content.split("Alert Summary:")[1].split("\n")[0].strip()
+                if "Current State:" in content:
+                    insights["current_state"] = content.split("Current State:")[1].split("\n")[0].strip()
+                if "Primary Recommendations:" in content:
+                    recommendations = content.split("Primary Recommendations:")[1].split("Secondary Recommendations:")[0]
+                    insights["primary_recommendations"] = [r.strip().strip('- ') for r in recommendations.split("\n") if r.strip()]
+                if "Secondary Recommendations:" in content:
+                    recommendations = content.split("Secondary Recommendations:")[1].split("Monitoring Focus:")[0]
+                    insights["secondary_recommendations"] = [r.strip().strip('- ') for r in recommendations.split("\n") if r.strip()]
+                if "Monitoring Focus:" in content:
+                    insights["monitoring_focus"] = content.split("Monitoring Focus:")[1].strip()
+
+            try:
+                # Store insights in database
+                new_insight = BiomarkerInsight(
+                    user_id=current_user.id,
+                    source='AI Analysis',
+                    metric_type='realtime',
+                    value=context['current_state']['stress_level'],
+                    threshold=60.0,  # Updated from 70.0
+                    trigger_description=insights['alert_summary'],
+                    impact_description=insights['current_state'],
+                    recommendations=json.dumps({
+                        'primary': insights['primary_recommendations'],
+                        'secondary': insights['secondary_recommendations']
+                    })
+                )
+                db.session.add(new_insight)
+                db.session.commit()
+                logger.info("Stored new biomarker insight")
+            except Exception as e:
+                logger.error(f"Failed to store insight in database: {e}")
+                db.session.rollback()
+
+            return insights
+
+        except Exception as e:
+            logger.error(f"Error in GPT API call: {e}")
+            return None
+
+    except Exception as e:
+        logger.error(f"Error generating insights: {str(e)}", exc_info=True)
+        return None
+
+@ring_bp.route('/api/ring-data')
+@login_required
+def get_ring_data():
+    """Fetch and analyze real-time ring data"""
+    try:
+        if not current_user.can_view_ring_data():
+            return jsonify({
+                'status': 'unauthorized',
+                'message': current_user.get_ring_access_message(),
+                'show_ring_data': False
+            })
+
+        logger.info("[RING_DATA] Fetching ring data")
+
+        # Fetch data from both rings
+        oura_data = fetch_oura_data()
+        ultrahuman_data = fetch_ultrahuman_data()
+
+        # Generate analysis and insights
+        alerts = analyze_biomarker_data(oura_data, ultrahuman_data)
+        insights = generate_ai_insights(oura_data, ultrahuman_data, alerts)
+
+        if not insights:
+            insights = {
+                "alert_summary": "Regular biomarker monitoring active",
+                "current_state": "All metrics within normal ranges",
+                "primary_recommendations": ["Continue normal activities", "Stay hydrated"],
+                "secondary_recommendations": ["Monitor stress levels", "Maintain regular sleep schedule"],
+                "monitoring_focus": "Regular health maintenance"
+            }
+
+        response_data = {
+            'status': 'success',
+            'show_ring_data': True,
+            'oura': oura_data,
+            'ultrahuman': ultrahuman_data,
+            'alerts': alerts,
+            'insights': insights,
+            'last_updated': datetime.now().isoformat()
+        }
+
+        logger.debug(f"[RING_DATA] Sending response: {json.dumps(response_data)}")
+        return jsonify(response_data)
+
+    except Exception as e:
+        logger.error(f"[RING_DATA] Error in get_ring_data: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'show_ring_data': False
+        }), 500
