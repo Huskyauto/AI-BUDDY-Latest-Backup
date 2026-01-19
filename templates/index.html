@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="landing-container text-center">
+    <div class="hero-section mb-5">
+        <img src="{{ url_for('static', filename='images/ai-buddy-logo.png') }}" alt="AI-BUDDY Logo" class="logo mb-4" width="180">
+        <h1 class="display-4 mb-3">MEET AI-BUDDY</h1>
+        <p class="lead mb-4">Transform your relationship with food, one moment at a time</p>
+        <p class="subtitle mb-4">Your personal AI companion for developing a healthier relationship with food and emotions.</p>
+        <div class="button-group">
+            <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-lg me-3">Get Started</a>
+            <button class="btn btn-outline-secondary btn-lg" data-bs-toggle="modal" data-bs-target="#learnMoreModal">Learn More</button>
+        </div>
+    </div>
+
+    <div id="features" class="features-section row g-4 mt-5">
+        <div class="col-md-4">
+            <div class="feature-card p-4">
+                <h3>Smart Support</h3>
+                <p>Receive personalized guidance and insights powered by advanced AI technology.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4">
+                <h3>Emotional Intelligence</h3>
+                <p>Track your moods and understand the connection between emotions and eating habits.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="feature-card p-4">
+                <h3>Mindful Journey</h3>
+                <p>Build sustainable habits with guided journaling and progress tracking.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.landing-container {
+    padding: 4rem 1rem;
+}
+
+.hero-section {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.feature-card {
+    background: #f8f9fa;
+    border-radius: 8px;
+    transition: transform 0.3s ease;
+    height: 100%;
+}
+
+.feature-card:hover {
+    transform: translateY(-5px);
+}
+
+.button-group {
+    margin-top: 2rem;
+}
+
+.subtitle {
+    color: #6c757d;
+    font-size: 1.25rem;
+}
+</style>
+{% endblock %}
