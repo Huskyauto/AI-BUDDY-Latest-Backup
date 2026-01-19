@@ -1,0 +1,165 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">ACT (Acceptance and Commitment Therapy) Coaching</h2>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">Back to Dashboard</a>
+            </div>
+            <p class="text-muted mb-4">
+                Explore personalized ACT techniques that help you develop psychological flexibility through mindfulness, acceptance, and value-based actions. Click on each section to learn more about different ACT processes and practices.
+            </p>
+
+            {% if error %}
+            <div class="alert alert-warning">{{ error }}</div>
+            {% endif %}
+
+            <div class="accordion" id="actInsightsAccordion">
+                <!-- Committed Action Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#committedActionSection">
+                            Committed Action
+                        </button>
+                    </h3>
+                    <div id="committedActionSection" class="accordion-collapse collapse show" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            {% if insights and insights.committed_action and insights.committed_action.strategies %}
+                                <p class="mb-3">{{ insights.committed_action.summary }}</p>
+                                <ul class="list-unstyled">
+                                    {% for strategy in insights.committed_action.strategies %}
+                                    <li class="mb-3">
+                                        <span data-bs-toggle="popover" 
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="{{ strategy.detail }}"
+                                              class="insight-item">
+                                            <i class="fas fa-bullseye text-primary me-2"></i>
+                                            {{ strategy.summary }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No committed action insights available at this time.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Present Moment Awareness Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#presentMomentSection">
+                            Present Moment Awareness
+                        </button>
+                    </h3>
+                    <div id="presentMomentSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            {% if insights and insights.present_moment and insights.present_moment.practices %}
+                                <p class="mb-3">{{ insights.present_moment.summary }}</p>
+                                <ul class="list-unstyled">
+                                    {% for practice in insights.present_moment.practices %}
+                                    <li class="mb-3">
+                                        <span data-bs-toggle="popover" 
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="{{ practice.detail }}"
+                                              class="insight-item">
+                                            <i class="fas fa-leaf text-teal me-2"></i>
+                                            {{ practice.summary }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No present moment insights available at this time.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acceptance Strategies Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acceptanceSection">
+                            Acceptance Strategies
+                        </button>
+                    </h3>
+                    <div id="acceptanceSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            {% if insights and insights.acceptance and insights.acceptance.strategies %}
+                                <p class="mb-3">{{ insights.acceptance.summary }}</p>
+                                <ul class="list-unstyled">
+                                    {% for strategy in insights.acceptance.strategies %}
+                                    <li class="mb-3">
+                                        <span data-bs-toggle="popover" 
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="{{ strategy.detail }}"
+                                              class="insight-item">
+                                            <i class="fas fa-hand-holding-heart text-teal me-2"></i>
+                                            {{ strategy.summary }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No acceptance insights available at this time.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cognitive Defusion Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#defusionSection">
+                            Cognitive Defusion
+                        </button>
+                    </h3>
+                    <div id="defusionSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            {% if insights and insights.defusion and insights.defusion.techniques %}
+                                <p class="mb-3">{{ insights.defusion.summary }}</p>
+                                <ul class="list-unstyled">
+                                    {% for technique in insights.defusion.techniques %}
+                                    <li class="mb-3">
+                                        <span data-bs-toggle="popover" 
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="{{ technique.detail }}"
+                                              class="insight-item">
+                                            <i class="fas fa-brain text-teal me-2"></i>
+                                            {{ technique.summary }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>No defusion insights available at this time.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{{ url_for('static', filename='js/act_coaching.js') }}"></script>
+
+<style>
+.insight-item {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+.insight-item:hover {
+    color: #0d6efd;
+}
+.popover {
+    max-width: 300px;
+}
+</style>
+{% endblock %}
