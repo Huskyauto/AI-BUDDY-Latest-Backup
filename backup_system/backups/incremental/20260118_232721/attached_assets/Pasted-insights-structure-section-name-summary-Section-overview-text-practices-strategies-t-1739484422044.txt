@@ -1,0 +1,159 @@
+insights_structure = { 'section_name': { 'summary': 'Section overview text', 'practices/strategies/techniques': [ { 'summary': 'Brief insight title', 'detail': 'Detailed explanation for popup' } ] } }
+
+### 2. Popup Bubble System
+The popup system utilizes Bootstrap's Popover component with the following features:
+```html
+<span data-bs-toggle="popover"
+      data-bs-trigger="hover focus"
+      data-bs-content="{{ practice.detail }}"
+      class="insight-item">
+    <i class="fas fa-icon text-teal me-2"></i>
+    {{ practice.summary }}
+</span>
+Key Features:
+
+Hover trigger activation
+Auto-placement
+HTML content support
+Automatic cleanup on accordion collapse
+3. Dynamic Content Generation
+The system generates insights based on:
+
+Recent mood entries (last 7 days)
+Emotional patterns
+User interaction history
+Therapy-specific frameworks
+4. Mood Data Processing
+def analyze_act_patterns(moods, food_logs):
+    """
+    Analyzes user mood patterns and generates ACT-specific insights.
+    Returns structured insights for all ACT components:
+    - Present Moment Awareness
+    - Values Clarification
+    - Acceptance Strategies
+    - Committed Action
+    - Cognitive Defusion
+    """
+5. Template Structure
+Each therapy section follows a consistent accordion structure:
+
+<div class="accordion-item">
+    <h3 class="accordion-header">
+        <button class="accordion-button" type="button" 
+                data-bs-toggle="collapse" 
+                data-bs-target="#sectionId">
+            Section Title
+        </button>
+    </h3>
+    <div id="sectionId" class="accordion-collapse collapse">
+        <div class="accordion-body">
+            <!-- Dynamic Content -->
+        </div>
+    </div>
+</div>
+Debug Logging System
+1. ACT Mood Data Logging
+logger.debug("==================== ACT MOOD DATA DEBUG ====================")
+logger.debug(f"User ID: {current_user.id}")
+logger.debug(f"Time range: From {week_ago} to {datetime.utcnow()}")
+logger.debug(f"Number of mood entries found: {len(recent_moods)}")
+2. Insights Generation Logging
+logger.debug("==================== ACT INSIGHTS DEBUG ====================")
+logger.debug(f"Values section content: {act_insights.get('values', {})}")
+logger.debug(f"Values practices: {act_insights.get('values', {}).get('practices', [])}")
+Known Behaviors and Requirements
+1. Values Clarification Section
+Requires mood data to generate insights
+Shows placeholder message when no mood data is available
+Updates automatically as new mood entries are logged
+Displays "Start tracking your moods..." message when insufficient mood data exists
+Activates hover-based insights once sufficient mood data is present
+2. Popup Behavior
+Activates on hover/focus
+Dismisses automatically when:
+Mouse leaves the element
+User clicks outside
+Accordion section collapses
+3. Data Dependencies
+Mood entries from the last 7 days
+User interaction patterns
+Emotional state tracking
+Activity correlations
+Troubleshooting Guide
+1. Missing Insights
+If insights are not displaying:
+
+Verify mood data exists in the database
+Check debug logs for data retrieval
+Verify template conditional rendering
+Ensure proper data structure format
+2. Popup Issues
+If popups aren't working:
+
+Check Bootstrap initialization
+Verify data-bs-* attributes
+Check for JavaScript console errors
+Verify proper event binding
+3. Content Updates
+The system updates insights:
+
+On page load
+When new mood data is logged
+Through API endpoints for real-time updates
+API Endpoints
+1. CBT Insights
+@cbt_bp.route('/api/cbt/insights')
+@login_required
+def get_insights():
+    """
+    Returns updated CBT insights based on latest mood and food data.
+    """
+2. DBT Insights
+@cbt_bp.route('/api/dbt/insights')
+@login_required
+def get_dbt_insights():
+    """
+    Returns updated DBT insights based on latest mood and food data.
+    """
+3. ACT Insights
+@cbt_bp.route('/api/act/insights')
+@login_required
+def get_act_insights():
+    """
+    Returns updated ACT insights based on latest mood and food data.
+    """
+CSS Styling
+1. Insight Items
+.insight-item {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+.insight-item:hover {
+    color: #0d6efd;
+}
+2. Popover Customization
+.popover {
+    max-width: 300px;
+}
+.text-teal {
+    color: #20c997;
+}
+JavaScript Initialization
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all popovers
+    var popoverTriggerList = [].slice.call(
+        document.querySelectorAll('[data-bs-toggle="popover"]')
+    )
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl, {
+            html: true,
+            placement: 'auto'
+        })
+    })
+    // Cleanup on accordion collapse
+    document.addEventListener('hidden.bs.collapse', function(e) {
+        popoverList.forEach(function(popover) {
+            popover.hide()
+        })
+    })
+})
