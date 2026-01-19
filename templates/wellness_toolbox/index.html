@@ -1,0 +1,900 @@
+{% extends "base.html" %}
+
+{% block title %}Wellness Toolbox - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Add notification container -->
+    <div id="notification" class="alert d-none" role="alert"></div>
+
+    <!-- Meditation Stats Section - Replaced with edited snippet -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="card-title">Meditation Stats</h2>
+                <div>
+                    <button id="reset-stats" class="btn btn-secondary me-2">Reset Stats</button>
+                    <a href="{{ url_for('challenges.list_challenges') }}" class="btn btn-primary">
+                        Join Meditation Challenges
+                    </a>
+                </div>
+            </div>
+            <div class="meditation-stats mt-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="stat-box text-center p-3 bg-light rounded">
+                            <h3 class="streak-count" id="total-sessions">0</h3>
+                            <p class="mb-0">Total Sessions</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="stat-box text-center p-3 bg-light rounded">
+                            <h3 class="streak-count" id="total-minutes">0</h3>
+                            <p class="mb-0">Total Minutes</p>
+                        </div>
+                    </div>
+                </div>
+                {% if show_ring_data %}
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="stat-box text-center p-3 bg-light rounded">
+                            <h3 class="current-stress" id="current-stress-level">--</h3>
+                            <p class="mb-0">Current Stress Level</p>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Meditation Section -->
+    <div class="card mb-4">
+        <div class="card-body meditation-container position-relative">
+            <div class="row">
+                <div class="col-md-8">
+                    <div class="meditation-content">
+                        <h2 class="card-title">Vipassana Meditation</h2>
+                        <p class="meditation-intro mb-4">
+                            Begin your meditation journey with guided Vipassana practice. This ancient technique helps reduce stress, increase focus, and promote overall well-being.
+                            <br><br>
+                            Find a comfortable seated position, close your eyes, and let our voice guidance lead you through a mindful meditation experience.
+                        </p>
+                        <div class="meditation-controls">
+                            <div class="form-group">
+                                <label for="meditation-duration">Duration (minutes):</label>
+                                <select class="form-control" id="meditation-duration">
+                                    {% for duration in durations %}
+                                    <option value="{{ duration }}">{{ duration }} minutes</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label>Background Sound:</label>
+                                <div class="sound-options">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="background-sound" id="sound-rain" value="rain">
+                                        <label class="form-check-label" for="sound-rain">
+                                            Gentle Rainfall <button class="btn btn-sm btn-outline-secondary test-sound" data-sound="rain">Test</button>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="background-sound" id="sound-wind" value="wind">
+                                        <label class="form-check-label" for="sound-wind">
+                                            Wind in Trees <button class="btn btn-sm btn-outline-secondary test-sound" data-sound="wind">Test</button>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="background-sound" id="sound-water" value="water">
+                                        <label class="form-check-label" for="sound-water">
+                                            Flowing Water <button class="btn btn-sm btn-outline-secondary test-sound" data-sound="water">Test</button>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="background-sound" id="sound-brown" value="brown">
+                                        <label class="form-check-label" for="sound-brown">
+                                            Brown Noise <button class="btn btn-sm btn-outline-secondary test-sound" data-sound="brown">Test</button>
+                                        </label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="radio" name="background-sound" id="sound-ambient" value="ambient" checked>
+                                        <label class="form-check-label" for="sound-ambient">
+                                            Ambient Pad <button class="btn btn-sm btn-outline-secondary test-sound" data-sound="ambient">Test</button>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group mt-3">
+                                <label for="volume-control">Background Sound Volume:</label>
+                                <input type="range" class="form-control-range" id="volume-control" min="0" max="1" step="0.1" value="0.5">
+                            </div>
+                            <div class="mt-3">
+                                <button class="btn btn-primary" id="start-meditation">Start Meditation</button>
+                                <button class="btn btn-secondary ms-2" id="stop-meditation" disabled>Stop Meditation</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="guidance-area">
+                        <div class="timer-display text-center mb-3" style="opacity: 0;">
+                            <h3 id="time-remaining" class="mb-0"></h3>
+                        </div>
+                        <div id="meditation-guidance" class="text-muted"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Breathing Exercises Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Deep Breathing Exercises</h2>
+
+            <div class="breathing-exercises mt-3">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="breathing-exercise-type">Choose Exercise:</label>
+                            <select class="form-control" id="breathing-exercise-type">
+                                <option value="box">Box Breathing (4-4-4-4)</option>
+                                <option value="478">4-7-8 Breathing</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group mt-3">
+                            <label for="breathing-duration">Duration (minutes):</label>
+                            <select class="form-control" id="breathing-duration">
+                                <option value="2">2 minutes</option>
+                                <option value="5">5 minutes</option>
+                                <option value="7">7 minutes</option>
+                                <option value="10">10 minutes</option>
+                                <option value="12">12 minutes</option>
+                            </select>
+                        </div>
+
+                        <div class="exercise-description mt-3">
+                            <div id="box-description">
+                                <h5>Box Breathing (4-4-4-4)</h5>
+                                <p>A calming technique used by Navy SEALs, using equal counts:</p>
+                                <ul>
+                                    <li>Inhale deeply through your nose for 4 seconds</li>
+                                    <li>Hold your breath for 4 seconds</li>
+                                    <li>Exhale completely through your mouth for 4 seconds</li>
+                                    <li>Hold empty for 4 seconds</li>
+                                </ul>
+                                <p>Great for stress relief and improving focus. Find a comfortable seated position before starting.</p>
+                            </div>
+                            <div id="478-description" style="display: none;">
+                                <h5>4-7-8 Breathing</h5>
+                                <p>A relaxation breath pattern developed by Dr. Andrew Weil that helps reduce anxiety:</p>
+                                <ul>
+                                    <li>Inhale quietly through your nose for 4 full seconds</li>
+                                    <li>Hold your breath for a complete 7 seconds</li>
+                                    <li>Exhale completely through your mouth, making a whoosh sound, for 8 full seconds</li>
+                                </ul>
+                                <p>Perfect for managing stress and promoting better sleep. Sit comfortably with your back straight before starting.</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group mt-3">
+                            <label for="breathing-volume">Voice Guidance Volume:</label>
+                            <input type="range" class="form-control-range" id="breathing-volume" min="0" max="1" step="0.1" value="0.5">
+                        </div>
+
+                        <div class="mt-3">
+                            <button class="btn btn-primary" id="start-breathing">Start Exercise</button>
+                            <button class="btn btn-secondary ms-2" id="stop-breathing" disabled>Stop Exercise</button>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="breathing-display mt-3 d-none">
+                            <div class="text-center mb-4">
+                                <div class="timer-display text-center mb-3">
+                                    <h3 id="breathing-time-remaining" class="mb-0"></h3>
+                                </div>
+                                <h3 id="breathing-instruction" class="mb-3"></h3>
+                                <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Fasting Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Fasting Programs</h2>
+            <p class="card-text">Explore different fasting programs and track your progress with guided support.</p>
+
+            <div id="fasting-container" class="mt-3">
+                <!-- Fasting Type Tabs -->
+                <ul class="nav nav-tabs mb-4" id="fasting-tabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="extended-tab" data-bs-toggle="tab" data-bs-target="#extended-fasting" type="button" role="tab" aria-controls="extended-fasting" aria-selected="true">Extended Fasting Programs</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="intermittent-tab" data-bs-toggle="tab" data-bs-target="#intermittent-fasting" type="button" role="tab" aria-controls="intermittent-fasting" aria-selected="false">Intermittent Fasting</button>
+                    </li>
+                </ul>
+                
+                <div class="tab-content" id="fasting-tab-content">
+                    <!-- Extended Fasting Programs Tab -->
+                    <div class="tab-pane fade show active" id="extended-fasting" role="tabpanel" aria-labelledby="extended-tab">
+                        <!-- Extended Program Selection -->
+                        <div id="extended-fasting-programs" class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">3-Day Reset Fast</h5>
+                                        <p class="card-text">A gentle 3-day fast to reset your metabolism and digestive system.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Enhanced metabolic flexibility, improved insulin sensitivity, cellular repair activation.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Drink water, herbal tea, and electrolytes. Stop if you feel unwell.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-fast" data-program-id="1">
+                                            Start 3-Day Reset Fast
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">5-Day Longevity Fast</h5>
+                                        <p class="card-text">A comprehensive fast focusing on longevity benefits and cellular regeneration.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Autophagy activation, stem cell generation, inflammation reduction.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Maintain electrolyte balance. Light exercise only. Monitor energy levels.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-fast" data-program-id="2">
+                                            Start 5-Day Longevity Fast
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">7-Day Transformation</h5>
+                                        <p class="card-text">Advanced fast for experienced fasters seeking deep healing.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Maximum autophagy, immune system reset, extensive cellular repair.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Daily monitoring required. Electrolytes essential. Rest frequently.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-fast" data-program-id="3">
+                                            Start 7-Day Transformation
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Intermittent Fasting Tab -->
+                    <div class="tab-pane fade" id="intermittent-fasting" role="tabpanel" aria-labelledby="intermittent-tab">
+                        <!-- Intermittent Program Selection -->
+                        <div id="intermittent-fasting-programs" class="row">
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">16-Hour Fast</h5>
+                                        <p class="card-text">16:8 intermittent fast - the most popular beginner-friendly approach.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Enhanced fat burning, improved metabolic health, convenient daily schedule.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Fast for 16 hours (including sleep time), eat during an 8-hour window.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-intermittent-fast" data-program-id="4">
+                                            Start 16-Hour Fast
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">18-Hour Fast</h5>
+                                        <p class="card-text">18:6 intermittent fast - for increased autophagy and fat burning.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Deeper autophagy, improved insulin sensitivity, reduced inflammation.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Fast for 18 hours, eat during a 6-hour window.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-intermittent-fast" data-program-id="5">
+                                            Start 18-Hour Fast
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <h5 class="card-title">20-Hour Fast</h5>
+                                        <p class="card-text">20:4 intermittent fast (Warrior Diet) - for maximum daily benefits.</p>
+                                        <div class="program-details mb-3">
+                                            <h6>Benefits:</h6>
+                                            <p class="small text-muted">Significant autophagy, enhanced fat adaptation, cellular rejuvenation.</p>
+                                            <h6>Instructions:</h6>
+                                            <p class="small text-muted">Fast for 20 hours, eat during a 4-hour window.</p>
+                                        </div>
+                                        <button class="btn btn-primary start-intermittent-fast" data-program-id="6">
+                                            Start 20-Hour Fast
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Active Extended Fasting Session Display -->
+                <div id="active-fasting-session" class="d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="current-program-name mb-0"></h3>
+                        <button id="reset-fasting" class="btn btn-outline-danger">
+                            <i class="fas fa-undo-alt me-2"></i>Reset Fast
+                        </button>
+                    </div>
+                    <div class="progress mb-3">
+                        <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="daily-progress">
+                        <div class="alert alert-info">
+                            <h4 class="mb-2">Day <span class="current-day">0</span> of <span class="total-days">0</span></h4>
+                            <div class="daily-guidance mt-2"></div>
+                        </div>
+
+                        <!-- Check-in Form -->
+                        <form id="checkin-form" class="mt-3">
+                            <div class="form-group">
+                                <label>How are you feeling today?</label>
+                                <select class="form-control" name="mood" required>
+                                    <option value="">Select your mood</option>
+                                    <option value="Happy">Happy</option>
+                                    <option value="Calm">Calm</option>
+                                    <option value="Energetic">Energetic</option>
+                                    <option value="Neutral">Neutral</option>
+                                    <option value="Tired">Tired</option>
+                                    <option value="Irritable">Irritable</option>
+                                    <option value="Anxious">Anxious</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label>Energy Level</label>
+                                <select class="form-control" name="energy_level" required>
+                                    <option value="">Select your energy level</option>
+                                    <option value="High">High</option>
+                                    <option value="Moderate">Moderate</option>
+                                    <option value="Low">Low</option>
+                                    <option value="Very Low">Very Low</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label>Weight (optional)</label>
+                                <input type="number" class="form-control" name="weight" step="0.1" placeholder="Enter your weight">
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label>Any symptoms? (check all that apply)</label>
+                                <div class="symptoms-checkboxes">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Hunger">
+                                        <label class="form-check-label">Hunger</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Headache">
+                                        <label class="form-check-label">Headache</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Dizziness">
+                                        <label class="form-check-label">Dizziness</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Nausea">
+                                        <label class="form-check-label">Nausea</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Fatigue">
+                                        <label class="form-check-label">Fatigue</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Insomnia">
+                                        <label class="form-check-label">Insomnia</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Muscle Aches">
+                                        <label class="form-check-label">Muscle Aches</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="symptoms[]" value="Irritability">
+                                        <label class="form-check-label">Irritability</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group mt-3">
+                                <label>Notes (optional)</label>
+                                <textarea class="form-control" name="notes" rows="3"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary mt-3">Complete Today's Check-in</button>
+                        </form>
+
+                        <div class="progress-days mt-4">
+                            <!-- Will be populated dynamically -->
+                        </div>
+
+                        <div class="fasting-history mt-4">
+                            <h4>Fasting Progress & Health Monitor</h4>
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Monitor your symptoms carefully. If you experience severe discomfort, consider breaking your fast.
+                            </div>
+                            <div class="check-in-history">
+                                <!-- History entries will be added here dynamically -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Active Intermittent Fasting Session Display -->
+                <div id="active-intermittent-session" class="d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="current-intermittent-program-name mb-0"></h3>
+                        <button id="reset-intermittent-fasting" class="btn btn-outline-danger">
+                            <i class="fas fa-undo-alt me-2"></i>Reset Fast
+                        </button>
+                    </div>
+                    
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>Time Remaining</h4>
+                                    <div class="time-remaining-display text-center py-3">
+                                        <h2 id="intermittent-hours-remaining" class="mb-0">00:00:00</h2>
+                                        <p class="text-muted">Hours : Minutes : Seconds</p>
+                                    </div>
+                                    
+                                    <div class="progress mb-3 mt-3">
+                                        <div class="progress-bar" id="intermittent-progress-bar" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    
+                                    <div class="text-center mt-4">
+                                        <button id="start-intermittent-timer" class="btn btn-primary btn-lg me-2">
+                                            <i class="fas fa-play-circle me-2"></i>Start Fast
+                                        </button>
+                                        <button id="end-intermittent-fast" class="btn btn-success btn-lg">
+                                            <i class="fas fa-check-circle me-2"></i>Complete Fast
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <h4>Fasting Stats</h4>
+                                    <ul class="list-group">
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Started
+                                            <span class="intermittent-start-time badge bg-primary rounded-pill"></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Target End Time
+                                            <span class="intermittent-end-time badge bg-info rounded-pill"></span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                                            Progress
+                                            <span class="intermittent-progress-percent badge bg-success rounded-pill">0%</span>
+                                        </li>
+                                    </ul>
+                                    
+                                    <div class="mt-4">
+                                        <h5>Benefits at this stage:</h5>
+                                        <div class="current-benefits p-3 bg-light rounded">
+                                            <p id="intermittent-benefits-text" class="mb-0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Stress Logging Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Log Your Stress Level</h2>
+            <form id="stress-log-form" class="mt-3">
+                <div class="form-group mb-3">
+                    <label for="stress-level">Current Stress Level (1-10):</label>
+                    <input type="range" class="form-range" id="stress-level" min="1" max="10" value="5">
+                    <div class="text-center">
+                        <span id="stress-level-display">5</span>/10
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label>Symptoms (optional):</label>
+                    <div class="symptom-checkboxes">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="headache" id="symptom-headache">
+                            <label class="form-check-label" for="symptom-headache">Headache</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="tension" id="symptom-tension">
+                            <label class="form-check-label" for="symptom-tension">Muscle Tension</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="fatigue" id="symptom-fatigue">
+                            <label class="form-check-label" for="symptom-fatigue">Fatigue</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="symptoms" value="anxiety" id="symptom-anxiety">
+                            <label class="form-check-label" for="symptom-anxiety">Anxiety</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group mb-3">
+                    <label for="stress-notes">Notes (optional):</label>
+                    <textarea class="form-control" id="stress-notes" rows="3" placeholder="Add any additional notes about your stress level..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Log Stress Level</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Stress History Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="card-title">Stress History</h2>
+            <div id="stress-history" class="mt-3">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Stress Level</th>
+                            <th>Symptoms</th>
+                            <th>Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stress-history-body">
+                        <!-- Stress history will be populated here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+<script src="{{ url_for('static', filename='js/meditation.js') }}"></script>
+<script src="{{ url_for('static', filename='js/fasting.js') }}"></script>
+<script src="{{ url_for('static', filename='js/breathing.js') }}"></script>
+<style>
+.scroll-locked {
+    overflow: scroll !important;
+    margin-right: calc(100vw - 100%);  /* Prevent layout shift when scrollbar appears */
+}
+
+.meditation-container {
+    position: relative;
+}
+
+.guidance-area {
+    position: relative;
+    padding: 20px;
+    border-left: 1px solid #eee;
+    height: 100%;
+}
+
+.timer-display {
+    font-size: 2rem;
+    color: #555;
+    transition: opacity 0.3s ease;
+}
+
+#meditation-guidance {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    opacity: 0.8;
+    margin-top: 20px;
+}
+
+.meditation-intro {
+    color: #666;
+    line-height: 1.8;
+}
+
+.breathing-display {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    position: fixed;
+    top: 50%;
+    right: 20px;
+    transform: translateY(-50%);
+    z-index: 1000;
+    max-width: 90%;
+    width: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.breathing-exercises {
+    position: relative;
+    min-height: 400px;
+}
+
+#breathing-instruction {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+    text-align: center;
+    margin: 1rem 0;
+    min-height: 3rem;
+}
+
+.progress {
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 15px;
+}
+
+.progress-bar {
+    transition: width 0.5s ease;
+    background-color: #4CAF50;
+}
+
+.streak-count {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.current-stress {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 0.5rem;
+}
+
+.stat-box {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    transition: transform 0.2s ease;
+}
+
+.stat-box:hover {
+    transform: translateY(-2px);
+}
+
+#breathing-instruction {
+    font-size: 1.5rem;
+    font-weight: 500;
+    color: #2c3e50;
+    text-align: center;
+    margin: 1rem 0;
+    min-height: 3rem;
+}
+</style>
+<script>
+    // Initialize all functionality when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Load meditation stats independently
+        updateMeditationStats();
+
+        // Update current stress level
+        updateCurrentStressLevel();
+
+        // Load stress history separately
+        loadStressHistory();
+
+        // Set up event listeners
+        setupEventListeners();
+        
+        // Set interval to update stress level every 5 minutes
+        setInterval(updateCurrentStressLevel, 300000);
+    });
+
+    function updateMeditationStats() {
+        console.debug('[MEDITATION_STATS] Fetching stats');
+        fetch('/api/meditation/stats')
+            .then(response => response.json())
+            .then(data => {
+                console.debug('[MEDITATION_STATS] Response:', data);
+                if (data.status === 'success') {
+                    document.getElementById('total-sessions').textContent = data.stats.total_sessions;
+                    document.getElementById('total-minutes').textContent = data.stats.total_minutes;
+                } else {
+                    console.error('[MEDITATION_STATS] Error in response:', data);
+                    showNotification('Error loading meditation stats', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('[MEDITATION_STATS] Error:', error);
+                showNotification('Failed to load meditation stats', 'error');
+            });
+    }
+
+    function loadStressHistory() {
+        console.debug('[STRESS_HISTORY] Loading history');
+        const historyBody = document.getElementById('stress-history-body');
+        if (!historyBody) {
+            console.error('[STRESS_HISTORY] Table body not found');
+            return;
+        }
+
+        // Clear existing entries
+        historyBody.innerHTML = '';
+
+        fetch('/api/wellness/stress/history')
+            .then(response => {
+                console.debug('[STRESS_HISTORY] Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.debug('[STRESS_HISTORY] Response data:', data);
+                if (data.status === 'success' && Array.isArray(data.history)) {
+                    if (data.history.length === 0) {
+                        const emptyRow = document.createElement('tr');
+                        emptyRow.innerHTML = '<td colspan="4" class="text-center">No stress history available</td>';
+                        historyBody.appendChild(emptyRow);
+                    } else {
+                        data.history.forEach(entry => {
+                            const date = new Date(entry.timestamp);
+                            const localDate = date.toLocaleString();
+                            const symptoms = Array.isArray(entry.symptoms) ? entry.symptoms.join(', ') : '';
+
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${localDate}</td>
+                                <td>${entry.level}/10</td>
+                                <td>${symptoms}</td>
+                                <td>${entry.notes || ''}</td>
+                            `;
+                            historyBody.appendChild(row);
+                        });
+                    }
+                } else {
+                    console.error('[STRESS_HISTORY] Invalid data:', data);
+                    showNotification('Error loading stress history', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('[STRESS_HISTORY] Error:', error);
+                showNotification('Failed to load stress history', 'error');
+            });
+    }
+
+    function setupEventListeners() {
+        // Stress level slider
+        const stressSlider = document.getElementById('stress-level');
+        if (stressSlider) {
+            stressSlider.addEventListener('input', function(e) {
+                document.getElementById('stress-level-display').textContent = e.target.value;
+            });
+        }
+
+        // Stress log form
+        const stressForm = document.getElementById('stress-log-form');
+        if (stressForm) {
+            stressForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                console.debug('[STRESS_LOG] Form submitted');
+
+                const level = document.getElementById('stress-level').value;
+                const notes = document.getElementById('stress-notes').value;
+                const symptoms = Array.from(document.querySelectorAll('input[name="symptoms"]:checked'))
+                    .map(checkbox => checkbox.value);
+
+                const requestData = {
+                    level: parseInt(level),
+                    symptoms: symptoms,
+                    notes: notes
+                };
+                console.debug('[STRESS_LOG] Request data:', requestData);
+
+                try {
+                    const response = await fetch('/api/wellness/stress/log', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(requestData)
+                    });
+
+                    console.debug('[STRESS_LOG] Response status:', response.status);
+                    const data = await response.json();
+                    console.debug('[STRESS_LOG] Response data:', data);
+
+                    if (data.status === 'success') {
+                        // Reset form
+                        document.querySelectorAll('input[name="symptoms"]:checked')
+                            .forEach(checkbox => checkbox.checked = false);
+                        document.getElementById('stress-notes').value = '';
+                        document.getElementById('stress-level').value = 5;
+                        document.getElementById('stress-level-display').textContent = '5';
+
+                        // Reload stress history
+                        loadStressHistory();
+                        showNotification('Stress level logged successfully');
+                    } else {
+                        showNotification(data.message || 'Failed to log stress level', 'error');
+                    }
+                } catch (error) {
+                    console.error('[STRESS_LOG] Error:', error);
+                    showNotification('Failed to log stress level', 'error');
+                }
+            });
+        }
+    }
+
+    function updateCurrentStressLevel() {
+        console.debug('[STRESS_LEVEL] Fetching current stress level');
+        const stressElement = document.getElementById('current-stress-level');
+        if (!stressElement) {
+            console.error('[STRESS_LEVEL] Stress level element not found');
+            return;
+        }
+
+        fetch('/api/meditation/stress')
+            .then(response => {
+                console.debug('[STRESS_LEVEL] Response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.debug('[STRESS_LEVEL] Response data:', data);
+                if (data.status === 'success') {
+                    if (data.current_stress !== null) {
+                        // Format to 1 decimal place
+                        const formattedStress = Number(data.current_stress).toFixed(1);
+                        stressElement.textContent = formattedStress;
+                    } else {
+                        stressElement.textContent = '--';
+                    }
+                } else {
+                    console.error('[STRESS_LEVEL] Error in response:', data);
+                    stressElement.textContent = '--';
+                }
+            })
+            .catch(error => {
+                console.error('[STRESS_LEVEL] Error:', error);
+                stressElement.textContent = '--';
+            });
+    }
+
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        if (notification) {
+            notification.textContent = message;
+            notification.className = `alert alert-${type} fade show`;
+            setTimeout(() => {
+                notification.className = 'alert d-none';
+            }, 3000);
+        }
+    }
+</script>
+
+{% endblock %}
