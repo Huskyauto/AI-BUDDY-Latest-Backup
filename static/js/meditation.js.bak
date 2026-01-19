@@ -1,0 +1,759 @@
+// Meditation audio controller
+document.addEventListener('DOMContentLoaded', async function() {
+    let audioContext;
+    let soundInterval;
+    let remainingTime;
+    let timerInterval;
+    let guidanceTimeouts = [];
+    let toneInitialized = false;
+    let selectedVoice = null;
+    let meditationActive = false;
+    let originalScrollPosition = 0;
+    let isScrollLocked = false;
+
+    // Scroll Lock Implementation
+    function lockScroll() {
+        if (!isScrollLocked) {
+            // Save current scroll position so we can maintain it
+            originalScrollPosition = window.pageYOffset || document.documentElement.scrollTop;
+            console.debug('Saving scroll position:', originalScrollPosition);
+
+            // Keep scrollbar visible but prevent scrolling while maintaining position
+            document.documentElement.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden';
+            document.body.style.position = 'fixed';
+            document.body.style.width = '100%';
+            
+            // Set top position to current scroll position to avoid jumping
+            document.body.style.top = `-${originalScrollPosition}px`;
+
+            // Add a class to handle scrollbar visibility
+            document.body.classList.add('scroll-locked');
+
+            isScrollLocked = true;
+            console.debug('Scroll locked - position preserved at:', originalScrollPosition);
+        }
+    }
+
+    function unlockScroll() {
+        if (isScrollLocked) {
+            // Remove all scroll lock styles
+            document.body.style.overflow = '';
+            document.body.style.position = '';
+            document.body.style.width = '';
+            document.body.style.top = '';
+            document.body.classList.remove('scroll-locked');
+
+            // Reset the overflow on html element as well
+            document.documentElement.style.overflow = '';
+
+            // Restore scroll position 
+            console.debug('Restoring scroll position to:', originalScrollPosition);
+            
+            // Check if we're using the global scroll manager to avoid conflicts
+            if (window.ScrollManager) {
+                console.log('Using global scroll manager to avoid auto-scrolling issues');
+                // Don't try to restore position ourselves, let it respect the global settings
+            } else {
+                // Only if ScrollManager isn't present, restore the scroll position manually
+                window.scrollTo({
+                    top: originalScrollPosition,
+                    behavior: 'auto' // Use 'auto' instead of 'smooth' to prevent visible scrolling
+                });
+            }
+            
+            isScrollLocked = false;
+            console.debug('Scroll unlocked and position restored');
+        }
+    }
+
+    // Initialize voice settings
+    async function initializeVoice() {
+        return new Promise((resolve) => {
+            window.speechSynthesis.onvoiceschanged = () => {
+                const voices = window.speechSynthesis.getVoices();
+                selectedVoice = voices.find(voice =>
+                    voice.name.toLowerCase().includes('female') ||
+                    voice.name.toLowerCase().includes('samantha') ||
+                    voice.lang.startsWith('en-GB')
+                ) || voices.find(voice => voice.lang.startsWith('en-'));
+                resolve(selectedVoice);
+            };
+            window.speechSynthesis.getVoices();
+        });
+    }
+
+    // Function to speak text
+    async function speakText(text, rate = 0.9, pitch = 1.1) {
+        return new Promise((resolve, reject) => {
+            try {
+                console.debug('Speaking text:', text);
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.voice = selectedVoice;
+                utterance.rate = rate;
+                utterance.pitch = pitch;
+                utterance.volume = 0.8;
+
+                // Show guidance in right panel
+                const guidanceArea = document.getElementById('meditation-guidance');
+                if (guidanceArea) {
+                    guidanceArea.textContent = text;
+                }
+
+                utterance.onend = () => {
+                    console.debug('Speech completed:', text);
+                    if (guidanceArea) guidanceArea.textContent = '';
+                    resolve();
+                };
+
+                utterance.onerror = (event) => {
+                    console.error('Speech error:', event);
+                    if (guidanceArea) guidanceArea.textContent = '';
+                    reject(event);
+                };
+
+                window.speechSynthesis.speak(utterance);
+            } catch (error) {
+                console.error('Error in speakText:', error);
+                if (guidanceArea) guidanceArea.textContent = '';
+                reject(error);
+            }
+        });
+    }
+
+    // Timer display update
+    function updateTimerDisplay() {
+        if (remainingTime) {
+            const minutes = Math.floor(remainingTime / 60);
+            const seconds = remainingTime % 60;
+            const timeDisplay = document.getElementById('time-remaining');
+            if (timeDisplay) {
+                timeDisplay.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                const timerDisplay = document.querySelector('.timer-display');
+                if (timerDisplay) {
+                    timerDisplay.style.opacity = '1';
+                }
+            }
+        }
+    }
+
+    // Initialize audio context and components
+    async function initializeAudio() {
+        try {
+            // Create audio context if not already initialized
+            if (!audioContext) {
+                console.debug('Creating new AudioContext in initializeAudio');
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            
+            // Resume audio context if suspended
+            if (audioContext.state === 'suspended') {
+                console.debug('Resuming audio context in initializeAudio');
+                await audioContext.resume();
+            }
+            
+            // Initialize Tone.js if not already done
+            if (!toneInitialized) {
+                console.debug('Initializing Tone.js in initializeAudio');
+                await Tone.start();
+                toneInitialized = true;
+            }
+
+            console.debug('Creating Tone.js components');
+            
+            // Create and configure reverb
+            const reverb = new Tone.Reverb({
+                decay: 8,
+                wet: 0.6,
+                preDelay: 0.2
+            }).toDestination();
+            
+            // Make sure reverb is ready before continuing
+            await reverb.generate();
+            console.debug('Reverb generated successfully');
+
+            // Create and connect delay
+            const delay = new Tone.FeedbackDelay({
+                delayTime: "8n",
+                feedback: 0.4,
+                wet: 0.2
+            }).connect(reverb);
+
+            // Create and connect chorus
+            const chorus = new Tone.Chorus({
+                frequency: 0.5,
+                delayTime: 3.5,
+                depth: 0.7,
+                wet: 0.5
+            }).connect(delay);
+
+            // Create noise and filter
+            const noise = new Tone.Noise("brown").connect(reverb);
+            const filter = new Tone.Filter({
+                type: "lowpass",
+                frequency: 800
+            }).connect(reverb);
+
+            // Create synth for ambient sounds
+            const ambientSynth = new Tone.PolySynth(Tone.Synth, {
+                volume: -15,
+                oscillator: {
+                    type: "triangle"
+                },
+                envelope: {
+                    attack: 0.5,
+                    decay: 0.5,
+                    sustain: 0.8,
+                    release: 2.0
+                }
+            }).connect(chorus);
+
+            console.debug('Audio components initialized successfully');
+            
+            return {
+                reverb,
+                delay,
+                chorus,
+                noise,
+                filter,
+                ambientSynth
+            };
+
+        } catch (error) {
+            console.error('Error initializing audio:', error);
+            return null;
+        }
+    }
+
+    // Initialize meditation session
+    try {
+        console.debug('Starting meditation initialization');
+        await initializeVoice();
+        const audioComponents = await initializeAudio();
+
+        if (audioComponents) {
+            const {ambientSynth, noise, reverb, filter} = audioComponents;
+
+            // Sound generators
+            const soundGenerators = {
+                rain: function() {
+                    noise.type = "pink";
+                    filter.frequency.value = 2000;
+                    noise.connect(filter);
+                    noise.start();
+                },
+                wind: function() {
+                    noise.type = "white";
+                    filter.frequency.value = 400;
+                    noise.connect(filter);
+                    noise.start();
+                },
+                water: function() {
+                    noise.type = "brown";
+                    filter.frequency.value = 800;
+                    noise.connect(filter);
+                    noise.start();
+                },
+                brown: function() {
+                    noise.type = "brown";
+                    filter.frequency.value = 400;
+                    noise.connect(reverb);
+                    noise.start();
+                },
+                ambient: function() {
+                    playAmbientPad();
+                }
+            };
+
+            function playAmbientPad() {
+                const now = Tone.now();
+                const notes = ["C4", "E4", "G4"];
+                ambientSynth.triggerAttackRelease(notes, "4n", now);
+                soundInterval = setInterval(() => {
+                    ambientSynth.triggerAttackRelease(notes, "4n", Tone.now());
+                }, 2000);
+            }
+
+            // Stop current sound
+            function stopCurrentSound() {
+                console.debug('Stopping current sound');
+                // Clear any running interval for ambient sounds
+                if (soundInterval) {
+                    clearInterval(soundInterval);
+                    soundInterval = null;
+                }
+                
+                // Stop all synth sounds
+                try {
+                    if (ambientSynth && typeof ambientSynth.releaseAll === 'function') {
+                        console.debug('Releasing all synth notes');
+                        ambientSynth.releaseAll();
+                    }
+                } catch (error) {
+                    console.error('Error releasing synth notes:', error);
+                }
+                
+                // Stop noise generator
+                try {
+                    if (noise && typeof noise.stop === 'function') {
+                        console.debug('Stopping noise generator');
+                        // Check if noise is already stopped to avoid errors
+                        if (noise.state === 'started') {
+                            noise.stop();
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error stopping noise generator:', error);
+                }
+            }
+
+            // Start meditation session
+            async function startMeditation(duration) {
+                try {
+                    console.debug('Starting meditation setup for duration:', duration);
+                    meditationActive = true;
+                    lockScroll();  // Lock scroll at start
+
+                    if (audioContext && audioContext.state === 'suspended') {
+                        console.debug('Resuming audio context');
+                        await audioContext.resume();
+                    }
+
+                    if (!toneInitialized) {
+                        console.debug('Initializing Tone.js');
+                        await Tone.start();
+                        toneInitialized = true;
+                    }
+
+                    // Setup UI
+                    document.getElementById('start-meditation').disabled = true;
+                    document.getElementById('stop-meditation').disabled = false;
+
+                    // Start backend session
+                    console.debug('Starting backend session');
+                    const startResponse = await fetch('/api/meditation/start', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            duration: duration,
+                            type: 'vipassana'
+                        })
+                    });
+
+                    const startData = await startResponse.json();
+                    if (startData.status !== 'success') {
+                        throw new Error('Failed to start meditation session');
+                    }
+
+                    console.debug('Backend session started:', startData);
+
+                    // Start background sound
+                    console.debug('Starting background sound');
+                    const selectedSound = document.querySelector('input[name="background-sound"]:checked').value;
+                    if (soundGenerators[selectedSound]) {
+                        soundGenerators[selectedSound]();
+                    }
+
+                    // Play initial guidance
+                    console.debug('Starting initial guidance');
+                    const initialGuidance = [
+                        "Welcome to your meditation session. Find a comfortable seated position.",
+                        "Take a moment to settle in, allowing your body to be at ease.",
+                        "Gently close your eyes and bring your attention to your breath.",
+                        "Notice the natural rhythm of your breathing, without trying to change it.",
+                        "Throughout this session, I'll provide gentle reminders to help maintain your focus.",
+                        "If you notice your mind wandering, that's perfectly normal.",
+                        "Simply acknowledge any thoughts and gently return your attention to your breath.",
+                        "Let's begin our practice together."
+                    ];
+
+                    for (const text of initialGuidance) {
+                        if (!meditationActive) {
+                            console.debug('Meditation stopped during intro');
+                            return;
+                        }
+                        try {
+                            console.debug(`Playing intro guidance: ${text}`);
+                            await speakText(text);
+                            await new Promise(resolve => setTimeout(resolve, 500));
+                        } catch (error) {
+                            console.error('Error playing intro guidance:', error);
+                        }
+                    }
+
+                    // Start timer AFTER intro completes
+                    console.debug('Starting meditation timer after intro');
+                    const startTime = new Date();
+                    remainingTime = duration * 60;
+                    timerInterval = setInterval(() => {
+                        remainingTime--;
+                        updateTimerDisplay();
+                        if (remainingTime <= 0) {
+                            completeMeditation(startTime, duration);
+                        }
+                    }, 1000);
+
+                    // Schedule periodic guidance (every 2.5 minutes)
+                    const periodicGuidance = [
+                        "Gently return your attention to your breath",
+                        "Notice the sensation of breathing in and out",
+                        "Let thoughts come and go, maintaining your awareness",
+                        "Feel the rise and fall of your chest",
+                        "Observe any tension in your body and let it soften",
+                        "Stay present with each breath",
+                        "If your mind has wandered, gently bring it back",
+                        "Continue breathing mindfully"
+                    ];
+
+                    const intervalMs = 150000; // 2.5 minutes
+                    let currentTime = intervalMs;
+
+                    console.debug('Scheduling periodic guidance');
+                    while (currentTime < (duration * 60 * 1000) - 30000) {
+                        const timeoutDuration = currentTime;
+                        const timeout = setTimeout(async () => {
+                            try {
+                                if (!meditationActive) return;
+                                const phrase = periodicGuidance[
+                                    Math.floor(Math.random() * periodicGuidance.length)
+                                ];
+                                console.debug(`Playing periodic guidance: ${phrase}`);
+                                await speakText(phrase);
+                            } catch (error) {
+                                console.error('Error playing periodic guidance:', error);
+                            }
+                        }, timeoutDuration);
+
+                        guidanceTimeouts.push(timeout);
+                        currentTime += intervalMs;
+                    }
+
+                    // Schedule ending guidance (30 seconds before end)
+                    const totalDurationMs = duration * 60 * 1000;
+                    console.debug('Scheduling ending guidance');
+                    const endingGuidance = [
+                        "We're approaching the end of our meditation.",
+                        "Take a few deep breaths, noticing how your body feels now.",
+                        "Begin to bring gentle movement back to your fingers and toes.",
+                        "When you're ready, slowly open your eyes.",
+                        "Take a moment to appreciate the peace you've created."
+                    ];
+
+                    const endingTimeout = setTimeout(async () => {
+                        try {
+                            if (!meditationActive) return;
+                            console.debug('Playing ending guidance');
+                            for (const phrase of endingGuidance) {
+                                await speakText(phrase);
+                                await new Promise(resolve => setTimeout(resolve, 300));
+                            }
+                        } catch (error) {
+                            console.error('Error playing ending guidance:', error);
+                        }
+                    }, totalDurationMs - 30000);
+
+                    guidanceTimeouts.push(endingTimeout);
+
+                } catch (error) {
+                    console.error('Error starting meditation:', error);
+                    showNotification('Failed to start meditation session', 'error');
+                    meditationActive = false;
+                    unlockScroll();  // Ensure scroll is unlocked on error
+                }
+            }
+
+            // Stop meditation session
+            async function stopMeditation() {
+                console.debug('Stopping meditation');
+                meditationActive = false;
+
+                guidanceTimeouts.forEach(timeout => {
+                    clearTimeout(timeout);
+                });
+                guidanceTimeouts = [];
+
+                clearInterval(timerInterval);
+                stopCurrentSound();
+                window.speechSynthesis.cancel();
+
+                document.getElementById('start-meditation').disabled = false;
+                document.getElementById('stop-meditation').disabled = true;
+                document.querySelector('.timer-display').style.opacity = '0';
+                document.getElementById('meditation-guidance').textContent = '';
+
+                unlockScroll();  // Release scroll lock when stopping
+            }
+
+            // Complete meditation session
+            async function completeMeditation(startTime, duration) {
+                console.debug('Completing meditation session');
+                meditationActive = false;
+                clearInterval(timerInterval);
+                stopCurrentSound();
+                window.speechSynthesis.cancel();
+
+                document.getElementById('start-meditation').disabled = false;
+                document.getElementById('stop-meditation').disabled = true;
+                document.querySelector('.timer-display').style.opacity = '0';
+                document.getElementById('meditation-guidance').textContent = '';
+
+                try {
+                    const endTime = new Date();
+                    const actualDurationMs = endTime - startTime;
+                    const actualDurationMin = Math.max(1, Math.round(actualDurationMs / (60 * 1000)));
+
+                    console.debug(`Meditation completed - Duration: ${actualDurationMin} minutes`);
+
+                    // Complete meditation session and update stats
+                    const response = await fetch('/api/meditation/complete', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            duration: actualDurationMin,
+                            start_time: startTime.toISOString(),
+                            end_time: endTime.toISOString()
+                        })
+                    });
+
+                    const data = await response.json();
+                    console.debug('Meditation completion response:', data);
+
+                    if (data.status === 'success') {
+                        showNotification('Meditation session completed successfully!');
+
+                        // Update stats display with the new values from response
+                        const totalSessions = document.getElementById('total-sessions');
+                        const totalMinutes = document.getElementById('total-minutes');
+
+                        if (totalSessions) {
+                            totalSessions.textContent = data.stats.total_sessions;
+                            console.debug('Updated total sessions:', data.stats.total_sessions);
+                        }
+
+                        if (totalMinutes) {
+                            totalMinutes.textContent = data.stats.total_minutes;
+                            console.debug('Updated total minutes:', data.stats.total_minutes);
+                        }
+
+                        // Force refresh stats
+                        await updateMeditationStats();
+
+                    } else {
+                        throw new Error(data.message || 'Failed to complete meditation session');
+                    }
+                } catch (error) {
+                    console.error('Error completing meditation:', error);
+                    showNotification('An error occurred while completing the meditation session', 'error');
+                } finally {
+                    unlockScroll();
+                }
+            }
+
+            // Initialize meditation stats
+            async function updateMeditationStats() {
+                try {
+                    console.debug('Fetching updated meditation stats');
+                    const response = await fetch('/api/meditation/stats');
+                    const data = await response.json();
+                    console.debug('Received meditation stats:', data);
+
+                    if (data.status === 'success' && data.stats) {
+                        const totalSessions = document.getElementById('total-sessions');
+                        const totalMinutes = document.getElementById('total-minutes');
+
+                        console.debug('Updating stats display:', {
+                            sessions: data.stats.total_sessions,
+                            minutes: data.stats.total_minutes
+                        });
+
+                        if (totalSessions) {
+                            totalSessions.textContent = data.stats.total_sessions || '0';
+                        } else {
+                            console.error('Total sessions element not found');
+                        }
+
+                        if (totalMinutes) {
+                            totalMinutes.textContent = data.stats.total_minutes || '0';
+                        } else {
+                            console.error('Total minutes element not found');
+                        }
+                    } else {
+                        console.error('Invalid stats data received:', data);
+                    }
+                } catch (error) {
+                    console.error('Error updating meditation stats:', error);
+                }
+            }
+
+            // Update ring data polling code to run immediately and periodically
+            async function updateRingData() {
+                try {
+                    const response = await fetch('/api/ring-data');
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch ring data');
+                    }
+                    const data = await response.json();
+
+                    if (data?.status === 'success' && data?.oura?.stress_level != null) {
+                        const stressLevel = document.getElementById('current-stress-level');
+                        if (stressLevel) {
+                            stressLevel.textContent = data.oura.stress_level.toFixed(1);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error fetching ring data:', error);
+                    const stressLevel = document.getElementById('current-stress-level');
+                    if (stressLevel) {
+                        stressLevel.textContent = '--';
+                    }
+                }
+            }
+
+            // Start periodic ring data updates immediately
+            // Fetch ring data immediately
+            await updateRingData();
+
+            // Then set up periodic updates
+            setInterval(updateRingData, 30000); // Update every 30 seconds
+
+
+            // Event listeners
+            document.getElementById('start-meditation').addEventListener('click', function() {
+                const duration = parseInt(document.getElementById('meditation-duration').value);
+                startMeditation(duration);
+            });
+
+            document.getElementById('stop-meditation').addEventListener('click', stopMeditation);
+
+            // Test sound buttons
+            document.querySelectorAll('.test-sound').forEach(button => {
+                button.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const soundType = this.dataset.sound;
+                    console.debug('Test sound button clicked:', soundType);
+                    
+                    try {
+                        // Stop any current sound first
+                        stopCurrentSound();
+                        
+                        // Initialize audio context if not already initialized
+                        if (!audioContext) {
+                            console.debug('Creating new AudioContext');
+                            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                        }
+                        
+                        // Resume audio context if suspended
+                        if (audioContext && audioContext.state === 'suspended') {
+                            console.debug('Resuming audio context');
+                            await audioContext.resume();
+                        }
+                        
+                        // Initialize Tone.js if not already initialized
+                        if (!toneInitialized) {
+                            console.debug('Initializing Tone.js');
+                            await Tone.start();
+                            toneInitialized = true;
+                        }
+                        
+                        // For debugging purposes
+                        console.debug('Sound generator:', soundType, 'exists:', !!soundGenerators[soundType]);
+                        
+                        // Play the sound
+                        if (soundGenerators[soundType]) {
+                            soundGenerators[soundType]();
+                            console.debug('Test sound started:', soundType);
+                            
+                            // Stop the sound after 3 seconds
+                            setTimeout(() => {
+                                stopCurrentSound();
+                                console.debug('Test sound stopped:', soundType);
+                            }, 3000);
+                        } else {
+                            console.error('Sound generator not found:', soundType);
+                        }
+                    } catch (error) {
+                        console.error('Error playing test sound:', error);
+                    }
+                });
+            });
+
+            // Volume control
+            const volumeControl = document.getElementById('volume-control');
+            if (volumeControl) {
+                volumeControl.addEventListener('input', function(e) {
+                    const volume = parseFloat(e.target.value);
+                    const dbValue = Tone.gainToDb(volume * 0.5);
+                    ambientSynth.volume.value = dbValue;
+                    noise.volume.value = dbValue;
+                });
+            }
+
+            // Reset stats button functionality
+            const resetStatsButton = document.getElementById('reset-stats');
+            console.debug('Reset stats button:', resetStatsButton);
+
+            if (resetStatsButton) {
+                resetStatsButton.addEventListener('click', async function() {
+                    console.debug('Reset stats button clicked');
+                    if (confirm('Are you sure you want to reset your meditation stats? This cannot be undone.')) {
+                        try {
+                            const response = await fetch('/api/meditation/stats/reset', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            });
+
+                            const data = await response.json();
+                            console.debug('Reset stats response:', data);
+
+                            if (data.status === 'success') {
+                                showNotification('Meditation stats have been reset');
+                                await updateMeditationStats();  // Refresh stats display
+                            } else {
+                                throw new Error(data.message || 'Failed to reset stats');
+                            }
+                        } catch (error) {
+                            console.error('Error resetting stats:', error);
+                            showNotification('Failed to reset meditation stats', 'error');
+                        }
+                    }
+                });
+            } else {
+                console.error('Reset stats button not found');
+            }
+
+            // Load initial stats
+            await updateMeditationStats();
+        }
+    } catch (error) {
+        console.error('Error during initialization:', error);
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const notification = document.getElementById('notification');
+        if (notification) {
+            notification.textContent = message;
+            notification.className = `alert alert-${type} fade show`;
+            setTimeout(() => {
+                notification.className = 'alert d-none';
+            }, 3000);
+        }
+    }
+
+    // Load initial stats
+    await updateMeditationStats();
+});
+
+// Cleanup on page unload
+window.addEventListener('beforeunload', () => {
+    if (isScrollLocked) {
+        unlockScroll();
+    }
+});
