@@ -1,0 +1,168 @@
+{
+  "timestamp": "2025-05-05T10:39:01.342553",
+  "issues": [
+    {
+      "component": "Environment",
+      "description": "Required environment variable not set: FLASK_APP",
+      "severity": "HIGH",
+      "fix_instructions": "Set the FLASK_APP environment variable in .env file",
+      "timestamp": "2025-05-05T10:38:48.552583"
+    },
+    {
+      "component": "Environment",
+      "description": "Required environment variable not set: OPENAI_API_KEY",
+      "severity": "HIGH",
+      "fix_instructions": "Set the OPENAI_API_KEY environment variable in .env file",
+      "timestamp": "2025-05-05T10:38:48.552700"
+    },
+    {
+      "component": "Environment",
+      "description": "Optional environment variable not set: OURA_API_KEY",
+      "severity": "MEDIUM",
+      "fix_instructions": "Set the OURA_API_KEY environment variable in .env file if using related features",
+      "timestamp": "2025-05-05T10:38:48.552835"
+    },
+    {
+      "component": "Environment",
+      "description": "Optional environment variable not set: ULTRAHUMAN_API_KEY",
+      "severity": "MEDIUM",
+      "fix_instructions": "Set the ULTRAHUMAN_API_KEY environment variable in .env file if using related features",
+      "timestamp": "2025-05-05T10:38:48.552934"
+    },
+    {
+      "component": "Environment",
+      "description": "Optional environment variable not set: GOOGLE_MAPS_API_KEY",
+      "severity": "MEDIUM",
+      "fix_instructions": "Set the GOOGLE_MAPS_API_KEY environment variable in .env file if using related features",
+      "timestamp": "2025-05-05T10:38:48.553065"
+    },
+    {
+      "component": "Database",
+      "description": "Error verifying database schema: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set.",
+      "severity": "HIGH",
+      "fix_instructions": null,
+      "timestamp": "2025-05-05T10:38:54.272512"
+    },
+    {
+      "component": "breathing",
+      "description": "Pattern not found in static/js/breathing.js: 478\\s+Breathing",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern '478\\s+Breathing' in static/js/breathing.js",
+      "timestamp": "2025-05-05T10:38:54.274074"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: generate_self_care_recommendation",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'generate_self_care_recommendation' in self_care.py",
+      "timestamp": "2025-05-05T10:38:54.274960"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: get_user_recommendations",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'get_user_recommendations' in self_care.py",
+      "timestamp": "2025-05-05T10:38:54.275175"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in templates/self_care/recommendation.html: recommendation-card",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'recommendation-card' in templates/self_care/recommendation.html",
+      "timestamp": "2025-05-05T10:38:54.275414"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in templates/self_care/recommendation.html: recommendation-source",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'recommendation-source' in templates/self_care/recommendation.html",
+      "timestamp": "2025-05-05T10:38:54.275577"
+    },
+    {
+      "component": "Breathing",
+      "description": "Incorrect timing for box breathing pattern (should be 4-4-4-4)",
+      "severity": "HIGH",
+      "fix_instructions": "Set all box breathing timers to 4000ms (4 seconds) in breathing.js",
+      "timestamp": "2025-05-05T10:38:54.276559"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/meditation/stress returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-05T10:39:01.306558"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/478?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-05T10:39:01.317952"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/box?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-05T10:39:01.326692"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/ring/data returned status code 404",
+      "severity": "HIGH",
+      "fix_instructions": null,
+      "timestamp": "2025-05-05T10:39:01.331701"
+    }
+  ],
+  "summary": {
+    "total_issues": 16,
+    "high_severity": 10,
+    "medium_severity": 6,
+    "low_severity": 0
+  },
+  "documentation": {
+    "files": {
+      "docs/BIOMETRIC_DATA_SETUP.md": {
+        "exists": true,
+        "size": 4055
+      },
+      "docs/location_wellness_documentation.md": {
+        "exists": true,
+        "size": 11798
+      },
+      "docs/meditation_challenges_documentation.md": {
+        "exists": true,
+        "size": 19230
+      },
+      "docs/FORK_INITIALIZATION_GUIDE_2025_05_03.md": {
+        "exists": true,
+        "size": 4697
+      },
+      "docs/DUAL_SERVER_ARCHITECTURE.md": {
+        "exists": true,
+        "size": 3982
+      }
+    },
+    "dual_server_architecture": true,
+    "fork_initialization_guide": true,
+    "biometric_data_setup": true,
+    "meditation_challenges_docs": true,
+    "location_wellness_docs": true
+  },
+  "configuration": {
+    "files": {
+      "start_dual_servers.sh": {
+        "exists": true,
+        "executable": true
+      },
+      "run_virtual_server.sh": {
+        "exists": true,
+        "executable": true
+      },
+      "run_virtual_server_5002.sh": {
+        "exists": true,
+        "executable": true
+      }
+    }
+  }
+}
