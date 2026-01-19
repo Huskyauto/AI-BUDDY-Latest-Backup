@@ -1,0 +1,271 @@
+{% extends "base.html" %}
+
+{% block title %}Wellness Check-In - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Manual Wellness Check-In</h4>
+                </div>
+                <div class="card-body">
+                    {% if current_user.can_view_ring_data() %}
+                    <div class="alert alert-info" role="alert">
+                        <i class="fas fa-ring"></i> <strong>Biometric User:</strong> While your smart ring provides valuable data, manual check-ins can supplement it with additional context that sensors can't capture.
+                    </div>
+                    {% endif %}
+
+                    <p class="text-muted mb-4">Track your wellness metrics to get personalized self-care recommendations. Your data helps AI-BUDDY understand your current state and provide tailored suggestions.</p>
+
+                    <form method="POST" action="/self-care/wellness-check-in" style="margin: 0; padding: 0;">
+                        
+                        <!-- Physical Wellness Section -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Physical Wellness</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="energy" class="form-label">Energy Level</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Low</span>
+                                        <input type="range" class="form-range flex-grow-1" id="energy_level" name="energy_level" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">High</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="physical_comfort" class="form-label">Physical Comfort</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Poor</span>
+                                        <input type="range" class="form-range flex-grow-1" id="physical_comfort" name="physical_comfort" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Great</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="sleep_quality" class="form-label">Sleep Quality</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Poor</span>
+                                        <input type="range" class="form-range flex-grow-1" id="sleep_quality" name="sleep_quality" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Great</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="breathing_quality" class="form-label">Breathing Quality</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Poor</span>
+                                        <input type="range" class="form-range flex-grow-1" id="breathing_quality" name="breathing_quality" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Great</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mental Wellness Section -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Mental Wellness</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="stress" class="form-label">Stress Level</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Calm</span>
+                                        <input type="range" class="form-range flex-grow-1" id="stress_level" name="stress_level" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Stressed</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="mood" class="form-label">Current Mood</label>
+                                    <select class="form-select" id="mood" name="mood" required>
+                                        <option value="">Select your mood...</option>
+                                        <option value="excited">Excited</option>
+                                        <option value="happy">Happy</option>
+                                        <option value="content">Content</option>
+                                        <option value="calm">Calm</option>
+                                        <option value="neutral">Neutral</option>
+                                        <option value="tired">Tired</option>
+                                        <option value="stressed">Stressed</option>
+                                        <option value="anxious">Anxious</option>
+                                        <option value="frustrated">Frustrated</option>
+                                        <option value="sad">Sad</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="focus_level" class="form-label">Focus Level</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Poor</span>
+                                        <input type="range" class="form-range flex-grow-1" id="focus_level" name="focus_level" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Great</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="physical_tension" class="form-label">Physical Tension</label>
+                                    <div class="d-flex align-items-center">
+                                        <span class="me-2 text-muted small">Relaxed</span>
+                                        <input type="range" class="form-range flex-grow-1" id="physical_tension" name="physical_tension" min="1" max="10" value="5">
+                                        <span class="ms-2 text-muted small">Tense</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Productivity Section -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Daily Activities</h5>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="productivity" class="form-label">Productivity Level</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 text-muted small">Low</span>
+                                    <input type="range" class="form-range flex-grow-1" id="productivity_level" name="productivity_level" min="1" max="10" value="5">
+                                    <span class="ms-2 text-muted small">High</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Additional Comprehensive Fields -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">Daily Activities</h5>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="exercise_minutes" class="form-label">Exercise Minutes</label>
+                                    <input type="number" class="form-control" id="exercise_minutes" name="exercise_minutes" min="0" max="480" value="0" placeholder="Minutes of exercise today">
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="water_glasses" class="form-label">Water Intake (glasses)</label>
+                                    <input type="number" class="form-control" id="water_glasses" name="water_glasses" min="0" max="20" value="0" placeholder="Number of glasses consumed">
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="weather_condition" class="form-label">Weather Condition</label>
+                                    <select class="form-select" id="weather_condition" name="weather_condition">
+                                        <option value="">Select weather...</option>
+                                        <option value="sunny">Sunny</option>
+                                        <option value="cloudy">Cloudy</option>
+                                        <option value="rainy">Rainy</option>
+                                        <option value="snowy">Snowy</option>
+                                        <option value="stormy">Stormy</option>
+                                        <option value="foggy">Foggy</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="location_type" class="form-label">Current Location</label>
+                                    <select class="form-select" id="location_type" name="location_type">
+                                        <option value="">Select location type...</option>
+                                        <option value="home">Home</option>
+                                        <option value="work">Work</option>
+                                        <option value="gym">Gym</option>
+                                        <option value="outdoors">Outdoors</option>
+                                        <option value="social">Social Setting</option>
+                                        <option value="travel">Travel</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Additional Notes</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional thoughts, observations, or context about your wellness today..."></textarea>
+                            </div>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                Submit Wellness Check-In
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Check-ins -->
+    {% if recent_check_ins %}
+    <div class="row mt-4" id="recent-checkins-{{ range(1000000) | random }}">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Check-ins ({{ recent_check_ins|length }} entries)</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Mood</th>
+                                    <th>Stress</th>
+                                    <th>Energy</th>
+                                    <th>Sleep</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for check_in in recent_check_ins %}
+                                <tr>
+                                    <td data-timestamp="{{ check_in.timestamp_with_timezone.isoformat() }}">{{ check_in.recorded_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                    <td>{{ check_in.mood|capitalize }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar {% if check_in.stress_level > 7 %}bg-danger{% elif check_in.stress_level > 4 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.stress_level * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.stress_level }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-primary" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.energy_level * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.energy_level }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-info" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.sleep_quality * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.sleep_quality }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/timezone_handler.js') }}?v={{ cache_version }}"></script>
+{% endblock %}
