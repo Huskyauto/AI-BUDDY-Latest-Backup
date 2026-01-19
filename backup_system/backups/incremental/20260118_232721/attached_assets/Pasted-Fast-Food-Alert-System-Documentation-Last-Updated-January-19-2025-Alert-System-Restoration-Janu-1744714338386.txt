@@ -1,0 +1,216 @@
+Fast Food Alert System Documentation
+Last Updated: January 19, 2025
+Alert System Restoration (January 19, 2025)
+The fast food alert system was restored to full functionality with the following key implementations:
+1. Alert Triggering System
+The system now consistently detects and alerts for fast food locations by:
+•	Maintaining a single active tracker instance
+•	Properly managing the last alerted restaurant state
+•	Using a 60-second cooldown between alerts
+•	Clearing restaurant history only when appropriate
+class LocationTracker:
+    def __init__(self):
+        self.last_alert_time = None
+        self.last_restaurant = None
+        self.alert_cooldown = 60  # seconds
+        self.last_speed = 0
+2. Restaurant Detection Improvements
+The detection logic was enhanced by:
+•	Using both place types and name-based detection
+•	Maintaining separate lists for fast food and excluded restaurants
+•	Implementing proper distance calculations
+•	Adding logging for better tracking
+# Fast food identifiers
+fast_food_types = [
+    'fast_food', 'meal_takeaway', 'meal_delivery'
+]
+ 
+fast_food_keywords = [
+    'mcdonalds', 'burger king', 'wendys', 'white castle',
+    'taco bell', 'popeyes', 'kfc', 'subway'
+    # ... other fast food chains
+]
+ 
+# Excluded to prevent false positives
+excluded_restaurants = [
+    'red lobster', 'olive garden', 'applebees',
+    # ... other sit-down restaurants
+]
+3. Alert Trigger Conditions
+Alerts are now triggered when:
+•	GPS accuracy is better than 20 meters
+•	Location is within 200 meters of a fast food place
+•	Speed is below 16.1 km/h (10 mph)
+•	Different restaurant than last alert
+•	Cooldown period has expired
+4. State Management
+The system properly manages state by:
+•	Tracking the last alerted restaurant
+•	Maintaining cooldown periods
+•	Properly resetting state when tracking is stopped
+•	Clearing history appropriately
+5. Key Configuration Parameters
+SEARCH_RADIUS = 500  # meters (for finding all nearby restaurants)
+ALERT_RADIUS = 200   # meters (for triggering alerts)
+MIN_ACCURACY = 20    # meters - GPS accuracy threshold
+SPEED_THRESHOLD = 16.1  # km/h (10 mph)
+Implementation Notes
+1.	Restaurant detection now uses a two-stage approach:
+•	Initial search using Google Places API
+•	Secondary filtering using our custom restaurant classification
+2.	Alert timing is managed through:
+•	Immediate triggers when conditions are met
+•	60-second cooldown between alerts
+•	Speed-based state clearing
+3.	Location tracking properly maintains state:
+•	Clears previous restaurant when stopped
+•	Resets properly on manual stop/start
+•	Maintains accuracy thresholds
+Troubleshooting
+Common issues and solutions:
+1.	Missing Alerts:
+•	Check GPS accuracy (should be < 20m)
+•	Verify speed is below 16.1 km/h
+•	Confirm cooldown period has expired
+•	Check if restaurant is in detection list
+2.	Duplicate Alerts:
+•	Verify last_restaurant tracking
+•	Check cooldown timer
+•	Confirm speed calculations
+3.	False Positives:
+•	Review excluded restaurants list
+•	Check place type classification
+•	Verify distance calculations
+Version History
+•	January 19, 2025: Restored core alert functionality
+o	Fixed restaurant detection
+o	Improved state management
+o	Enhanced alert triggering logic
+o	Added comprehensive logging
+Overview
+The fast food alert system provides real-time notifications when users approach fast food establishments, offering mindful eating suggestions and alternatives.
+Core Components
+1. Restaurant Detection System
+# Key Parameters
+SEARCH_RADIUS = 500  # meters (for finding all nearby restaurants)
+ALERT_RADIUS = 200   # meters (for triggering alerts)
+MIN_ACCURACY = 20    # meters - GPS accuracy threshold
+Fast Food Classification
+The system uses two methods to identify fast food locations:
+1.	Place Types:
+fast_food_types = [
+    'fast_food',
+    'meal_takeaway',
+    'meal_delivery'
+]
+2.	Name-based Detection:
+fast_food_keywords = [
+    'mcdonalds', 'mcdonald', 'burger king', 'wendys', 'arbys',
+    'taco bell', 'popeyes', 'kfc', 'subway', 'culvers',
+    'chick-fil-a', 'chick fil a', 'chickfila', 'white castle',
+    'dairy queen', 'five guys', 'jack in the box', 'little caesars',
+    'dominos', 'pizza hut', 'papa johns', 'dunkin', 'jimmy johns'
+]
+Excluded Restaurants
+To prevent false positives, these establishments are explicitly excluded:
+excluded_restaurants = [
+    'red lobster', 'olive garden', 'applebees', 'chilis', 'outback',
+    'texas roadhouse', 'longhorn', 'red robin', 'buffalo wild wings',
+    'ihop', 'denny\'s', 'cracker barrel'
+]
+2. Alert Triggering System
+Trigger Conditions
+•	GPS accuracy better than 20 meters
+•	Location within 200 meters of fast food establishment
+•	Speed below 16.1 km/h (10 mph)
+•	Different restaurant than last alert
+•	Alert cooldown period expired (60 seconds) Alert Timing: Alerts are triggered immediately upon meeting all trigger conditions. If conditions are not met, no alert is generated. The system checks for these conditions every [Frequency of checks] seconds.
+Location Tracker Implementation
+class LocationTracker:
+    def __init__(self):
+        self.last_alert_time = None
+        self.last_alert_location = None
+        self.alert_cooldown = 60  # seconds
+        self.last_speed = 0
+        self.last_restaurant = None
+        self.location_tracking_enabled = False #Added for UI state management
+ 
+    def restart_location_tracking(self):
+        self.location_tracking_enabled = True # Reset tracking logic
+        # Additional logic to restart location services if needed
+Location Tracking Restart Logic: The restart_location_tracking method resets the tracking state and optionally restarts location services. This is triggered by a user action or when certain conditions are met (e.g., speed exceeding threshold).
+3. Alert Message Generation
+The system generates two types of messages:
+1.	Audio Alerts:
+message_parts = [
+    f"Alert: You are near a fast food location, approximately {distance} meters away.",
+    "Let's consider some mindful eating suggestions.",
+    "Take a moment to check your hunger level on a scale of 1 to 10.",
+    # ... additional suggestions
+]
+Audio Feedback Implementation: Audio alerts are played using the device's audio system. The volume and tone can be customized in settings.
+2.	Visual Suggestions:
+suggestions = [
+    "Take a moment to check your hunger level (1-10)",
+    "Consider if you're eating from physical hunger or emotional needs",
+    "Remember your health goals and values",
+    # ... additional suggestions
+]
+Visual Feedback Implementation: Visual suggestions are displayed on the user interface. The UI updates dynamically to display relevant suggestions based on the context of the alert. This includes a clear visual indicator showing the proximity of nearby fast food restaurants. UI State Management: The UI state is managed using [State management library/method, e.g., React Context API, Redux]. This ensures that the UI reflects the current state of the system (e.g., location tracking status, alert status).
+Implementation Details
+1. Place Detection Process
+1.	Initial search using Google Places API with restaurant type
+2.	Fallback to broader search if no results
+3.	Filter results using fast food identifiers
+4.	Calculate distance to each location
+5.	Identify closest eligible establishment
+2. Alert Management
+1.	Track last alerted restaurant to prevent duplicates
+2.	Maintain cooldown period between alerts
+3.	Reset tracking when speed exceeds threshold
+4.	Clear restaurant history after sustained high speed
+3. Speed Monitoring
+•	Continuous GPS speed monitoring
+•	Speed threshold for alert triggering: 16.1 km/h
+•	Speed-based tracking reset: 24.14 km/h (15 mph)
+Frontend Integration
+Location Tracking Interface
+// Key Parameters
+const AUTO_START_SPEED_THRESHOLD = 24.14; // 15 mph in km/h
+const SPEED_BUFFER_SIZE = 5;
+const MIN_SPEED_MEASUREMENTS = 3;
+UI Components
+1.	Start/Stop tracking buttons
+2.	Location status indicator
+3.	Mindful eating suggestions panel
+4.	Dynamic alert display
+Best Practices
+1.	GPS Accuracy:
+•	Maintain minimum accuracy threshold
+•	Skip updates with poor accuracy
+•	Enable high accuracy mode in geolocation
+2.	Alert Frequency:
+•	Implement cooldown period
+•	Prevent duplicate alerts
+•	Reset tracking after sustained high speed
+3.	Performance Optimization:
+•	Buffer speed measurements
+•	Validate GPS data
+•	Minimize API calls
+Troubleshooting
+Common Issues and Solutions:
+1.	False Positives:
+•	Check excluded restaurants list
+•	Verify place type classification
+•	Validate distance calculations
+2.	Missed Alerts:
+•	Check GPS accuracy
+•	Verify speed calculations
+•	Confirm cooldown timer status
+•	Check Location Services permissions Ensure the app has the necessary permissions to access location data.
+3.	Duplicate Alerts:
+•	Check last restaurant tracking
+•	Verify cooldown period
+•	Review speed monitoring logic
+•	Examine Alert Cooldown Implementation Ensure the cooldown timer is functioning correctly and is not being prematurely reset.
+
