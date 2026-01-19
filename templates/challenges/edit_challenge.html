@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Meditation Challenge - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-edit"></i> Edit Meditation Challenge</h2>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('challenges.edit_challenge', challenge_id=challenge.id) }}">
+                        {{ form.hidden_tag() if form }}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Challenge Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="{{ challenge.name }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Challenge Description</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="4" required>{{ challenge.description }}</textarea>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">Start Date (Cannot be changed)</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       value="{{ challenge.start_date.strftime('%Y-%m-%d') }}" disabled>
+                                <div class="form-text">Start date cannot be modified once a challenge is created.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       value="{{ challenge.end_date.strftime('%Y-%m-%d') }}" 
+                                       min="{{ challenge.start_date.strftime('%Y-%m-%d') }}" required>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goal_minutes" class="form-label">Daily Goal (minutes)</label>
+                            <input type="number" class="form-control" id="goal_minutes" name="goal_minutes" 
+                                   min="5" max="120" value="{{ challenge.duration_requirement }}" required>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Current Participants</label>
+                            <input type="text" class="form-control" value="{{ challenge.current_participants }} / {{ challenge.max_participants }}" disabled>
+                            <div class="form-text">Maximum participants cannot be changed after creation.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Changes
+                            </button>
+                            <a href="{{ url_for('challenges.list_challenges') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Challenges
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Validate end date is after start date
+        document.getElementById('end_date').addEventListener('change', function() {
+            const startDate = new Date(document.getElementById('start_date').value);
+            const endDate = new Date(this.value);
+            if (endDate <= startDate) {
+                alert('End date must be after start date');
+                const newEndDate = new Date(startDate);
+                newEndDate.setDate(newEndDate.getDate() + 7);
+                this.value = newEndDate.toISOString().split('T')[0];
+            }
+        });
+    });
+</script>
+{% endblock %}
