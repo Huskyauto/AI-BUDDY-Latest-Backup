@@ -1,0 +1,244 @@
+Fork created successfully at 2026-01-18 18:44:11.485825
+System initialized and verified with recent fixes
+Database migrations completed
+Backup created at: backup_system/backups/pre_fork_2026_01_18
+
+SERVER ARCHITECTURE:
+- Dual server architecture implemented
+- Main application server on port 5000
+- Secondary server for background tasks on port 5002
+- Documentation: docs/DUAL_SERVER_ARCHITECTURE.md
+
+ADMIN DASHBOARD:
+- Admin dashboard fully functional with API usage tracking
+- PDF report generation working for user statistics and API usage
+- Access available at /admin for huskyauto@gmail.com
+- Documentation: docs/admin_dashboard_documentation.md
+
+BIOMETRIC DATA INTEGRATION:
+- Biometric data integration verified successfully
+- Real-time data from Oura and Ultrahuman rings available
+- Documentation: docs/BIOMETRIC_DATA_SETUP.md
+
+MEDITATION FEATURES:
+- Meditation challenges with tracking implementation
+- Voice guidance with stress monitoring integration
+- Documentation: docs/meditation_challenges_documentation.md
+
+LOCATION WELLNESS:
+- Fast food detection with Google Places API
+- Voice alerts for mindful eating
+- Documentation: docs/location_wellness_documentation.md
+
+FORK VERIFICATION SYSTEMS:
+- Biometric data verification: verify_biometric_data.py
+- Meditation feature verification: verify_meditation_feature.py
+- Full fork integrity checks: verify_fork_integrity.py
+
+IMPORTANT DOCUMENTATION:
+- docs/FORK_INITIALIZATION_GUIDE_2025_05_03.md - Comprehensive fork initialization guide
+- docs/BIOMETRIC_DATA_SETUP.md - Biometric integration guide
+- docs/location_wellness_documentation.md - Location wellness feature guide
+- docs/meditation_challenges_documentation.md - Meditation challenges guide
+- docs/DUAL_SERVER_ARCHITECTURE.md - Server architecture guide
+- docs/admin_dashboard_documentation.md - Admin dashboard guide
+
+DEFAULT USER CREDENTIALS:
+- Email: huskyauto@gmail.com
+- Password: Rw-120764
+- Note: This user has biometric data access configured
+2026-01-18 18:47:11,793 - __main__ - INFO - Starting fork initialization at 2026-01-18 18:47:11.793421
+2026-01-18 18:47:11,794 - __main__ - INFO - Found 0 latest documentation files by date
+2026-01-18 18:47:11,794 - __main__ - INFO - Found biometric data setup documentation
+2026-01-18 18:47:11,794 - __main__ - INFO - Found meditation challenges documentation
+2026-01-18 18:47:11,795 - __main__ - INFO - Found fork initialization guide (May 2025)
+2026-01-18 18:47:11,795 - __main__ - INFO - Found location wellness documentation
+2026-01-18 18:47:11,795 - __main__ - INFO - Verifying environment variables...
+2026-01-18 18:47:11,795 - __main__ - INFO - Environment verification completed
+2026-01-18 18:47:11,795 - __main__ - INFO - Initializing database...
+2026-01-18 18:47:11,795 - __main__ - INFO - Running database migrations with forced reinitialization...
+2026-01-18 18:47:16,639 - __main__ - INFO - Database migrations completed successfully
+2026-01-18 18:47:16,639 - __main__ - INFO - Setting up default user...
+2026-01-18 18:47:18,778 - __main__ - INFO - Default user setup completed successfully
+2026-01-18 18:47:18,778 - __main__ - INFO - Verifying biometric data integration...
+2026-01-18 18:47:21,531 - __main__ - INFO - Biometric data verification successful
+2026-01-18 18:47:21,531 - __main__ - INFO - Output: 2026-01-18 18:47:19,358 - __main__ - INFO - Starting biometric data verification...
+2026-01-18 18:47:19,358 - __main__ - INFO - Testing Oura Ring API connection...
+2026-01-18 18:47:19,358 - __main__ - INFO - Using Oura API key: MZTQ...XBHC
+2026-01-18 18:47:19,723 - __main__ - INFO - Successfully connected to Oura Ring API
+2026-01-18 18:47:19,728 - __main__ - INFO - Testing Ultrahuman Ring API connection...
+2026-01-18 18:47:19,728 - __main__ - INFO - Using Ultrahuman API key: eyJh...MfNw
+2026-01-18 18:47:19,728 - __main__ - INFO - Trying Ultrahuman API endpoint: https://partner.ultrahuman.com/api/v1/user
+2026-01-18 18:47:19,867 - __main__ - WARNING - Endpoint https://partner.ultrahuman.com/api/v1/user failed with status code: 404
+2026-01-18 18:47:19,868 - __main__ - INFO - Trying Ultrahuman API endpoint: https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com
+2026-01-18 18:47:20,042 - __main__ - WARNING - Endpoint https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com failed with status code: 400
+2026-01-18 18:47:20,042 - __main__ - ERROR - All Ultrahuman API endpoints failed to connect
+2026-01-18 18:47:20,042 - __main__ - INFO - Attempting to retrieve current biometric data...
+2026-01-18 18:47:20,042 - __main__ - INFO - Fetching data from Oura Ring API...
+2026-01-18 18:47:21,276 - __main__ - INFO - Successfully retrieved 307 heart rate records from Oura
+2026-01-18 18:47:21,276 - __main__ - INFO - Fetching data from Ultrahuman Ring API...
+2026-01-18 18:47:21,277 - __main__ - INFO - Requesting Ultrahuman data from: https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com&date=2026-01-18
+2026-01-18 18:47:21,504 - __main__ - INFO - Ultrahuman API response structure: ['data', 'error', 'status']
+2026-01-18 18:47:21,505 - __main__ - INFO - Successfully retrieved metrics data from Ultrahuman Partner API
+
+Biometric Data Verification Results:
+====================================
+Oura Ring API:          ✓ Connected
+Ultrahuman Ring API:    ✗ Not Connected
+Oura Data Retrieval:    ✓ Success
+Ultrahuman Data:        ✓ Success
+====================================
+
+Verification Successful: Real-time biometric data is accessible
+
+2026-01-18 18:47:21,532 - __main__ - INFO - Verifying meditation feature functionality...
+2026-01-18 18:47:21,609 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:138] - Starting meditation feature verification...
+2026-01-18 18:47:21,609 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:69] - Checking required files...
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/js/meditation.js
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/js/global_scroll_manager.js
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: templates/wellness_toolbox/index.html
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,595 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/css/custom.css
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,596 - __main__ - INFO - [verify_meditation_feature.py:86] - Checking required code patterns...
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,596 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: document.addEventListener('DOMContentLoaded'
+2026-01-18 18:47:21,610 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,596 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: function speakText
+2026-01-18 18:47:21,611 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,596 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: function initializeAudio
+2026-01-18 18:47:21,611 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,600 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: document.querySelectorAll('.test-sound').forEach
+2026-01-18 18:47:21,611 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: Promise.race
+2026-01-18 18:47:21,611 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: meditation-guidance
+2026-01-18 18:47:21,611 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: test-sound
+2026-01-18 18:47:21,617 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: background-sound
+2026-01-18 18:47:21,620 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: meditation-controls
+2026-01-18 18:47:21,620 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:148] - Meditation feature verification PASSED
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 18:47:21,601 - __main__ - INFO - [verify_meditation_feature.py:159] - Verification results saved to meditation_verification_results.json
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] MEDITATION FEATURE VERIFICATION SUMMARY
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] ✅ ALL CHECKS PASSED
+2026-01-18 18:47:21,621 - __main__ - INFO - [MEDITATION VERIFY] File Checks:
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/js/meditation.js
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/js/global_scroll_manager.js
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ templates/wellness_toolbox/index.html
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/css/custom.css
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] Pattern Checks:
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] File: static/js/meditation.js
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ document.addEventListener('DOMContentLoaded'
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ function speakText
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ function initializeAudio
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ document.querySelectorAll('.test-sound').forEach
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] ✓ Promise.race
+2026-01-18 18:47:21,622 - __main__ - INFO - [MEDITATION VERIFY] File: templates/wellness_toolbox/index.html
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ✓ meditation-guidance
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ✓ test-sound
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ✓ background-sound
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ✓ meditation-controls
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] Next Steps:
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] 1. The meditation feature is correctly configured
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] 2. No further action is needed
+2026-01-18 18:47:21,623 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 18:47:21,624 - __main__ - INFO - Meditation feature verification successful
+2026-01-18 23:15:02,885 - __main__ - INFO - Starting fork initialization at 2026-01-18 23:15:02.885032
+2026-01-18 23:15:03,146 - __main__ - INFO - Found 0 latest documentation files by date
+2026-01-18 23:15:03,146 - __main__ - INFO - Found biometric data setup documentation
+2026-01-18 23:15:03,146 - __main__ - INFO - Found meditation challenges documentation
+2026-01-18 23:15:03,146 - __main__ - INFO - Found fork initialization guide (May 2025)
+2026-01-18 23:15:03,146 - __main__ - INFO - Found location wellness documentation
+2026-01-18 23:15:03,148 - __main__ - INFO - Verifying environment variables...
+2026-01-18 23:15:03,149 - __main__ - INFO - Environment verification completed
+2026-01-18 23:15:03,149 - __main__ - INFO - Initializing database...
+2026-01-18 23:15:03,149 - __main__ - INFO - Running database migrations with forced reinitialization...
+2026-01-18 23:15:06,332 - __main__ - ERROR - Database migration failed with exit code 1
+2026-01-18 23:15:06,333 - __main__ - ERROR - Output: 2026-01-18 23:15:04,166 - __main__ - INFO - Starting database migration process...
+2026-01-18 23:15:04,166 - __main__ - INFO - Force reinitialization requested
+2026-01-18 23:15:05,753 - __main__ - INFO - Forcing migration reinitialization...
+2026-01-18 23:15:05,753 - __main__ - INFO - Clearing alembic version data...
+2026-01-18 23:15:05,827 - __main__ - INFO - Cleaned up alembic version data
+2026-01-18 23:15:05,827 - __main__ - INFO - Using existing migrations directory
+2026-01-18 23:15:05,827 - __main__ - INFO - Applying database migrations...
+
+Database migrations failed. Check logs for details.
+
+2026-01-18 23:15:06,333 - __main__ - ERROR - Error output: INFO  [alembic.runtime.migration] Context impl PostgresqlImpl.
+INFO  [alembic.runtime.migration] Will assume transactional DDL.
+
+2026-01-18 23:15:06,333 - __main__ - INFO - Retrying database migrations without forced reinitialization...
+2026-01-18 23:15:07,447 - __main__ - INFO - Database migrations completed successfully on retry
+2026-01-18 23:15:07,448 - __main__ - INFO - Setting up default user...
+2026-01-18 23:15:09,435 - __main__ - INFO - Default user setup completed successfully
+2026-01-18 23:15:09,436 - __main__ - INFO - Verifying biometric data integration...
+2026-01-18 23:15:11,032 - __main__ - INFO - Biometric data verification successful
+2026-01-18 23:15:11,034 - __main__ - INFO - Output: 2026-01-18 23:15:09,926 - __main__ - INFO - Starting biometric data verification...
+2026-01-18 23:15:09,926 - __main__ - INFO - Testing Oura Ring API connection...
+2026-01-18 23:15:09,926 - __main__ - INFO - Using Oura API key: MZTQ...XBHC
+2026-01-18 23:15:10,243 - __main__ - INFO - Successfully connected to Oura Ring API
+2026-01-18 23:15:10,243 - __main__ - INFO - Testing Ultrahuman Ring API connection...
+2026-01-18 23:15:10,243 - __main__ - INFO - Using Ultrahuman API key: eyJh...MfNw
+2026-01-18 23:15:10,243 - __main__ - INFO - Trying Ultrahuman API endpoint: https://partner.ultrahuman.com/api/v1/user
+2026-01-18 23:15:10,366 - __main__ - WARNING - Endpoint https://partner.ultrahuman.com/api/v1/user failed with status code: 404
+2026-01-18 23:15:10,366 - __main__ - INFO - Trying Ultrahuman API endpoint: https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com
+2026-01-18 23:15:10,485 - __main__ - WARNING - Endpoint https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com failed with status code: 400
+2026-01-18 23:15:10,486 - __main__ - ERROR - All Ultrahuman API endpoints failed to connect
+2026-01-18 23:15:10,486 - __main__ - INFO - Attempting to retrieve current biometric data...
+2026-01-18 23:15:10,486 - __main__ - INFO - Fetching data from Oura Ring API...
+2026-01-18 23:15:10,727 - __main__ - INFO - Successfully retrieved 214 heart rate records from Oura
+2026-01-18 23:15:10,727 - __main__ - INFO - Fetching data from Ultrahuman Ring API...
+2026-01-18 23:15:10,727 - __main__ - INFO - Requesting Ultrahuman data from: https://partner.ultrahuman.com/api/v1/metrics?email=huskyauto@gmail.com&date=2026-01-18
+2026-01-18 23:15:10,993 - __main__ - INFO - Ultrahuman API response structure: ['data', 'error', 'status']
+2026-01-18 23:15:10,994 - __main__ - INFO - Successfully retrieved metrics data from Ultrahuman Partner API
+
+Biometric Data Verification Results:
+====================================
+Oura Ring API:          ✓ Connected
+Ultrahuman Ring API:    ✗ Not Connected
+Oura Data Retrieval:    ✓ Success
+Ultrahuman Data:        ✓ Success
+====================================
+
+Verification Successful: Real-time biometric data is accessible
+
+2026-01-18 23:15:11,034 - __main__ - INFO - Verifying meditation feature functionality...
+2026-01-18 23:15:11,112 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:138] - Starting meditation feature verification...
+2026-01-18 23:15:11,112 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:69] - Checking required files...
+2026-01-18 23:15:11,112 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/js/meditation.js
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/js/global_scroll_manager.js
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: templates/wellness_toolbox/index.html
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:77] - ✓ File exists: static/css/custom.css
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:86] - Checking required code patterns...
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: document.addEventListener('DOMContentLoaded'
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: function speakText
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: function initializeAudio
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: document.querySelectorAll('.test-sound').forEach
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,102 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in static/js/meditation.js: Promise.race
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: meditation-guidance
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: test-sound
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: background-sound
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:110] - ✓ Pattern found in templates/wellness_toolbox/index.html: meditation-controls
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:148] - Meditation feature verification PASSED
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] 2026-01-18 23:15:11,103 - __main__ - INFO - [verify_meditation_feature.py:159] - Verification results saved to meditation_verification_results.json
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] MEDITATION FEATURE VERIFICATION SUMMARY
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 23:15:11,113 - __main__ - INFO - [MEDITATION VERIFY] ✅ ALL CHECKS PASSED
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] File Checks:
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/js/meditation.js
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/js/global_scroll_manager.js
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ templates/wellness_toolbox/index.html
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ static/css/custom.css
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] Pattern Checks:
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] File: static/js/meditation.js
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ document.addEventListener('DOMContentLoaded'
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ function speakText
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ function initializeAudio
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ document.querySelectorAll('.test-sound').forEach
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ Promise.race
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] File: templates/wellness_toolbox/index.html
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ meditation-guidance
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ test-sound
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ background-sound
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ✓ meditation-controls
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] Next Steps:
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] 1. The meditation feature is correctly configured
+2026-01-18 23:15:11,114 - __main__ - INFO - [MEDITATION VERIFY] 2. No further action is needed
+2026-01-18 23:15:11,115 - __main__ - INFO - [MEDITATION VERIFY] ==================================================
+2026-01-18 23:15:11,115 - __main__ - INFO - Meditation feature verification successful
