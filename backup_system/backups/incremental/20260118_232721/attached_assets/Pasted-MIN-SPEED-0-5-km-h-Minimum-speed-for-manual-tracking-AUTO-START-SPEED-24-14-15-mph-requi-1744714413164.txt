@@ -1,0 +1,72 @@
+MIN_SPEED = 0.5 km/h // Minimum speed for manual tracking AUTO_START_SPEED = 24.14 // 15 mph - required for auto-start TRIGGER_SPEED = 16.1 // 10 mph - maximum for alerts
+ 
+### Auto-Start Behavior
+1. Manual Start/Stop Control
+   - User can manually start/stop tracking at any time
+   - Manual stop is respected until high-speed threshold is reached
+   - `manuallyStoppedTracking` flag prevents unwanted auto-restart
+ 
+2. Speed-Based Auto-Start Logic
+   - Only activates after reaching 15 mph (24.14 km/h)
+   - Requires sustained speed above threshold
+   - Resets when manually stopped until high speed is reached again
+ 
+3. State Management
+   ```javascript
+   isTrackingActive        // Current tracking state
+   hasReachedAutoStartSpeed // High-speed threshold reached
+   autoStartEnabled        // Auto-start capability enabled
+   manuallyStoppedTracking // Manual stop override
+Alert Timing
+•	Minimum interval between alerts: 60 seconds
+•	Extended cooldown for same restaurant: 300 seconds (5 minutes)
+•	Automatic speed-based activation when speed drops below threshold
+Voice Synthesis Configuration
+utterance.rate = 0.9     // Slightly slower than default for clarity
+utterance.pitch = 1.0    // Standard pitch
+utterance.volume = 1.0   // Full volume
+Configuration Parameters
+Location Tracking
+SEARCH_RADIUS = 100  # meters - closer range for better accuracy
+ALERT_RADIUS = 50    # meters - smaller radius for precise alerts
+SPEED_THRESHOLD = 0.5  # km/h - very low threshold for stationary detection
+MIN_ACCURACY = 100    # meters (GPS accuracy threshold)
+MIN_SPEED_COUNT = 2   # Minimum speed readings required
+API Configuration
+•	Blueprint URL prefix: '/location-wellness'
+•	Required endpoints:
+/api/test-api-key   # Test Google Maps API key
+/api/test-places    # Test nearby places detection
+/api/location-status # Update location and get alerts
+Troubleshooting
+Common Issues and Solutions
+1.	Auto-Start Not Working
+•	Verify speed threshold (24.14 km/h / 15 mph required)
+•	Check if manually stopped (requires reaching high speed again)
+•	Confirm GPS accuracy meets minimum threshold
+•	Review console logs for speed monitoring status
+2.	Unwanted Auto-Start
+•	Check manuallyStoppedTracking flag
+•	Verify speed calculations
+•	Ensure proper state reset after manual stop
+•	Review auto-start conditions in console logs
+3.	API Test Failures
+•	Verify correct blueprint URL prefix ('/location-wellness')
+•	Check Google Maps API key configuration
+•	Confirm endpoint accessibility
+•	Review server response in developer console
+4.	Location Alert Issues
+•	Verify GPS accuracy meets minimum threshold
+•	Check speed calculations
+•	Confirm Places API response
+•	Review location tracking status
+•	Check alert cooldown periods
+State Debugging
+Console log format for speed monitoring:
+{
+    currentSpeed: "0.05",        // Current speed in km/h
+    averageSpeed: "0.04",        // Average of recent readings
+    hasReachedAutoStart: false,  // High-speed threshold status
+    manuallyStoppedTracking: true // Manual stop override status
+}
+
