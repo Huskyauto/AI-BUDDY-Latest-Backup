@@ -1,0 +1,29 @@
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Quick Water Intake</h5>
+        <form id="water-log-form" class="mb-3">
+            <div class="input-group">
+                <button type="button" class="btn btn-outline-secondary" id="water-decrement">
+                    <i class="fas fa-minus"></i>
+                </button>
+                <input type="number" id="water-amount" class="form-control text-center" value="0" min="0" step="8">
+                <button type="button" class="btn btn-outline-secondary" id="water-increment">
+                    <i class="fas fa-plus"></i>
+                </button>
+                <button type="submit" class="btn btn-primary">Log Water</button>
+            </div>
+        </form>
+        <div class="mt-2">
+            <span>Daily Total: <span id="daily-water">{{ initial_data.totalWater }}</span> oz</span>
+            <div class="progress mt-2">
+                <div id="water-progress" class="progress-bar" role="progressbar" 
+                     style="width: {{ (initial_data.totalWater / initial_data.waterGoal * 100) if initial_data.waterGoal > 0 else 0 }}%" 
+                     aria-valuenow="{{ (initial_data.totalWater / initial_data.waterGoal * 100) if initial_data.waterGoal > 0 else 0 }}" 
+                     aria-valuemin="0" 
+                     aria-valuemax="100">
+                </div>
+            </div>
+            <small class="text-muted">Goal: <span id="water-goal">{{ initial_data.waterGoal }}</span> oz</small>
+        </div>
+    </div>
+</div>
