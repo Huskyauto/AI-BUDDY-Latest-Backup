@@ -1,0 +1,30 @@
+2025-03-24 01:34:56,498 - __main__ - INFO - Creating backup directory...
+2025-03-24 01:34:56,498 - __main__ - INFO - Backed up app.py
+2025-03-24 01:34:56,498 - __main__ - INFO - Backed up models.py
+2025-03-24 01:34:56,499 - __main__ - INFO - Backed up main.py
+2025-03-24 01:34:56,499 - __main__ - INFO - Backed up extensions.py
+2025-03-24 01:34:56,499 - __main__ - INFO - Backed up fasting.py
+2025-03-24 01:34:56,500 - __main__ - INFO - Backed up auth.py
+2025-03-24 01:34:56,500 - __main__ - INFO - Backed up dashboard.py
+2025-03-24 01:34:56,500 - __main__ - INFO - Backed up ring_routes.py
+2025-03-24 01:34:56,501 - __main__ - INFO - Backed up food_tracker.py
+2025-03-24 01:34:56,501 - __main__ - INFO - Backed up wellness_toolbox.py
+2025-03-24 01:34:56,501 - __main__ - INFO - Backed up stress_monitoring.py
+2025-03-24 01:34:56,502 - __main__ - INFO - Backed up static/js/fasting.js
+2025-03-24 01:34:56,502 - __main__ - INFO - Backed up templates/wellness_toolbox/index.html
+2025-03-24 01:34:56,502 - __main__ - INFO - Backed up templates/base.html
+2025-03-24 01:34:56,502 - __main__ - INFO - Backed up deployment_config.py
+2025-03-24 01:34:56,503 - __main__ - INFO - Backed up .env
+2025-03-24 01:34:56,503 - __main__ - INFO - Initializing new fork...
+2025-03-24 01:34:56,895 - init_fork - INFO - Starting fork initialization...
+2025-03-24 01:34:56,895 - init_fork - INFO - Verifying environment variables...
+2025-03-24 01:34:56,895 - init_fork - INFO - All required environment variables verified
+2025-03-24 01:34:56,895 - init_fork - INFO - Initializing database...
+2025-03-24 01:34:58,104 - init_fork - INFO - Database connection verified successfully
+2025-03-24 01:34:58,294 - init_fork - INFO - Database tables created successfully
+2025-03-24 01:34:58,294 - init_fork - INFO - Fork initialization completed successfully
+2025-03-24 01:34:58,295 - __main__ - INFO - Fork creation completed successfully on 2025_03_24
+
+New fork created successfully!
+The system has been initialized with all recent fixes.
+You can now start using the new fork.
