@@ -1,0 +1,243 @@
+import os
+import logging
+from datetime import datetime, timedelta
+from typing import Dict, Any, Optional
+from functools import lru_cache
+import requests
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+class RingDataManager:
+    def __init__(self):
+        # Get API keys from environment variables
+        self.oura_api_key = os.environ.get('OURA_API_KEY')
+        self.ultrahuman_api_key = os.environ.get('ULTRAHUMAN_API_KEY')
+        if not self.oura_api_key or not self.ultrahuman_api_key:
+            logger.error("Missing required API keys")
+            logger.debug(f"Oura API Key present: {bool(self.oura_api_key)}")
+            logger.debug(f"Ultrahuman API Key present: {bool(self.ultrahuman_api_key)}")
+
+        self.oura_base_url = "https://api.ouraring.com/v2"
+        self.ultrahuman_base_url = "https://partner.ultrahuman.com/api/v1"
+        self.authorized_email = "huskyauto@gmail.com"  # Corrected authorized email
+
+        logger.info("RingDataManager initialized successfully")
+
+    def _check_authorization(self, user_email: Optional[str]) -> bool:
+        """Check if the user is authorized to access ring data"""
+        if not user_email:
+            logger.warning('No email provided for authorization check')
+            return False
+
+        is_authorized = user_email.lower() == self.authorized_email.lower()
+        logger.debug(f"Authorization check for {user_email}: {is_authorized}")
+        return is_authorized
+
+    def _validate_heart_rate(self, value: Any) -> int:
+        """Validate and convert heart rate value"""
+        try:
+            hr = float(value)
+            if 30 <= hr <= 200:  # Basic range validation
+                return int(hr)
+            logger.warning(f"Heart rate {hr} outside normal range")
+            return 0
+        except (ValueError, TypeError):
+            logger.error(f"Invalid heart rate value: {value}")
+            return 0
+
+    @lru_cache(maxsize=128)
+    def get_oura_data(self, user_id: int, user_email: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch Oura Ring data using the v2 API"""
+        try:
+            if not self._check_authorization(user_email):
+                logger.error(f"Unauthorized access attempt for Oura data: {user_email}")
+                return self._get_default_oura_response("Unauthorized access")
+
+            if not self.oura_api_key:
+                logger.error("Oura API key not configured")
+                return self._get_default_oura_response("API key not configured")
+
+            headers = {
+                "Authorization": f"Bearer {self.oura_api_key}",
+                "Content-Type": "application/json"
+            }
+
+            today = datetime.now().strftime("%Y-%m-%d")
+            yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+            # Fetch heart rate data
+            heart_rate_response = requests.get(
+                f"{self.oura_base_url}/usercollection/heartrate",
+                headers=headers,
+                params={
+                    "start_datetime": f"{today}T00:00:00Z",
+                    "end_datetime": f"{today}T23:59:59Z"
+                },
+                timeout=10
+            )
+            heart_rate_response.raise_for_status()
+            heart_rate_data = heart_rate_response.json()
+            logger.debug(f"Oura heart rate response: {heart_rate_data}")
+
+            # Process heart rate data
+            latest_heart_rate = 0
+            if heart_rate_data.get('data', []):
+                latest_hr = heart_rate_data['data'][-1].get('bpm', 0)
+                latest_heart_rate = self._validate_heart_rate(latest_hr)
+
+            # Fetch readiness data
+            readiness_response = requests.get(
+                f"{self.oura_base_url}/usercollection/daily_readiness",
+                headers=headers,
+                params={
+                    "start_date": yesterday,
+                    "end_date": today
+                },
+                timeout=10
+            )
+            readiness_response.raise_for_status()
+            readiness_data = readiness_response.json()
+            logger.debug(f"Oura readiness response: {readiness_data}")
+
+            # Process readiness data
+            hrv = 0
+            stress_level = 0
+            skin_temp = 36.5
+
+            if readiness_data.get('data', []):
+                latest_readiness = readiness_data['data'][-1]
+                contributors = latest_readiness.get('contributors', {})
+                recovery_score = contributors.get('recovery_index', 0)
+                hrv_balance = contributors.get('hrv_balance', 0)
+                hrv = latest_readiness.get('hrv', {}).get('value', 27)
+                stress_level = max(0, 100 - ((recovery_score + hrv_balance) / 2))
+
+                if 'temperature_deviation' in latest_readiness:
+                    skin_temp = 36.5 + latest_readiness['temperature_deviation']
+
+            return {
+                'heart_rate': latest_heart_rate,
+                'heart_rate_variability': hrv,
+                'stress_level': int(stress_level),
+                'skin_temperature': round(skin_temp, 1),
+                'timestamp': datetime.now().isoformat()
+            }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to fetch Oura data: {str(e)}", exc_info=True)
+            return self._get_default_oura_response(f"Failed to fetch data: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in get_oura_data: {str(e)}", exc_info=True)
+            return self._get_default_oura_response(f"Unexpected error: {str(e)}")
+
+    def _get_default_oura_response(self, error_message: str) -> Dict[str, Any]:
+        """Generate a default response for Oura data"""
+        return {
+            'heart_rate': 0,
+            'heart_rate_variability': 0,
+            'stress_level': 0,
+            'skin_temperature': 0,
+            'timestamp': datetime.now().isoformat(),
+            'error': error_message
+        }
+
+    def _get_default_ultrahuman_response(self, error_message: str) -> Dict[str, Any]:
+        """Generate a default response for Ultrahuman data"""
+        return {
+            'heart_rate': 0,
+            'heart_rate_variability': 0,
+            'recovery_index': 0,
+            'skin_temperature': 0,
+            'timestamp': datetime.now().isoformat(),
+            'error': error_message
+        }
+
+    @lru_cache(maxsize=128)
+    def get_ultrahuman_data(self, user_id: int, user_email: Optional[str] = None) -> Dict[str, Any]:
+        """Fetch Ultrahuman Ring data using partner API v1"""
+        try:
+            if not self._check_authorization(user_email):
+                logger.error(f"Unauthorized access attempt for Ultrahuman data: {user_email}")
+                return self._get_default_ultrahuman_response("Unauthorized access")
+
+            if not self.ultrahuman_api_key:
+                logger.error("Ultrahuman API key not configured")
+                return self._get_default_ultrahuman_response("API key not configured")
+
+            headers = {
+                "Authorization": self.ultrahuman_api_key,
+                "Content-Type": "application/json"
+            }
+
+            today = datetime.now()
+            formatted_date = today.strftime("%Y-%m-%d")
+
+            # Log request details
+            logger.info(f"Making Ultrahuman API request for date: {formatted_date}")
+
+            response = requests.get(
+                f"{self.ultrahuman_base_url}/metrics",
+                headers=headers,
+                params={
+                    "email": self.authorized_email,
+                    "date": formatted_date
+                },
+                timeout=10
+            )
+
+            response.raise_for_status()
+            data = response.json()
+            logger.debug(f"Ultrahuman API Response: {data}")
+
+            metrics = data.get('data', {}).get('metric_data', [])
+
+            # Extract metrics with proper validation
+            heart_rate = next((m for m in metrics if m['type'] == 'hr'), {}).get('object', {})
+            temperature = next((m for m in metrics if m['type'] == 'temp'), {}).get('object', {})
+            hrv = next((m for m in metrics if m['type'] == 'hrv'), {}).get('object', {})
+            recovery = next((m for m in metrics if m['type'] == 'recovery_index'), {}).get('object', {})
+
+            def get_most_recent_value(values, metric_type: str) -> float:
+                if not values:
+                    logger.debug(f'No values found for {metric_type}')
+                    return 0
+
+                valid_values = [v for v in values if isinstance(v, dict) and 'value' in v and 'timestamp' in v]
+                if not valid_values:
+                    logger.debug(f'No valid values found for {metric_type}')
+                    return 0
+
+                sorted_values = sorted(valid_values, key=lambda x: x['timestamp'])
+                latest_value = sorted_values[-1]['value'] if sorted_values else 0
+                logger.debug(f'Latest {metric_type} value: {latest_value}')
+                return latest_value
+
+            hr_value = self._validate_heart_rate(get_most_recent_value(heart_rate.get('values', []), 'heart_rate'))
+            hrv_value = get_most_recent_value(hrv.get('values', []), 'hrv')
+            temp_value = get_most_recent_value(temperature.get('values', []), 'temperature')
+            recovery_value = recovery.get('value', recovery.get('score', 0))
+
+            return {
+                'heart_rate': hr_value,
+                'heart_rate_variability': int(hrv_value),
+                'recovery_index': int(recovery_value),
+                'skin_temperature': round(float(temp_value), 1),
+                'timestamp': datetime.now().isoformat()
+            }
+
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Failed to fetch Ultrahuman data: {str(e)}", exc_info=True)
+            return self._get_default_ultrahuman_response(f"Failed to fetch data: {str(e)}")
+        except Exception as e:
+            logger.error(f"Unexpected error in get_ultrahuman_data: {str(e)}", exc_info=True)
+            return self._get_default_ultrahuman_response(f"Unexpected error: {str(e)}")
+
+    def clear_cache(self):
+        """Clear the cached data"""
+        self.get_oura_data.cache_clear()
+        self.get_ultrahuman_data.cache_clear()
+
+# Create a singleton instance
+ring_manager = RingDataManager()
