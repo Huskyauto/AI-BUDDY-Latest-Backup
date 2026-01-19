@@ -1,0 +1,123 @@
+Location Wellness Feature Documentation
+Overview
+The location wellness feature provides real-time health-conscious location tracking and contextual recommendations for healthier alternatives when users approach food establishments.
+
+Technical Parameters
+GPS and Location Detection
+GPS Accuracy Threshold: 20 meters
+Location Update Interval: 5 seconds
+Speed Buffer Size: 5 measurements
+Minimum Speed Measurements: 3 (for reliable speed calculation)
+Auto-Start Parameters
+Auto-Start Speed Threshold: 24.14 km/h (15 mph)
+Speed Calculation Method: Rolling average with outlier removal
+Speed Buffer Window: Last 5 measurements
+Speed Validation: Filters out unrealistic speeds
+Detection Thresholds
+Parking Speed: ≤ 10 km/h
+Drive-thru Speed: 10-20 km/h
+Alert Cooldown: 60 seconds
+Auto-Start Validation: Requires 3 valid speed measurements
+Search Radii
+Primary: 150m for food places
+Secondary: 2km for parks/outdoor
+Tertiary: 1.5km for walking trails
+Auto-Start Implementation Details
+1. Speed Monitoring System
+// Constants
+const AUTO_START_SPEED_THRESHOLD = 24.14; // 15 mph
+const SPEED_BUFFER_SIZE = 5;
+const MIN_SPEED_MEASUREMENTS = 3;
+// Speed calculation using Haversine formula
+function calculateSpeed(lat1, lon1, lat2, lon2, timeDiff) {
+    // Calculate distance between coordinates
+    const R = 6371; // Earth's radius in km
+    const distance = /* Haversine calculation */
+    // Convert to km/h
+    return distance / (timeDiff / 3600);
+}
+2. Speed Buffer Management
+Maintains a rolling buffer of the last 5 speed measurements
+Removes outliers by sorting speeds and excluding highest/lowest values
+Calculates average speed from remaining valid measurements
+3. Auto-Start Trigger Conditions
+Current GPS accuracy better than 20 meters
+At least 3 valid speed measurements in buffer
+Average speed exceeds 24.14 km/h (15 mph)
+Location tracking not already active
+4. Implementation Flow
+Page loads → Initializes speed monitoring
+GPS provides position updates every 5 seconds
+Speed calculated between consecutive positions
+Valid speeds added to rolling buffer
+Average speed calculated after outlier removal
+When average exceeds threshold → Auto-starts tracking
+Key Components
+1. Location Tracking
+Continuous GPS monitoring with accuracy validation
+Speed and deceleration calculation
+Parking lot and drive-thru detection
+2. Place Detection
+Food establishment proximity detection
+Multi-radius search for healthy alternatives
+Place type categorization (parks, trails, fitness)
+3. Health Recommendations
+Contextual suggestion generation
+Voice alerts with natural pauses
+Fallback suggestions when no nearby places found
+Testing Guidelines
+Auto-Start Testing
+Verify speed calculation accuracy:
+Drive at constant speeds
+Compare with vehicle speedometer
+Check speed buffer contents
+Test auto-start triggers:
+Accelerate past 15 mph
+Verify tracking activation
+Check console logs for speed data
+Validate GPS accuracy handling:
+Test in areas with varying GPS signal
+Verify accuracy threshold enforcement
+Location Detection Testing
+Drive near food establishments at various speeds
+Test different approach patterns:
+Direct approach
+Gradual deceleration
+Quick stops
+Verify detection accuracy at different GPS accuracy levels
+Troubleshooting
+Common Issues
+Auto-Start Not Triggering
+
+Check GPS accuracy value
+Verify speed buffer contents
+Confirm minimum speed measurements
+Check console logs for speed monitoring data
+Inaccurate Speed Detection
+
+Verify GPS signal strength
+Check position update frequency
+Confirm speed calculation parameters
+Review outlier removal process
+Missing Alerts
+
+Check cooldown timer
+Verify GPS accuracy meets minimum threshold
+Confirm voice synthesis initialization
+Integration Details
+GPS Integration
+Uses HTML5 Geolocation API
+High accuracy mode enabled
+5-second update interval
+Minimum accuracy threshold: 20 meters
+Voice Synthesis
+Uses Web Speech API
+Configurable voice selection
+Rate and pitch optimization for clarity
+Future Enhancements
+Machine learning for improved speed prediction
+Enhanced auto-start algorithm with acceleration data
+Personalized trigger speed thresholds
+Extended place type support
+Version History
+See CHANGELOG.md for detailed version history and updates.
