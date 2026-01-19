@@ -1,0 +1,122 @@
+from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user
+import logging
+import os
+from openai import OpenAI
+
+# Configure logging
+logger = logging.getLogger(__name__)
+
+# Initialize OpenAI client with error handling
+try:
+    api_key = os.environ.get('OPENAI_API_KEY')
+    if not api_key:
+        logger.error("OpenAI API key not found in environment variables")
+        client = None
+    else:
+        client = OpenAI(api_key=api_key)
+except Exception as e:
+    logger.error(f"Error initializing OpenAI client: {str(e)}")
+    client = None
+
+health_prediction_bp = Blueprint('health_prediction', __name__)
+
+SYSTEM_PROMPT = """You are an AI health assistant for AI-BUDDY, focusing on health risk prediction and lifestyle recommendations. Use the provided biometric data and user inputs to:
+1. Analyze potential health risks based on the user's symptoms, lifestyle, and biometric data
+2. Provide evidence-based recommendations while maintaining a supportive tone
+3. Suggest lifestyle modifications that are realistic and achievable
+4. Emphasize preventive care and early intervention when appropriate
+5. Consider both physical and mental health aspects in your analysis
+
+Important guidelines:
+- Always encourage users to consult healthcare professionals for serious concerns
+- Provide clear explanations for your recommendations
+- Stay within your scope as an AI assistant
+- Never diagnose specific conditions
+- Maintain a supportive and empathetic tone
+- Focus on general wellness and preventive measures
+
+Note: If you don't have enough information to make a reliable assessment, ask clarifying questions to better understand the user's situation.
+"""
+
+@health_prediction_bp.route('/health-prediction')
+@login_required
+def index():
+    return render_template('health_prediction/index.html')
+
+@health_prediction_bp.route('/api/health-chat', methods=['POST'])
+@login_required
+def chat():
+    """Handle health prediction chat messages and generate responses."""
+    try:
+        if not client:
+            logger.error("OpenAI client not properly initialized")
+            return jsonify({
+                "success": False,
+                "error": "AI service not properly configured"
+            }), 500
+
+        data = request.get_json()
+        if not data:
+            return jsonify({"success": False, "error": "No data provided"}), 400
+
+        user_message = data.get('message')
+        chat_history = data.get('history', [])
+
+        if not user_message:
+            return jsonify({"success": False, "error": "No message provided"}), 400
+
+        # Log request details
+        logger.debug(f"Processing health chat request - Message: {user_message}")
+        logger.debug(f"Chat history length: {len(chat_history)}")
+
+        # Prepare messages array
+        messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
+        # Add chat history
+        for msg in chat_history:
+            role = "user" if msg["type"] == "user" else "assistant"
+            messages.append({"role": role, "content": msg["content"]})
+
+        # Add current message
+        messages.append({"role": "user", "content": user_message})
+
+        try:
+            response = client.chat.completions.create(
+                model="gpt-4o",  # Using the latest model
+                messages=messages,
+                temperature=0.7,
+                max_tokens=500,
+                presence_penalty=0.6,
+                frequency_penalty=0.3
+            )
+
+            if not response.choices:
+                logger.error("No response choices received from OpenAI")
+                return jsonify({
+                    "success": False,
+                    "error": "Failed to generate response"
+                }), 500
+
+            ai_response = response.choices[0].message.content.strip()
+            logger.debug("Successfully received response from GPT-4o")
+
+            return jsonify({
+                "success": True,
+                "response": ai_response
+            })
+
+        except Exception as e:
+            error_type = type(e).__name__
+            logger.error(f"OpenAI API error: {error_type} - {str(e)}")
+            return jsonify({
+                "success": False,
+                "error": "Failed to get response from AI service"
+            }), 500
+
+    except Exception as e:
+        logger.error(f"Error in health prediction chat: {str(e)}", exc_info=True)
+        return jsonify({
+            "success": False,
+            "error": "An unexpected error occurred"
+        }), 500
