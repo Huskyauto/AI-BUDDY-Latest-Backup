@@ -1,0 +1,108 @@
+DEBUG:ring_routes:Sending request to GPT-4o
+DEBUG:openai._base_client:Request options: {'method': 'post', 'url': '/chat/completions', 'files': None, 'json_data': {'messages': [{'role': 'system', 'content': "You are an expert in real-time biometric analysis and health optimization.\n                Given the current biomarker readings and context, provide specific insights and actionable recommendations.\n                Focus on the most significant health signals and their immediate implications.\n                Structure your response as a JSON object with the following keys:\n                - alert_summary: A clear description of the main health signal that triggered the analysis\n                - current_state: A detailed interpretation of the user's current physiological state\n                - primary_recommendations: List of 2-3 immediate actions to address the main concern\n                - secondary_recommendations: List of 2-3 preventive or maintenance actions\n                - monitoring_focus: What specific metrics the user should pay attention to in the next few hours"}, {'role': 'user', 'content': 'Analyze these real-time biomarker readings and provide detailed insights:\n{\n  "trigger_event": {\n    "type": "recovery",\n    "description": "Compromised recovery capacity: 68/100",\n    "severity": "moderate",\n    "value": 68\n  },\n  "temporal_context": {\n    "time_of_day": "morning",\n    "hour": 3,\n    "circadian_phase": "rest"\n  },\n  "current_state": {\n    "stress_level": {\n      "value": 50,\n      "category": "moderate"\n    },\n    "recovery_status": {\n      "value": 68,\n      "category": "compromised"\n    },\n    "autonomic_balance": {\n      "hrv_oura": 45,\n      "hrv_ultrahuman": 48,\n      "cross_device_alignment": 3,\n      "state": "balanced"\n    },\n    "temperature_regulation": {\n      "oura_temp": 36.5,\n      "ultrahuman_temp": 36.4,\n      "differential": 0.10000000000000142,\n      "stability": "stable"\n    }\n  },\n  "active_alerts": [\n    {\n      "type": "recovery",\n      "severity": "moderate",\n      "value": 68,\n      "description": "Recovery capacity is limited: 68/100"\n    }\n  ]\n}'}], 'model': 'gpt-4o', 'response_format': {'type': 'json_object'}, 'temperature': 0.7}}
+DEBUG:openai._base_client:Sending HTTP Request: POST https://api.openai.com/v1/chat/completions
+DEBUG:httpcore.connection:connect_tcp.started host='api.openai.com' port=443 local_address=None timeout=5.0 socket_options=None
+DEBUG:httpcore.connection:connect_tcp.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fda3e927750>
+DEBUG:httpcore.connection:start_tls.started ssl_context=<ssl.SSLContext object at 0x7fda3f5b3c80> server_hostname='api.openai.com' timeout=5.0
+DEBUG:httpcore.connection:start_tls.complete return_value=<httpcore._backends.sync.SyncStream object at 0x7fda3eaa8990>
+DEBUG:httpcore.http11:send_request_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_headers.complete
+DEBUG:httpcore.http11:send_request_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:send_request_body.complete
+DEBUG:httpcore.http11:receive_response_headers.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_headers.complete return_value=(b'HTTP/1.1', 200, b'OK', [(b'Date', b'Fri, 10 Jan 2025 03:27:29 GMT'), (b'Content-Type', b'application/json'), (b'Transfer-Encoding', b'chunked'), (b'Connection', b'keep-alive'), (b'access-control-expose-headers', b'X-Request-ID'), (b'openai-organization', b'user-6xkw0c5w3z48amzsu6uvfqsx'), (b'openai-processing-ms', b'5820'), (b'openai-version', b'2020-10-01'), (b'x-ratelimit-limit-requests', b'5000'), (b'x-ratelimit-limit-tokens', b'800000'), (b'x-ratelimit-remaining-requests', b'4999'), (b'x-ratelimit-remaining-tokens', b'799509'), (b'x-ratelimit-reset-requests', b'12ms'), (b'x-ratelimit-reset-tokens', b'36ms'), (b'x-request-id', b'req_1efd42943145f7258d0b5011c3f94ebb'), (b'strict-transport-security', b'max-age=31536000; includeSubDomains; preload'), (b'CF-Cache-Status', b'DYNAMIC'), (b'Set-Cookie', b'__cf_bm=vsSqcOYIZvA1YWUTFLc3nPHqgn3hHkYJRzHlTnXk4vU-1736479649-1.0.1.1-oHsnnZnjj76r_EvNcIH8emLLydiBx6mAyNZBhHNLlqd2YE7l0kYncIWGe7oSEv7hR75_UZNnw.n9IoXZW84IuQ; path=/; expires=Fri, 10-Jan-25 03:57:29 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'X-Content-Type-Options', b'nosniff'), (b'Set-Cookie', b'_cfuvid=b38JcJkjwYaR1tHT149sTALKVZBr8Ir9.ihsr.KLXak-1736479649132-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), (b'Server', b'cloudflare'), (b'CF-RAY', b'8ff9922a4aede826-ORD'), (b'Content-Encoding', b'gzip'), (b'alt-svc', b'h3=":443"; ma=86400')])
+INFO:httpx:HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+DEBUG:httpcore.http11:receive_response_body.started request=<Request [b'POST']>
+DEBUG:httpcore.http11:receive_response_body.complete
+DEBUG:httpcore.http11:response_closed.started
+DEBUG:httpcore.http11:response_closed.complete
+DEBUG:openai._base_client:HTTP Response: POST https://api.openai.com/v1/chat/completions "200 OK" Headers([('date', 'Fri, 10 Jan 2025 03:27:29 GMT'), ('content-type', 'application/json'), ('transfer-encoding', 'chunked'), ('connection', 'keep-alive'), ('access-control-expose-headers', 'X-Request-ID'), ('openai-organization', 'user-6xkw0c5w3z48amzsu6uvfqsx'), ('openai-processing-ms', '5820'), ('openai-version', '2020-10-01'), ('x-ratelimit-limit-requests', '5000'), ('x-ratelimit-limit-tokens', '800000'), ('x-ratelimit-remaining-requests', '4999'), ('x-ratelimit-remaining-tokens', '799509'), ('x-ratelimit-reset-requests', '12ms'), ('x-ratelimit-reset-tokens', '36ms'), ('x-request-id', 'req_1efd42943145f7258d0b5011c3f94ebb'), ('strict-transport-security', 'max-age=31536000; includeSubDomains; preload'), ('cf-cache-status', 'DYNAMIC'), ('set-cookie', '__cf_bm=vsSqcOYIZvA1YWUTFLc3nPHqgn3hHkYJRzHlTnXk4vU-1736479649-1.0.1.1-oHsnnZnjj76r_EvNcIH8emLLydiBx6mAyNZBhHNLlqd2YE7l0kYncIWGe7oSEv7hR75_UZNnw.n9IoXZW84IuQ; path=/; expires=Fri, 10-Jan-25 03:57:29 GMT; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('x-content-type-options', 'nosniff'), ('set-cookie', '_cfuvid=b38JcJkjwYaR1tHT149sTALKVZBr8Ir9.ihsr.KLXak-1736479649132-0.0.1.1-604800000; path=/; domain=.api.openai.com; HttpOnly; Secure; SameSite=None'), ('server', 'cloudflare'), ('cf-ray', '8ff9922a4aede826-ORD'), ('content-encoding', 'gzip'), ('alt-svc', 'h3=":443"; ma=86400')])
+DEBUG:openai._base_client:request_id: req_1efd42943145f7258d0b5011c3f94ebb
+DEBUG:ring_routes:Raw GPT response: {
+  "alert_summary": "The main health signal triggering this analysis is the compromised recovery capacity, which is currently at 68/100, indicating a moderate level of concern.",
+  "current_state": "The user is experiencing moderate stress levels with a value of 50. Recovery status is compromised, suggesting that the body is not fully recuperating as expected. Despite this, autonomic balance, as indicated by HRV measures from Oura and Ultrahuman, is in a balanced state, showing slight cross-device variation but overall alignment. Temperature regulation is stable, with minimal differential between devices.",
+  "primary_recommendations": [
+    "Engage in a brief period of guided relaxation or meditation (5-10 minutes) to help reduce stress levels.",
+    "Avoid any strenuous physical activity to allow the body to focus on recovery and recuperation.",
+    "Ensure hydration by drinking a glass of water, as it can support recovery and stress management."
+  ],
+  "secondary_recommendations": [
+    "Plan for a restful evening with a consistent bedtime to improve sleep quality and enhance recovery.",
+    "Incorporate light stretching or yoga to assist in stress reduction and improve recovery capacity.",
+    "Monitor dietary intake to ensure balanced nutrition supporting recovery and stress management."
+  ],
+  "monitoring_focus": "Over the next few hours, pay particular attention to the recovery status and stress level metrics. Look for improvements in these areas, and ensure that temperature regulation remains stable. Additionally, track any changes in HRV readings to ensure autonomic balance remains stable."
+}
+INFO:ring_routes:Stored new biomarker insight for user 1
+DEBUG:ring_routes:Final insights structure: {
+  "alert_summary": "The main health signal triggering this analysis is the compromised recovery capacity, which is currently at 68/100, indicating a moderate level of concern.",
+  "current_state": "The user is experiencing moderate stress levels with a value of 50. Recovery status is compromised, suggesting that the body is not fully recuperating as expected. Despite this, autonomic balance, as indicated by HRV measures from Oura and Ultrahuman, is in a balanced state, showing slight cross-device variation but overall alignment. Temperature regulation is stable, with minimal differential between devices.",
+  "primary_recommendations": [
+    "Engage in a brief period of guided relaxation or meditation (5-10 minutes) to help reduce stress levels.",
+    "Avoid any strenuous physical activity to allow the body to focus on recovery and recuperation.",
+    "Ensure hydration by drinking a glass of water, as it can support recovery and stress management."
+  ],
+  "secondary_recommendations": [
+    "Plan for a restful evening with a consistent bedtime to improve sleep quality and enhance recovery.",
+    "Incorporate light stretching or yoga to assist in stress reduction and improve recovery capacity.",
+    "Monitor dietary intake to ensure balanced nutrition supporting recovery and stress management."
+  ],
+  "monitoring_focus": "Over the next few hours, pay particular attention to the recovery status and stress level metrics. Look for improvements in these areas, and ensure that temperature regulation remains stable. Additionally, track any changes in HRV readings to ensure autonomic balance remains stable."
+}
+INFO:ring_routes:Successfully generated AI insights
+DEBUG:ring_routes:Final insights structure: {
+  "alert_summary": "The main health signal triggering this analysis is the compromised recovery capacity, which is currently at 68/100, indicating a moderate level of concern.",
+  "current_state": "The user is experiencing moderate stress levels with a value of 50. Recovery status is compromised, suggesting that the body is not fully recuperating as expected. Despite this, autonomic balance, as indicated by HRV measures from Oura and Ultrahuman, is in a balanced state, showing slight cross-device variation but overall alignment. Temperature regulation is stable, with minimal differential between devices.",
+  "primary_recommendations": [
+    "Engage in a brief period of guided relaxation or meditation (5-10 minutes) to help reduce stress levels.",
+    "Avoid any strenuous physical activity to allow the body to focus on recovery and recuperation.",
+    "Ensure hydration by drinking a glass of water, as it can support recovery and stress management."
+  ],
+  "secondary_recommendations": [
+    "Plan for a restful evening with a consistent bedtime to improve sleep quality and enhance recovery.",
+    "Incorporate light stretching or yoga to assist in stress reduction and improve recovery capacity.",
+    "Monitor dietary intake to ensure balanced nutrition supporting recovery and stress management."
+  ],
+  "monitoring_focus": "Over the next few hours, pay particular attention to the recovery status and stress level metrics. Look for improvements in these areas, and ensure that temperature regulation remains stable. Additionally, track any changes in HRV readings to ensure autonomic balance remains stable."
+}
+DEBUG:ring_routes:Sending response: {
+  "status": "success",
+  "show_ring_data": true,
+  "oura": {
+    "stress_level": 50,
+    "heart_rate": 70,
+    "heart_rate_variability": 45,
+    "skin_temperature": 36.5
+  },
+  "ultrahuman": {
+    "recovery_index": 68,
+    "heart_rate": 70,
+    "heart_rate_variability": 48,
+    "skin_temperature": 36.4
+  },
+  "alerts": [
+    {
+      "type": "recovery",
+      "severity": "moderate",
+      "value": 68,
+      "description": "Recovery capacity is limited: 68/100"
+    }
+  ],
+  "insights": {
+    "alert_summary": "The main health signal triggering this analysis is the compromised recovery capacity, which is currently at 68/100, indicating a moderate level of concern.",
+    "current_state": "The user is experiencing moderate stress levels with a value of 50. Recovery status is compromised, suggesting that the body is not fully recuperating as expected. Despite this, autonomic balance, as indicated by HRV measures from Oura and Ultrahuman, is in a balanced state, showing slight cross-device variation but overall alignment. Temperature regulation is stable, with minimal differential between devices.",
+    "primary_recommendations": [
+      "Engage in a brief period of guided relaxation or meditation (5-10 minutes) to help reduce stress levels.",
+      "Avoid any strenuous physical activity to allow the body to focus on recovery and recuperation.",
+      "Ensure hydration by drinking a glass of water, as it can support recovery and stress management."
+    ],
+    "secondary_recommendations": [
+      "Plan for a restful evening with a consistent bedtime to improve sleep quality and enhance recovery.",
+      "Incorporate light stretching or yoga to assist in stress reduction and improve recovery capacity.",
+      "Monitor dietary intake to ensure balanced nutrition supporting recovery and stress management."
+    ],
+    "monitoring_focus": "Over the next few hours, pay particular attention to the recovery status and stress level metrics. Look for improvements in these areas, and ensure that temperature regulation remains stable. Additionally, track any changes in HRV readings to ensure autonomic balance remains stable."
+  },
+  "last_updated": "2025-01-10T03:27:29.253365"
+}
+INFO:werkzeug:172.31.196.37 - - [10/Jan/2025 03:27:29] "GET /api/ring-data HTTP/1.1" 200 -
