@@ -1,0 +1,85 @@
+Location Tracking System Documentation
+Overview
+The location tracking system monitors user location to provide mindful eating alerts when approaching fast food restaurants. It uses Google Places API for restaurant detection and implements intelligent speed-based alerting.
+Core Components
+LocationTracker Class
+•	Manages user location state and alert triggering logic
+•	Handles speed monitoring and location change detection
+•	Implements cooldown periods between alerts
+Key Settings
+•	SEARCH_RADIUS: 2000 meters (for restaurant detection)
+•	ALERT_RADIUS: 200 meters (proximity threshold)
+•	SPEED_THRESHOLD: 16.1 km/h (10 mph - for alert triggering)
+•	MIN_ACCURACY: 30 meters (GPS accuracy threshold)
+Alert Logic
+Speed-Based Alerts
+•	Alerts only trigger when:
+i.	User is stationary (speed < 1.0 km/h) at a new location
+ii.	User is moving slowly (speed ≤ 16.1 km/h / 10 mph)
+•	Suppresses alerts when:
+i.	Moving at higher speeds (passing by restaurants)
+ii.	GPS accuracy is poor
+iii.	Within cooldown period for same restaurant
+Location Reset Conditions
+•	Moving more than 100 meters from last alert location
+•	Sustained high speed detection (2+ readings above threshold)
+•	Manual tracking disable/enable
+Recent Improvements
+January 2025 Updates
+1.	Enhanced speed-based alerting:
+•	Prevents alerts while driving past restaurants
+•	Only triggers when actually stopping/slow near locations
+2.	Refined restaurant detection:
+•	Improved keyword search for major chains
+•	Added Wendy's and Burger King to priority search
+3.	Optimized reset logic:
+•	Reduced reset distance threshold to 100 meters
+•	More sensitive speed detection for faster resets
+4.	Improved logging for better debugging
+API Endpoints
+POST /api/location-status
+Handles location updates and alert triggering
+Input:
+{
+    "latitude": float,
+    "longitude": float,
+    "accuracy": float,
+    "speed": float,
+    "audio_completed": boolean
+}
+ 
+Response:
+{
+    "status": "active"|"scanning"|"error",
+    "suggestions": [string] (if active),
+    "audio_message": string (if active),
+    "restaurant_name": string (if active),
+    "distance": float (if active)
+}
+POST /api/location-tracking
+Toggles location tracking on/off
+Input:
+{
+    "enabled": boolean
+}
+ 
+Response:
+{
+    "status": "success"|"error",
+    "tracking_enabled": boolean
+}
+Dependencies
+•	Google Maps Places API
+•	Flask-Login for authentication
+•	Requests for API calls
+Configuration Requirements
+•	Valid Google Maps API key in environment variables
+•	PostgreSQL database for user session management
+•	Flask server running on port 5000
+Deployment Notes
+1.	Ensure all environment variables are set:
+•	GOOGLE_MAPS_API_KEY
+•	DATABASE_URL
+2.	Configure logging level (DEBUG for development)
+3.	Start server with host='0.0.0.0' for proper access
+
