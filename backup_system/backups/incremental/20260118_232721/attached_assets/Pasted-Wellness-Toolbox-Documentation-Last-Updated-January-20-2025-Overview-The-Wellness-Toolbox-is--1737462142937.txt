@@ -1,0 +1,105 @@
+Wellness Toolbox Documentation
+Last Updated: January 20, 2025
+
+Overview
+The Wellness Toolbox is an integrated feature of AI-BUDDY that provides comprehensive stress monitoring and meditation tracking capabilities. It supports both smart ring integration and manual stress logging to accommodate all users.
+
+Core Features
+1. Stress Monitoring
+Smart Ring Integration
+Real-time stress level monitoring via Oura and Ultrahuman rings
+Automatic stress level tracking during meditation sessions
+Current stress level display (0-100 scale)
+Average stress reduction metrics
+Manual Stress Logging
+Simple 1-10 scale stress level input
+Symptom tracking with common options:
+Headache
+Muscle Tension
+Fatigue
+Anxiety
+Optional notes field for detailed context
+History view of last 6 stress entries
+Temporary success/error notifications (2-second display)
+2. Meditation Features
+Guided Vipassana meditation sessions
+Customizable session durations:
+10 minutes
+20 minutes
+30 minutes
+45 minutes
+60 minutes
+Background sound options:
+Gentle Rainfall
+Wind in Trees
+Flowing Water
+Brown Noise
+Ambient Pad
+Volume control for background sounds
+Automatic stress level measurement before and after sessions (if ring available)
+Manual stress logging integration for non-ring users
+3. Progress Tracking
+Meditation statistics:
+Current streak
+Longest streak
+Total sessions
+Total minutes
+Average stress reduction (if applicable)
+Stress history display:
+Timestamp
+Stress level
+Associated symptoms
+Notes
+Most recent 6 entries shown
+4. Integration with Community Features
+Link to meditation challenges
+Community participation tracking
+Shared progress metrics
+Technical Implementation
+Backend Components
+wellness_toolbox.py:
+
+Flask Blueprint implementation
+API endpoints for meditation and stress logging
+Database interactions
+Smart ring data integration
+ring_data.py:
+
+Smart ring data fetching and processing
+Stress level calculations
+Data normalization between different ring types
+Frontend Components
+Main interface (templates/wellness_toolbox/index.html):
+
+Responsive layout
+Real-time stress monitoring display
+Meditation controls
+Stress logging interface
+History views
+JavaScript functionality (static/js/meditation.js):
+
+Audio processing for meditation sounds
+Timer management
+Stress logging form handling
+History updates
+Dynamic UI updates
+Database Schema
+MeditationSession: Tracks meditation sessions and associated stress levels
+StressLevel: Records manual stress logs with symptoms and notes
+User Experience Features
+Non-intrusive success/error notifications
+Real-time stress level updates
+Intuitive stress logging interface
+Clear history display
+Seamless integration of manual and automated tracking
+Future Enhancements
+Additional meditation types
+More background sound options
+Extended historical data analysis
+Enhanced visualization of stress patterns
+Integration with additional wearable devices
+Maintenance Notes
+Regular monitoring of ring API endpoints
+Database optimization for growing history
+User feedback integration
+Performance optimization for real-time updates
