@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Create New Post</h1>
+    
+    <form method="POST" class="mt-4">
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="category" class="form-label">Category</label>
+            <select class="form-select" id="category" name="category">
+                <option value="General Discussion" selected>General Discussion</option>
+                <option value="Success Stories">Success Stories</option>
+                <option value="Support">Support</option>
+                <option value="Tips & Tricks">Tips & Tricks</option>
+            </select>
+        </div>
+        
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="6" required></textarea>
+        </div>
+        
+        <div class="mb-3">
+            <a href="{{ url_for('forum.index') }}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-primary">Create Post</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
