@@ -1,0 +1,640 @@
+{% extends "base.html" %}
+
+{% block title %}Fasting Programs - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="display-4">Fasting Programs</h1>
+            <p class="lead">Select a fasting program to start your wellness journey or view your current progress.</p>
+        </div>
+    </div>
+
+    <!-- Active Session Alert -->
+    <div id="active-session-alert" class="alert alert-info d-none mb-4">
+        <h4>Active Fasting Session</h4>
+        <p id="active-session-details">You have an active fasting session. <a href="#" id="view-active-session">View your progress</a>.</p>
+    </div>
+
+    <!-- Extended Fasting Programs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Extended Fasting Programs</h2>
+            <p>Multi-day water fasting programs for deeper health benefits and cellular rejuvenation.</p>
+            <div class="card-deck" id="extended-programs">
+                <div class="text-center py-5" id="loading-extended">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <!-- Program cards will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Intermittent Fasting Programs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Intermittent Fasting Programs</h2>
+            <p>Time-restricted eating patterns for daily metabolic health improvements.</p>
+            <div class="card-deck" id="intermittent-programs">
+                <div class="text-center py-5" id="loading-intermittent">
+                    <div class="spinner-border" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                </div>
+                <!-- Program cards will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- View History Button -->
+    <div class="row mt-5">
+        <div class="col-12 text-center">
+            <a href="/fasting/history" class="btn btn-outline-primary">View Fasting History</a>
+        </div>
+    </div>
+
+    <!-- Program Details Modal -->
+    <div class="modal fade" id="programModal" tabindex="-1" role="dialog" aria-labelledby="programModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="programModalLabel">Program Details</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="programModalBody">
+                    <!-- Program details will be inserted here -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="start-program-btn">Start Program</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active Session Modal -->
+    <div class="modal fade" id="activeSessionModal" tabindex="-1" role="dialog" aria-labelledby="activeSessionModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="activeSessionModalLabel">Active Fasting Session</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body" id="activeSessionModalBody">
+                    <div class="text-center py-3" id="active-session-loading">
+                        <div class="spinner-border" role="status">
+                            <span class="sr-only">Loading...</span>
+                        </div>
+                    </div>
+                    <div id="active-session-content" class="d-none">
+                        <!-- Active session details will be inserted here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" id="end-session-btn">End Session</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Daily Check-in Modal -->
+    <div class="modal fade" id="checkInModal" tabindex="-1" role="dialog" aria-labelledby="checkInModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="checkInModalLabel">Daily Check-in</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="check-in-form">
+                        <div class="form-group">
+                            <label for="mood">How are you feeling today?</label>
+                            <select class="form-control" id="mood" name="mood" required>
+                                <option value="">Select mood...</option>
+                                <option value="great">Great</option>
+                                <option value="good">Good</option>
+                                <option value="okay">Okay</option>
+                                <option value="tired">Tired</option>
+                                <option value="struggling">Struggling</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="energy-level">Energy Level (1-10)</label>
+                            <input type="number" class="form-control" id="energy-level" name="energy_level" min="1" max="10" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="weight">Current Weight (optional)</label>
+                            <input type="number" class="form-control" id="weight" name="weight" step="0.1">
+                            <small class="text-muted">Enter in pounds</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="symptoms">Any symptoms?</label>
+                            <input type="text" class="form-control" id="symptoms" name="symptoms" placeholder="Headache, fatigue, etc.">
+                        </div>
+                        <div class="form-group">
+                            <label for="notes">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="submit-check-in">Submit Check-in</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Initialize variables
+let selectedProgramId = null;
+let selectedProgramType = null;
+let currentSessionId = null;
+let activeSessionType = null;
+let checkInDay = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Load programs
+    loadExtendedPrograms();
+    loadIntermittentPrograms();
+    
+    // Check for active sessions
+    checkActiveSession();
+    
+    // Add event listeners
+    document.getElementById('start-program-btn').addEventListener('click', startProgram);
+    document.getElementById('end-session-btn').addEventListener('click', endSession);
+    document.getElementById('submit-check-in').addEventListener('click', submitCheckIn);
+    document.getElementById('view-active-session').addEventListener('click', function(e) {
+        e.preventDefault();
+        showActiveSession();
+    });
+});
+
+// Load extended fasting programs
+function loadExtendedPrograms() {
+    const programsContainer = document.getElementById('extended-programs');
+    const loadingElement = document.getElementById('loading-extended');
+    
+    fetch('/api/fasting/programs')
+        .then(response => response.json())
+        .then(data => {
+            loadingElement.classList.add('d-none');
+            
+            if (data.status === 'success' && data.programs && data.programs.length > 0) {
+                const programsHtml = data.programs.map(program => `
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">${program.name}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">${program.duration_days} Days</h6>
+                            <p class="card-text">${program.description}</p>
+                            <button class="btn btn-primary view-program" 
+                                data-id="${program.id}" 
+                                data-type="extended">View Details</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                programsContainer.innerHTML = programsHtml;
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-program[data-type="extended"]').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const programId = this.getAttribute('data-id');
+                        showProgramDetails(programId, 'extended');
+                    });
+                });
+            } else {
+                programsContainer.innerHTML = '<p class="text-center w-100">No extended fasting programs available.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading extended programs:', error);
+            loadingElement.classList.add('d-none');
+            programsContainer.innerHTML = '<div class="alert alert-danger w-100">Error loading programs. Please try again later.</div>';
+        });
+}
+
+// Load intermittent fasting programs
+function loadIntermittentPrograms() {
+    const programsContainer = document.getElementById('intermittent-programs');
+    const loadingElement = document.getElementById('loading-intermittent');
+    
+    fetch('/api/fasting/intermittent/programs')
+        .then(response => response.json())
+        .then(data => {
+            loadingElement.classList.add('d-none');
+            
+            if (data.status === 'success' && data.programs && data.programs.length > 0) {
+                const programsHtml = data.programs.map(program => `
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title">${program.name}</h5>
+                            <p class="card-text">${program.description}</p>
+                            <button class="btn btn-primary view-program" 
+                                data-id="${program.id}" 
+                                data-type="intermittent">View Details</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+                programsContainer.innerHTML = programsHtml;
+                
+                // Add event listeners to view buttons
+                document.querySelectorAll('.view-program[data-type="intermittent"]').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const programId = this.getAttribute('data-id');
+                        showProgramDetails(programId, 'intermittent');
+                    });
+                });
+            } else {
+                programsContainer.innerHTML = '<p class="text-center w-100">No intermittent fasting programs available.</p>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading intermittent programs:', error);
+            loadingElement.classList.add('d-none');
+            programsContainer.innerHTML = '<div class="alert alert-danger w-100">Error loading programs. Please try again later.</div>';
+        });
+}
+
+// Show program details in modal
+function showProgramDetails(programId, type) {
+    selectedProgramId = programId;
+    selectedProgramType = type;
+    
+    const modalBody = document.getElementById('programModalBody');
+    modalBody.innerHTML = `
+        <div class="text-center py-3">
+            <div class="spinner-border" role="status">
+                <span class="sr-only">Loading...</span>
+            </div>
+        </div>
+    `;
+    
+    $('#programModal').modal('show');
+    
+    fetch(`/api/fasting/programs/${programId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.program) {
+                const program = data.program;
+                modalBody.innerHTML = `
+                    <h4>${program.name}</h4>
+                    <p class="text-muted">${type === 'extended' ? program.duration_days + ' Days' : 'Daily Program'}</p>
+                    
+                    <h5>Description</h5>
+                    <p>${program.description}</p>
+                    
+                    <h5>Benefits</h5>
+                    <p>${program.benefits}</p>
+                    
+                    <h5>Instructions</h5>
+                    <p>${program.instructions}</p>
+                `;
+            } else {
+                modalBody.innerHTML = '<div class="alert alert-danger">Error loading program details. Please try again.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching program details:', error);
+            modalBody.innerHTML = '<div class="alert alert-danger">Error loading program details. Please try again.</div>';
+        });
+}
+
+// Start a fasting program
+function startProgram() {
+    if (!selectedProgramId || !selectedProgramType) {
+        alert('Please select a program first.');
+        return;
+    }
+    
+    const endpoint = selectedProgramType === 'extended' 
+        ? '/api/fasting/start' 
+        : '/api/fasting/intermittent/start';
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            program_id: selectedProgramId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            $('#programModal').modal('hide');
+            alert('Fasting program started successfully!');
+            // Refresh to show active session
+            checkActiveSession();
+        } else {
+            alert('Error: ' + (data.message || 'Could not start program'));
+        }
+    })
+    .catch(error => {
+        console.error('Error starting program:', error);
+        alert('An error occurred while starting the program. Please try again.');
+    });
+}
+
+// Check for active fasting sessions
+function checkActiveSession() {
+    // Check for extended fasting session
+    fetch('/api/fasting/active')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success' && data.session) {
+                // We have an active extended session
+                document.getElementById('active-session-alert').classList.remove('d-none');
+                document.getElementById('active-session-details').innerHTML = 
+                    `You have an active ${data.session.program_name} session (Day ${data.session.current_day} of ${data.session.total_days}). <a href="#" id="view-active-session">View your progress</a>.`;
+                currentSessionId = data.session.id;
+                activeSessionType = 'extended';
+                
+                // Reattach event listener
+                document.getElementById('view-active-session').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showActiveSession();
+                });
+                return;
+            }
+            
+            // No active extended session, check for intermittent
+            return fetch('/api/fasting/intermittent/active');
+        })
+        .then(response => response ? response.json() : null)
+        .then(data => {
+            if (data && data.status === 'success' && data.session) {
+                // We have an active intermittent session
+                document.getElementById('active-session-alert').classList.remove('d-none');
+                document.getElementById('active-session-details').innerHTML = 
+                    `You have an active ${data.session.program_name} session. <a href="#" id="view-active-session">View your progress</a>.`;
+                currentSessionId = data.session.id;
+                activeSessionType = 'intermittent';
+                
+                // Reattach event listener
+                document.getElementById('view-active-session').addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showActiveSession();
+                });
+            } else if (!currentSessionId) {
+                // No active sessions
+                document.getElementById('active-session-alert').classList.add('d-none');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking active sessions:', error);
+        });
+}
+
+// Show active session details
+function showActiveSession() {
+    if (!currentSessionId || !activeSessionType) {
+        alert('No active session found.');
+        return;
+    }
+    
+    const modalBody = document.getElementById('activeSessionModalBody');
+    const loadingElement = document.getElementById('active-session-loading');
+    const contentElement = document.getElementById('active-session-content');
+    
+    loadingElement.classList.remove('d-none');
+    contentElement.classList.add('d-none');
+    
+    $('#activeSessionModal').modal('show');
+    
+    const endpoint = activeSessionType === 'extended' 
+        ? '/api/fasting/active' 
+        : '/api/fasting/intermittent/active';
+    
+    fetch(endpoint)
+        .then(response => response.json())
+        .then(data => {
+            loadingElement.classList.add('d-none');
+            contentElement.classList.remove('d-none');
+            
+            if (data.status === 'success' && data.session) {
+                const session = data.session;
+                
+                if (activeSessionType === 'extended') {
+                    // Extended session UI
+                    checkInDay = session.current_day;
+                    
+                    // Progress bar calculation
+                    const progress = (session.current_day / session.total_days) * 100;
+                    
+                    contentElement.innerHTML = `
+                        <h4>${session.program_name}</h4>
+                        <p class="text-muted">Started: ${new Date(session.start_time).toLocaleDateString()}</p>
+                        
+                        <div class="mb-3">
+                            <h5>Progress: Day ${session.current_day} of ${session.total_days}</h5>
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: ${progress}%" 
+                                    aria-valuenow="${progress}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="card mb-3">
+                            <div class="card-header">Daily Check-in</div>
+                            <div class="card-body">
+                                ${session.todays_checkin 
+                                    ? `<p class="text-success">You've already checked in today. Thank you!</p>
+                                       <div class="mt-3">
+                                            <p><strong>Mood:</strong> ${session.todays_checkin.mood}</p>
+                                            <p><strong>Energy Level:</strong> ${session.todays_checkin.energy_level}/10</p>
+                                            ${session.todays_checkin.weight ? `<p><strong>Weight:</strong> ${session.todays_checkin.weight} lbs</p>` : ''}
+                                            ${session.todays_checkin.symptoms ? `<p><strong>Symptoms:</strong> ${session.todays_checkin.symptoms}</p>` : ''}
+                                            ${session.todays_checkin.notes ? `<p><strong>Notes:</strong> ${session.todays_checkin.notes}</p>` : ''}
+                                       </div>`
+                                    : `<p>Record your progress for Day ${session.current_day}.</p>
+                                       <button class="btn btn-primary" id="check-in-btn">Daily Check-in</button>`
+                                }
+                            </div>
+                        </div>
+                        
+                        <h5>Check-in History</h5>
+                        <div class="list-group">
+                            ${session.check_ins && session.check_ins.length > 0 
+                                ? session.check_ins.map(ci => `
+                                    <div class="list-group-item">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <h6>Day ${ci.day_number}</h6>
+                                            <span class="text-muted">${new Date(ci.check_in_time).toLocaleDateString()}</span>
+                                        </div>
+                                        <p><strong>Mood:</strong> ${ci.mood}</p>
+                                        <p><strong>Energy Level:</strong> ${ci.energy_level}/10</p>
+                                        ${ci.weight ? `<p><strong>Weight:</strong> ${ci.weight} lbs</p>` : ''}
+                                        ${ci.symptoms ? `<p><strong>Symptoms:</strong> ${ci.symptoms}</p>` : ''}
+                                        ${ci.notes ? `<p><strong>Notes:</strong> ${ci.notes}</p>` : ''}
+                                    </div>
+                                `).join('')
+                                : '<p class="text-muted">No check-in history available.</p>'
+                            }
+                        </div>
+                    `;
+                    
+                    // Add check-in button event listener
+                    if (!session.todays_checkin) {
+                        document.getElementById('check-in-btn').addEventListener('click', openCheckInModal);
+                    }
+                } else {
+                    // Intermittent session UI
+                    contentElement.innerHTML = `
+                        <h4>${session.program_name}</h4>
+                        <p class="text-muted">Started: ${new Date(session.start_time).toLocaleDateString()}</p>
+                        
+                        <div class="alert alert-info">
+                            <p>Your daily intermittent fasting session is active.</p>
+                            <p><strong>Program:</strong> ${session.program_name}</p>
+                            <p>${session.program_description}</p>
+                        </div>
+                    `;
+                }
+            } else {
+                contentElement.innerHTML = '<div class="alert alert-danger">Error loading session details. Please try again.</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching active session:', error);
+            loadingElement.classList.add('d-none');
+            contentElement.classList.remove('d-none');
+            contentElement.innerHTML = '<div class="alert alert-danger">Error loading session details. Please try again.</div>';
+        });
+}
+
+// Open check-in modal
+function openCheckInModal() {
+    // Reset the form
+    document.getElementById('check-in-form').reset();
+    
+    // Show the modal
+    $('#checkInModal').modal('show');
+}
+
+// Submit daily check-in
+function submitCheckIn() {
+    if (!currentSessionId || !checkInDay) {
+        alert('No active session found.');
+        return;
+    }
+    
+    const form = document.getElementById('check-in-form');
+    const mood = form.elements['mood'].value;
+    const energyLevel = form.elements['energy_level'].value;
+    const weight = form.elements['weight'].value || null;
+    const symptoms = form.elements['symptoms'].value;
+    const notes = form.elements['notes'].value;
+    
+    if (!mood || !energyLevel) {
+        alert('Please fill in required fields.');
+        return;
+    }
+    
+    fetch('/api/fasting/checkin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: currentSessionId,
+            day_number: checkInDay,
+            mood: mood,
+            energy_level: parseInt(energyLevel),
+            weight: weight ? parseFloat(weight) : null,
+            symptoms: symptoms,
+            notes: notes
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            $('#checkInModal').modal('hide');
+            // Refresh the active session display
+            showActiveSession();
+        } else {
+            alert('Error: ' + (data.message || 'Could not submit check-in'));
+        }
+    })
+    .catch(error => {
+        console.error('Error submitting check-in:', error);
+        alert('An error occurred while submitting your check-in. Please try again.');
+    });
+}
+
+// End current session
+function endSession() {
+    if (!currentSessionId || !activeSessionType) {
+        alert('No active session found.');
+        return;
+    }
+    
+    if (!confirm('Are you sure you want to end your current fasting session?')) {
+        return;
+    }
+    
+    const endpoint = activeSessionType === 'extended' 
+        ? '/api/fasting/end' 
+        : '/api/fasting/intermittent/end';
+    
+    fetch(endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            session_id: currentSessionId
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            $('#activeSessionModal').modal('hide');
+            alert('Fasting session ended successfully!');
+            // Reset variables and refresh UI
+            currentSessionId = null;
+            activeSessionType = null;
+            checkInDay = null;
+            document.getElementById('active-session-alert').classList.add('d-none');
+        } else {
+            alert('Error: ' + (data.message || 'Could not end session'));
+        }
+    })
+    .catch(error => {
+        console.error('Error ending session:', error);
+        alert('An error occurred while ending your session. Please try again.');
+    });
+}
+</script>
+
+<style>
+.card-deck {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-gap: 1rem;
+}
+
+.view-program {
+    margin-top: auto;
+}
+
+.list-group-item {
+    margin-bottom: 10px;
+}
+</style>
+{% endblock %}
