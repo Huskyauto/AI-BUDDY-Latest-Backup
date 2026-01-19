@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Meditation Challenges</h1>
+
+  <div class="d-flex justify-content-between mb-4">
+    <button class="btn btn-success" onclick="window.location.href='/create-challenge'">Create Challenge</button>
+    {% if is_admin %}
+    <button class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#resetChallengesModal">Reset All Challenges</button>
+    {% endif %}
+  </div>
+  
+  <!-- Reset Challenges Modal -->
+  {% if is_admin %}
+  <div class="modal fade" id="resetChallengesModal" tabindex="-1" aria-labelledby="resetChallengesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="resetChallengesModalLabel">Confirm Reset</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p class="text-danger">Warning! This will permanently delete all meditation challenges.</p>
+          <p>This action cannot be undone. Are you sure you want to continue?</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form action="/reset-challenges" method="POST">
+            <button type="submit" class="btn btn-danger">Reset All Challenges</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if today_sessions %}
+  <div class="alert alert-success">
+    <strong>Great job!</strong> You've completed {{ today_sessions|length }} meditation session(s) today!
+  </div>
+  {% endif %}
+
+  <h2>Active Challenges</h2>
+  <div class="row">
+    {% for challenge in active_challenges %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ challenge.name }}</h5>
+            <p class="card-text">{{ challenge.description }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-success">Active</span>
+            </div>
+            <p><strong>Duration:</strong> {{ challenge.duration_requirement }} minutes/day</p>
+            <p><strong>Frequency:</strong> {{ challenge.frequency_requirement }} sessions/week</p>
+            <p><strong>End Date:</strong> {{ challenge.end_date.strftime('%Y-%m-%d') }}</p>
+            {% if current_user in challenge.participants %}
+              <button class="btn btn-secondary" disabled>You're Registered</button>
+            {% else %}
+              {% if challenge.can_join(current_user) %}
+                <button class="btn btn-primary" onclick="joinChallenge({{ challenge.id }})">Join Challenge</button>
+              {% else %}
+                <button class="btn btn-secondary" disabled>Registration Closed</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No active challenges at the moment.</p>
+    {% endfor %}
+  </div>
+
+  <h2>Upcoming Challenges</h2>
+  <div class="row">
+    {% for challenge in upcoming_challenges %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ challenge.name }}</h5>
+            <p class="card-text">{{ challenge.description }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-info">Upcoming</span>
+            </div>
+            <p><strong>Duration:</strong> {{ challenge.duration_requirement }} minutes/day</p>
+            <p><strong>Frequency:</strong> {{ challenge.frequency_requirement }} sessions/week</p>
+            <p><strong>Start Date:</strong> {{ challenge.start_date.strftime('%Y-%m-%d') }}</p>
+            {% if current_user in challenge.participants %}
+              <button class="btn btn-secondary" disabled>You're Registered</button>
+            {% else %}
+              {% if challenge.can_join(current_user) %}
+                <button class="btn btn-primary" onclick="joinChallenge({{ challenge.id }})">Join Challenge</button>
+              {% else %}
+                <button class="btn btn-secondary" disabled>Registration Closed</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No upcoming challenges at the moment.</p>
+    {% endfor %}
+  </div>
+
+  <h2>Completed Challenges</h2>
+  <div class="row">
+    {% for challenge in completed_challenges %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ challenge.name }}</h5>
+            <p class="card-text">{{ challenge.description }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge bg-secondary">Completed</span>
+            </div>
+            <p><strong>Duration:</strong> {{ challenge.duration_requirement }} minutes/day</p>
+            <p><strong>Frequency:</strong> {{ challenge.frequency_requirement }} sessions/week</p>
+            <p><strong>End Date:</strong> {{ challenge.end_date.strftime('%Y-%m-%d') }}</p>
+            {% if current_user in challenge.participants %}
+              <div class="alert alert-success">
+                <small>You participated in this challenge</small>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No completed challenges yet.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function joinChallenge(challengeId) {
+    fetch(`/join-challenge/${challengeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || 'Error joining challenge');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error joining challenge. Please try again.');
+    });
+}
+</script>
+{% endblock %}
