@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card chat-card">
+                <div class="card-header">
+                    <h4>Chat with AI-BUDDY</h4>
+                </div>
+                <div class="card-body">
+                    <div id="chat-messages" class="chat-messages">
+                        <!-- Messages will be populated here -->
+                    </div>
+                    <div class="emotion-selector mb-3">
+                        <label class="form-label">How are you feeling?</label>
+                        <div class="custom-dropdown">
+                            <div class="selected-emotion" id="selected-emotion">
+                                <span class="emoji">😊</span>
+                                <span class="text">Select emotion</span>
+                                <span class="arrow">▼</span>
+                            </div>
+                            <div class="emotion-options" id="emotion-options">
+                                <!-- Emotion options -->
+                                {% for emotion in [
+                                    ('peaceful', '😌', 'Peaceful'),
+                                    ('happy', '😊', 'Happy'),
+                                    ('excited', '🤗', 'Excited'),
+                                    ('grateful', '🙏', 'Grateful'),
+                                    ('relaxed', '😎', 'Relaxed'),
+                                    ('thoughtful', '🤔', 'Thoughtful'),
+                                    ('neutral', '😐', 'Neutral'),
+                                    ('uncertain', '😕', 'Uncertain'),
+                                    ('sad', '😢', 'Sad'),
+                                    ('stressed', '😫', 'Stressed'),
+                                    ('frustrated', '😤', 'Frustrated'),
+                                    ('anxiety', '😰', 'Anxious'),
+                                    ('tired', '😴', 'Tired'),
+                                    ('unwell', '🤒', 'Unwell'),
+                                    ('numb', '😶', 'Numb')
+                                ] %}
+                                <div class="emotion-option" data-value="{{ emotion[0] }}">
+                                    <span class="emoji">{{ emotion[1] }}</span>
+                                    <span class="text">{{ emotion[2] }}</span>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <input type="hidden" id="emotion-select" name="emotion" value="neutral">
+                    </div>
+                    <form id="chat-form">
+                        <div class="input-group">
+                            <input type="text" id="message-input" class="form-control" placeholder="Type your message...">
+                            <button class="btn btn-outline-secondary" type="button" id="mic-button">
+                                <i class="fas fa-microphone"></i>
+                            </button>
+                            <button class="btn btn-primary" type="submit" id="send-message">Send</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.chat-card {
+    min-height: 500px;
+    margin-top: 20px;
+}
+
+.chat-messages {
+    height: 300px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+    padding: 10px;
+}
+
+#mic-button {
+    transition: all 0.3s ease;
+}
+
+#mic-button.recording {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.1);
+        opacity: 0.8;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.message {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+.user-message {
+    background-color: #e3f2fd;
+    margin-left: 20%;
+}
+
+.ai-message {
+    background-color: #f8f9fa;
+    margin-right: 20%;
+}
+
+.message-time {
+    font-size: 0.8em;
+    color: #6c757d;
+    margin-top: 5px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<!-- Add Font Awesome for the microphone icon -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" integrity="sha512-9usAa10IRO0HhonpyAIVpjrylPvoDwiPUiKdWk5t3PyolY1cOd4DSE0Ga+ri4AuTroPR5aQvXU9xC6qOPnzFeg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const voiceInputBtn = document.getElementById('mic-button'); // Updated button ID
+    let recognition = null;
+    let isRecording = false;
+    let recordingTimeout = null;
+
+    // Initialize speech recognition
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false; 
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            console.log('Recognition started');
+            isRecording = true;
+            updateMicrophoneButton();
+            messageInput.placeholder = 'Listening...';
+
+            // Set 5-second timeout for recording
+            recordingTimeout = setTimeout(() => {
+                if (isRecording) {
+                    stopRecording();
+                }
+            }, 5000); // 5 seconds timeout
+        };
+
+        recognition.onend = function() {
+            console.log('Recognition ended');
+            if (isRecording) { 
+                // If recording hasn't been manually stopped, restart it
+                // This ensures we get the full 5 seconds
+                if (recordingTimeout) {
+                    recognition.start();
+                } else {
+                    stopRecording();
+                }
+            }
+        };
+
+        recognition.onresult = function(event) {
+            let finalTranscript = '';
+            let interimTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const transcript = event.results[i][0].transcript;
+                if (event.results[i].isFinal) {
+                    finalTranscript += transcript;
+                } else {
+                    interimTranscript += transcript;
+                }
+            }
+
+            if (finalTranscript !== '') {
+                messageInput.value = finalTranscript;
+            }
+            if (interimTranscript !== '') {
+                messageInput.value = interimTranscript;
+            }
+            messageInput.focus();
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            stopRecording();
+        };
+
+        function updateMicrophoneButton() {
+            if (isRecording) {
+                voiceInputBtn.classList.remove('btn-outline-secondary');
+                voiceInputBtn.classList.add('recording');
+                voiceInputBtn.querySelector('i').classList.remove('fas fa-microphone');
+                voiceInputBtn.querySelector('i').classList.add('fas fa-microphone-slash');
+            } else {
+                voiceInputBtn.classList.remove('recording');
+                voiceInputBtn.classList.add('btn-outline-secondary');
+                voiceInputBtn.querySelector('i').classList.remove('fas fa-microphone-slash');
+                voiceInputBtn.querySelector('i').classList.add('fas fa-microphone');
+            }
+        }
+
+        function stopRecording() {
+            if (isRecording) {
+                clearTimeout(recordingTimeout);
+                recordingTimeout = null;
+                recognition.stop();
+                isRecording = false;
+                updateMicrophoneButton();
+                messageInput.placeholder = 'Type your message...';
+            }
+        }
+
+        voiceInputBtn.addEventListener('click', function() {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                messageInput.value = '';
+                recognition.start();
+            }
+        });
+
+        chatForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (isRecording) {
+                stopRecording();
+            }
+
+            // Only submit if there's a message
+            if (messageInput.value.trim()) {
+                this.submit();
+            }
+        });
+    } else {
+        voiceInputBtn.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
+});
+</script>
+{% endblock %}
