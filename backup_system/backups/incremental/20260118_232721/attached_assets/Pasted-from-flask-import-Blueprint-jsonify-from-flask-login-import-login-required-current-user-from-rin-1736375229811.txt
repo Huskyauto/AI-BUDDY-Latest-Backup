@@ -1,0 +1,102 @@
+from flask import Blueprint, jsonify
+from flask_login import login_required, current_user
+from ring_data import ring_manager
+import logging
+import os
+
+# Configure logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
+ring_bp = Blueprint('ring', __name__)
+
+@ring_bp.route('/api/ring-data')
+@login_required
+def get_ring_data():
+    """Fetch both Oura and Ultrahuman ring data"""
+    try:
+        # Only allow access for authorized email
+        if not current_user.email or current_user.email.lower() != 'huskyauto@gmail.com':
+            logger.warning(f'Unauthorized ring data access attempt by: {current_user.email}')
+            return jsonify({
+                'status': 'unauthorized',
+                'message': 'Ring data access restricted',
+                'show_ring_data': False,
+                'oura': {'error': 'Unauthorized access'},
+                'ultrahuman': {'error': 'Unauthorized access'}
+            })
+
+        # Verify API keys are configured
+        oura_key = os.environ.get('OURA_API_KEY')
+        ultrahuman_key = os.environ.get('ULTRAHUMAN_API_KEY')
+
+        if not oura_key or not ultrahuman_key:
+            missing_keys = []
+            if not oura_key:
+                missing_keys.append('OURA_API_KEY')
+            if not ultrahuman_key:
+                missing_keys.append('ULTRAHUMAN_API_KEY')
+            logger.error(f'Missing required API keys: {", ".join(missing_keys)}')
+            return jsonify({
+                'status': 'error',
+                'message': 'Ring API configuration incomplete',
+                'show_ring_data': False,
+                'oura': {'error': 'API key missing'},
+                'ultrahuman': {'error': 'API key missing'}
+            })
+
+        # Fetch Oura data with detailed logging
+        try:
+            logger.info(f"Fetching Oura data for user {current_user.email}")
+            oura_data = ring_manager.get_oura_data(
+                user_id=current_user.id,
+                user_email=current_user.email
+            )
+            logger.debug(f"Oura data retrieved: {oura_data}")
+        except Exception as e:
+            logger.error(f"Error fetching Oura data: {str(e)}", exc_info=True)
+            oura_data = {
+                'error': f'Failed to fetch Oura data: {str(e)}',
+                'heart_rate': '--',
+                'heart_rate_variability': '--',
+                'stress_level': '--',
+                'skin_temperature': '--'
+            }
+
+        # Fetch Ultrahuman data with detailed logging
+        try:
+            logger.info(f"Fetching Ultrahuman data for user {current_user.email}")
+            ultrahuman_data = ring_manager.get_ultrahuman_data(
+                user_id=current_user.id,
+                user_email=current_user.email
+            )
+            logger.debug(f"Ultrahuman data retrieved: {ultrahuman_data}")
+        except Exception as e:
+            logger.error(f"Error fetching Ultrahuman data: {str(e)}", exc_info=True)
+            ultrahuman_data = {
+                'error': f'Failed to fetch Ultrahuman data: {str(e)}',
+                'heart_rate': '--',
+                'heart_rate_variability': '--',
+                'recovery_index': '--',
+                'skin_temperature': '--'
+            }
+
+        # Clear cache to ensure fresh data on next request
+        ring_manager.clear_cache()
+
+        return jsonify({
+            'status': 'success',
+            'show_ring_data': True,
+            'oura': oura_data,
+            'ultrahuman': ultrahuman_data
+        })
+
+    except Exception as e:
+        logger.error(f"Unexpected error in get_ring_data: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': f'Unexpected error: {str(e)}',
+            'show_ring_data': False,
+            'oura': {'error': 'Server error'},
+            'ultrahuman': {'error': 'Server error'}
+        }), 500
