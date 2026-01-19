@@ -1,0 +1,14 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <style>
+        .primary { fill: #0D47A1; } /* Deeper blue color */
+        .accent { fill: #4CAF50; } /* Green color */
+    </style>
+    <g transform="translate(100 100)">
+        <!-- Heart shape -->
+        <path class="primary" d="M0,30 C-40,0 -40,-40 0,-40 C40,-40 40,0 0,30" />
+        <!-- Laurel wreath left -->
+        <path class="accent" d="M-20,-20 C-50,-10 -50,10 -20,20" fill="none" stroke="#4CAF50" stroke-width="4"/>
+        <!-- Laurel wreath right -->
+        <path class="accent" d="M20,-20 C50,-10 50,10 20,20" fill="none" stroke="#4CAF50" stroke-width="4"/>
+    </g>
+</svg>
