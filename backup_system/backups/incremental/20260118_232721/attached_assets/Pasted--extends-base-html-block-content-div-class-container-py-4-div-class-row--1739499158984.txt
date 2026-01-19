@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">ACT (Acceptance and Commitment Therapy) Coaching</h2>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            <p class="text-muted mb-4">
+                Explore personalized ACT techniques that help you develop psychological flexibility through mindfulness,
+                acceptance, and value-based actions. Click on each section to learn more about different ACT processes and practices.
+                Hover over insights for more detailed explanations.
+            </p>
+
+            {% if error %}
+            <div class="alert alert-warning">{{ error }}</div>
+            {% else %}
+            <div class="accordion" id="actInsightsAccordion">
+                <!-- Present Moment Awareness Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#presentMomentSection">
+                            Present Moment Awareness
+                        </button>
+                    </h3>
+                    <div id="presentMomentSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.present_moment.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for practice in insights.present_moment.practices %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ practice.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-leaf text-teal me-2"></i>
+                                        {{ practice.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Values Clarification Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#valuesSection">
+                            Values Clarification
+                        </button>
+                    </h3>
+                    <div id="valuesSection" class="accordion-collapse collapse show" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            {% if insights and insights.values and insights.values.practices %}
+                                <p class="mb-3">{{ insights.values.summary }}</p>
+                                <ul class="list-unstyled">
+                                    {% for practice in insights.values.practices %}
+                                    <li class="mb-2">
+                                        <span data-bs-toggle="popover"
+                                              data-bs-trigger="hover focus"
+                                              data-bs-content="{{ practice.detail }}"
+                                              class="insight-item">
+                                            <i class="fas fa-heart text-teal me-2"></i>
+                                            {{ practice.summary }}
+                                        </span>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <p>Start tracking your moods to receive personalized value insights and guidance.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acceptance Strategies Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#acceptanceSection">
+                            Acceptance Strategies
+                        </button>
+                    </h3>
+                    <div id="acceptanceSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.acceptance.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for strategy in insights.acceptance.strategies %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ strategy.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-hand-holding-heart text-teal me-2"></i>
+                                        {{ strategy.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Committed Action Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#committedActionSection">
+                            Committed Action
+                        </button>
+                    </h3>
+                    <div id="committedActionSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.committed_action.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for action in insights.committed_action.actions %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ action.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-check-circle text-teal me-2"></i>
+                                        {{ action.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <!-- Cognitive Defusion Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#defusionSection">
+                            Cognitive Defusion
+                        </button>
+                    </h3>
+                    <div id="defusionSection" class="accordion-collapse collapse" data-bs-parent="#actInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.defusion.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for technique in insights.defusion.techniques %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ technique.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-brain text-teal me-2"></i>
+                                        {{ technique.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.insight-item {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+.insight-item:hover {
+    color: #0d6efd;
+}
+.popover {
+    max-width: 300px;
+}
+.text-teal {
+    color: #20c997;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl, {
+            html: true,
+            placement: 'auto'
+        })
+    })
+
+    // Destroy popovers when their triggers are removed from the DOM
+    document.addEventListener('hidden.bs.collapse', function(e) {
+        popoverList.forEach(function(popover) {
+            popover.hide()
+        })
+    })
+})
+</script>
+{% endblock %}
