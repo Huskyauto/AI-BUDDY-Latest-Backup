@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row">
+    <div class="col-12">
+      <h1>Ring Data</h1>
+      <p class="lead">Monitor your physiological well-being with comprehensive biometric tracking.</p>
+    </div>
+  </div>
+
+  <!-- API Setup Alert -->
+  <div id="apiSetupAlert" class="alert alert-warning d-none mb-4" role="alert">
+    <h4 class="alert-heading">Ring API Setup Required</h4>
+    <p>To view your ring data, please ensure your API keys are properly configured:</p>
+    <ol>
+      <li>Set up your Oura Ring API key</li> 
+      <li>Set up your Ultrahuman Ring API key</li>
+    </ol>
+    <p>Contact support if you need help with API setup.</p>
+  </div>
+
+  <!-- Error Alert -->
+  <div id="errorAlert" class="alert alert-danger d-none mb-4" role="alert">
+    <h4 class="alert-heading">Error Loading Ring Data</h4>
+    <p id="errorMessage"></p>
+  </div>
+
+  <div class="row g-4">
+    <!-- Oura Ring Data -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2>Oura Ring Data</h2>
+          <div id="ouraDataContainer">
+            <div class="loading-spinner text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading Oura Ring data...</p>
+            </div>
+            <div class="data-content d-none">
+              <div class="metric-row">
+                <label>Heart Rate</label>
+                <span id="ouraHeartRate">--</span> <small>bpm</small>
+              </div>
+              <div class="metric-row">
+                <label>Heart Rate Variability</label>
+                <span id="ouraHRV">--</span> <small>ms</small>
+              </div>
+              <div class="metric-row">
+                <label>Stress Level</label>
+                <span id="ouraStress">--</span> <small>/100</small>
+              </div>
+              <div class="metric-row">
+                <label>Skin Temperature</label>
+                <span id="ouraSkinTemp">--</span> <small>°C</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Ultrahuman Ring Data -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-body">
+          <h2>Ultrahuman Ring Data</h2>
+          <div id="ultrahumanDataContainer">
+            <div class="loading-spinner text-center">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="mt-2">Loading Ultrahuman Ring data...</p>
+            </div>
+            <div class="data-content d-none">
+              <div class="metric-row">
+                <label>Recovery Index</label>
+                <span id="ultrahumanRecovery">--</span> <small>/100</small>
+              </div>
+              <div class="metric-row">
+                <label>Heart Rate</label>
+                <span id="ultrahumanHeartRate">--</span> <small>bpm</small>
+              </div>
+              <div class="metric-row">
+                <label>Heart Rate Variability</label>
+                <span id="ultrahumanHRV">--</span> <small>ms</small>
+              </div>
+              <div class="metric-row">
+                <label>Skin Temperature</label>
+                <span id="ultrahumanSkinTemp">--</span> <small>°C</small>
+              </div>
+              <div class="metric-row">
+                <label>VO2 Max</label>
+                <span id="ultrahumanVO2Max" data-ultrahuman-vo2max>--</span> <small>ml/kg/min</small>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.metric-row {
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 0.25rem;
+}
+
+.metric-row label {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+  color: #6c757d;
+}
+
+.loading-spinner {
+  padding: 2rem 0;
+}
+
+.data-content.d-none {
+  display: none !important;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize ring data updates
+  console.log("Initializing ring data updates");
+  updateRingData();
+  setInterval(updateRingData, 30000); // Update every 30 seconds
+});
+
+function showLoadingSpinners() {
+  document.querySelectorAll('.loading-spinner').forEach(spinner => {
+    spinner.classList.remove('d-none');
+  });
+  document.querySelectorAll('.data-content').forEach(content => {
+    content.classList.add('d-none');
+  });
+}
+
+function hideLoadingSpinners() {
+  document.querySelectorAll('.loading-spinner').forEach(spinner => {
+    spinner.classList.add('d-none');
+  });
+  document.querySelectorAll('.data-content').forEach(content => {
+    content.classList.remove('d-none');
+  });
+}
+
+function updateRingData() {
+  console.log("Fetching fresh ring data...");
+  showLoadingSpinners();
+
+  fetch('/api/ring-data')
+    .then(response => response.json())
+    .then(data => {
+      console.log("Received ring data:", data);
+
+      if (data.status === 'error') {
+        // Show error message
+        document.getElementById('errorAlert').classList.remove('d-none');
+        document.getElementById('errorMessage').textContent = data.message;
+
+        // Show API setup alert if needed
+        if (data.needs_api_setup) {
+          document.getElementById('apiSetupAlert').classList.remove('d-none');
+        } else {
+          document.getElementById('apiSetupAlert').classList.add('d-none');
+        }
+
+        // Keep spinners visible if we need API setup
+        if (!data.needs_api_setup) {
+          hideLoadingSpinners();
+        }
+        return;
+      }
+
+      // Hide error alerts if data is successful
+      document.getElementById('errorAlert').classList.add('d-none');
+      document.getElementById('apiSetupAlert').classList.add('d-none');
+
+      hideLoadingSpinners();
+
+      // Update Oura data
+      if (data.oura) {
+        document.getElementById('ouraHeartRate').textContent = data.oura.heart_rate || '--';
+        document.getElementById('ouraHRV').textContent = data.oura.heart_rate_variability || '--';
+        document.getElementById('ouraStress').textContent = data.oura.stress_level || '--';
+        document.getElementById('ouraSkinTemp').textContent = data.oura.skin_temperature || '--';
+      }
+
+      // Update Ultrahuman data
+      if (data.ultrahuman) {
+        document.getElementById('ultrahumanRecovery').textContent = data.ultrahuman.recovery_index || '--';
+        document.getElementById('ultrahumanHeartRate').textContent = data.ultrahuman.heart_rate || '--';
+        document.getElementById('ultrahumanHRV').textContent = data.ultrahuman.heart_rate_variability || '--';
+        document.getElementById('ultrahumanSkinTemp').textContent = data.ultrahuman.skin_temperature || '--';
+        document.getElementById('ultrahumanVO2Max').textContent = data.ultrahuman.vo2_max || '--';
+      }
+    })
+    .catch(error => {
+      console.error('Error fetching ring data:', error);
+      document.getElementById('errorAlert').classList.remove('d-none');
+      document.getElementById('errorMessage').textContent = 'Failed to fetch ring data. Please try again later.';
+      hideLoadingSpinners();
+    });
+}
+</script>
+{% endblock %}
