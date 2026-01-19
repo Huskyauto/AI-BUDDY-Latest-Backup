@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+
+{% block title %}Create Meditation Challenge - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0"><i class="fas fa-plus-circle"></i> Create Meditation Challenge</h2>
+                </div>
+                <div class="card-body">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                        {% if messages %}
+                            {% for category, message in messages %}
+                                <div class="alert alert-{{ category }}">{{ message }}</div>
+                            {% endfor %}
+                        {% endif %}
+                    {% endwith %}
+                    
+                    <form method="POST" action="{{ url_for('challenges.create_challenge') }}">
+                        {{ form.hidden_tag() if form }}
+                        
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Challenge Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   placeholder="e.g., 30 Days of Mindfulness" required>
+                            <div class="form-text">Choose a name that's inspiring and descriptive.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Challenge Description</label>
+                            <textarea class="form-control" id="description" name="description" 
+                                      rows="4" placeholder="Describe the challenge goals, benefits, and instructions..." required></textarea>
+                            <div class="form-text">Provide clear guidelines for participants.</div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="start_date" class="form-label">Start Date</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date" 
+                                       min="{{ today }}" required>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="end_date" class="form-label">End Date</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date" 
+                                       min="{{ today }}" required>
+                            </div>
+                            <div class="form-text">Challenge duration should be at least 7 days for best results.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="goal_minutes" class="form-label">Daily Goal (minutes)</label>
+                            <input type="number" class="form-control" id="goal_minutes" name="goal_minutes" 
+                                   min="5" max="120" value="20" required>
+                            <div class="form-text">Recommended daily meditation time: 10-30 minutes.</div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="max_participants" class="form-label">Maximum Participants</label>
+                            <input type="number" class="form-control" id="max_participants" name="max_participants" 
+                                   min="2" max="100" value="10" required>
+                            <div class="form-text">Set a limit for group size. You can leave at default (10) for most challenges.</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-check-circle"></i> Create Challenge
+                            </button>
+                            <a href="{{ url_for('challenges.list_challenges') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Challenges
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set minimum date values to today
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('start_date').min = today;
+        document.getElementById('end_date').min = today;
+        
+        // Set default values to today + 1 day and today + 30 days
+        const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        document.getElementById('start_date').value = tomorrow.toISOString().split('T')[0];
+        
+        const endDefault = new Date();
+        endDefault.setDate(endDefault.getDate() + 30);
+        document.getElementById('end_date').value = endDefault.toISOString().split('T')[0];
+        
+        // Validate end date is after start date
+        document.getElementById('start_date').addEventListener('change', function() {
+            const startDate = new Date(this.value);
+            const endDate = new Date(document.getElementById('end_date').value);
+            if (endDate <= startDate) {
+                const newEndDate = new Date(startDate);
+                newEndDate.setDate(newEndDate.getDate() + 7);
+                document.getElementById('end_date').value = newEndDate.toISOString().split('T')[0];
+            }
+        });
+    });
+</script>
+{% endblock %}
