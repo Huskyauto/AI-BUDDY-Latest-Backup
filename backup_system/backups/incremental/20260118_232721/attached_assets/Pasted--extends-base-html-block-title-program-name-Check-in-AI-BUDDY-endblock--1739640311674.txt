@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}{{ program_name }} - Check-in - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold">{{ program_name }}</h2>
+            <button onclick="resetFast()" class="bg-red-500 hover:bg-red-600 text-white py-2 px-4 rounded">
+                Reset Fast
+            </button>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="bg-gray-200 rounded-full h-4 mb-6">
+            <div class="bg-teal-500 rounded-full h-4" style="width: {{ progress }}%"></div>
+        </div>
+
+        <!-- Daily Instructions -->
+        <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
+            <h3 class="text-lg font-semibold mb-2">Day {{ current_day }} of {{ total_days }}</h3>
+            <p class="text-gray-700">{{ day_instructions }}</p>
+        </div>
+
+        <!-- Check-in Form -->
+        <form id="fasting-checkin-form" class="space-y-6">
+            <!-- Mood Selection -->
+            <div>
+                <label for="mood" class="block text-sm font-medium text-gray-700">How are you feeling?</label>
+                <select id="mood" name="mood" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    <option value="">Select your mood...</option>
+                    <option value="Great">Great</option>
+                    <option value="Good">Good</option>
+                    <option value="OK">OK</option>
+                    <option value="Challenging">Challenging</option>
+                    <option value="Difficult">Difficult</option>
+                </select>
+            </div>
+
+            <!-- Energy Level -->
+            <div>
+                <label for="energy-level" class="block text-sm font-medium text-gray-700">Energy Level (1-10)</label>
+                <input type="range" id="energy-level" class="w-full" min="1" max="10" value="5">
+                <div class="text-center mt-2">
+                    <span id="energy-level-display">5</span>/10
+                </div>
+            </div>
+
+            <!-- Weight -->
+            <div>
+                <label for="weight" class="block text-sm font-medium text-gray-700">Weight (optional)</label>
+                <input type="number" id="weight" step="0.1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Enter your weight">
+            </div>
+
+            <!-- Symptoms -->
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Any symptoms? (check all that apply)</label>
+                <div class="space-y-2">
+                    <div class="flex items-center">
+                        <input type="checkbox" id="symptom-headache" name="symptoms" value="Headache" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                        <label for="symptom-headache" class="ml-2">Headache</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="symptom-fatigue" name="symptoms" value="Fatigue" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                        <label for="symptom-fatigue" class="ml-2">Fatigue</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="symptom-dizziness" name="symptoms" value="Dizziness" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                        <label for="symptom-dizziness" class="ml-2">Dizziness</label>
+                    </div>
+                    <div class="flex items-center">
+                        <input type="checkbox" id="symptom-nausea" name="symptoms" value="Nausea" class="rounded border-gray-300 text-teal-600 focus:ring-teal-500">
+                        <label for="symptom-nausea" class="ml-2">Nausea</label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes -->
+            <div>
+                <label for="notes" class="block text-sm font-medium text-gray-700">Notes (optional)</label>
+                <textarea id="notes" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" placeholder="Add any notes about how you're feeling..."></textarea>
+            </div>
+
+            <button type="submit" class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded">
+                Complete Today's Check-in
+            </button>
+        </form>
+
+        <!-- Success Message -->
+        <div id="success-message" class="mt-6 bg-green-50 border-l-4 border-green-500 p-4 hidden">
+            <h4 class="text-lg font-semibold text-green-700">Check-in Completed!</h4>
+            <div id="last-checkin-details" class="mt-2 text-green-600"></div>
+        </div>
+    </div>
+
+    <!-- Check-in History -->
+    <div class="mt-8 bg-white rounded-lg shadow overflow-hidden">
+        <div class="p-6">
+            <h3 class="text-xl font-semibold mb-4">Check-in History</h3>
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead>
+                        <tr>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mood</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Energy</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Weight</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Symptoms</th>
+                            <th class="px-6 py-3 bg-gray-50 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Notes</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200" id="fasting-history">
+                        <!-- History will be populated dynamically -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('energy-level').addEventListener('input', function(e) {
+    document.getElementById('energy-level-display').textContent = e.target.value;
+});
+
+function resetFast() {
+    if (confirm('Are you sure you want to reset this fast? All progress will be lost.')) {
+        fetch('/api/fasting/reset', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                showNotification('Fast reset successfully');
+                window.location.href = '/wellness-toolbox/fasting-programs';
+            } else {
+                showNotification(data.message || 'Error resetting fast', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('An error occurred while resetting the fast', 'error');
+        });
+    }
+}
+
+function updateLastCheckin(checkin) {
+    const details = document.getElementById('last-checkin-details');
+    details.innerHTML = `
+        <p><strong>Time:</strong> ${new Date(checkin.date).toLocaleDateString()}</p>
+        <p><strong>Mood:</strong> ${checkin.mood}</p>
+        <p><strong>Energy Level:</strong> ${checkin.energy_level}/10</p>
+        <p><strong>Weight:</strong> ${checkin.weight || 'Not provided'}</p>
+        <p><strong>Symptoms:</strong> ${checkin.symptoms.join(', ') || 'None reported'}</p>
+        <p><strong>Notes:</strong> ${checkin.notes || 'No notes provided'}</p>
+    `;
+    document.getElementById('success-message').classList.remove('hidden');
+}
+
+document.getElementById('fasting-checkin-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+
+    const data = {
+        mood: document.getElementById('mood').value,
+        energy_level: document.getElementById('energy-level').value,
+        weight: document.getElementById('weight').value,
+        symptoms: Array.from(document.querySelectorAll('input[name="symptoms"]:checked')).map(cb => cb.value),
+        notes: document.getElementById('notes').value
+    };
+
+    fetch('/api/fasting/checkin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            showNotification('Check-in completed successfully!');
+            updateLastCheckin(data.checkin);
+            loadHistory();
+            document.getElementById('fasting-checkin-form').reset();
+            document.getElementById('energy-level').value = '5';
+            document.getElementById('energy-level-display').textContent = '5';
+        } else {
+            showNotification(data.message || 'Error completing check-in', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while submitting the check-in', 'error');
+    });
+});
+
+function loadHistory() {
+    fetch('/api/fasting/history')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const historyBody = document.getElementById('fasting-history');
+                historyBody.innerHTML = '';
+
+                data.history.forEach(entry => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${new Date(entry.start_time).toLocaleDateString()}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.mood || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.energy_level || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.weight || '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.symptoms ? entry.symptoms.join(', ') : '-'}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${entry.notes || '-'}</td>
+                    `;
+                    historyBody.appendChild(row);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error loading history:', error);
+            showNotification('Error loading fasting history', 'error');
+        });
+}
+
+function showNotification(message, type = 'info') {
+    alert(message);
+}
+
+// Load history when page loads
+document.addEventListener('DOMContentLoaded', loadHistory);
+</script>
+{% endblock %}
