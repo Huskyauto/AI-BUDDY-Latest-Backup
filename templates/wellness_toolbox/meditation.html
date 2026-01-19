@@ -1,0 +1,204 @@
+<script>
+let meditationAudio = {
+    initial: null,
+    interval: null,
+    ending: null
+};
+
+let backgroundSound = null;
+let meditationTimer = null;
+
+async function startMeditation(duration) {
+    try {
+        // First start the meditation session in the backend
+        const sessionResponse = await fetch('/api/meditation/start', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                duration: duration,
+                type: 'vipassana'
+            })
+        });
+
+        if (!sessionResponse.ok) {
+            throw new Error('Failed to start meditation session');
+        }
+
+        console.log("Starting meditation session...");
+
+        // Load and play initial guidance first
+        console.log("Loading initial guidance audio...");
+        const response = await fetch(`/api/meditation/guidance/initial?duration=${duration}`);
+        if (!response.ok) {
+            throw new Error(`Failed to load initial guidance`);
+        }
+
+        const audioBlob = await response.blob();
+        meditationAudio.initial = new Audio(URL.createObjectURL(audioBlob));
+
+        // Wait for initial guidance to load
+        await new Promise((resolve, reject) => {
+            meditationAudio.initial.addEventListener('loadeddata', resolve);
+            meditationAudio.initial.addEventListener('error', reject);
+        });
+
+        console.log("Initial guidance loaded, starting playback...");
+
+        // Play initial guidance immediately
+        await meditationAudio.initial.play();
+        console.log("Initial guidance playing...");
+
+        // Load remaining guidance in background while initial plays
+        loadRemainingGuidance(duration);
+
+        // Calculate session timings
+        const totalMilliseconds = duration * 60 * 1000;
+        const intervalPeriod = 3 * 60 * 1000;  // Play interval guidance every 3 minutes
+        const endingOffset = 30 * 1000;  // Play ending guidance 30 seconds before end
+
+        // Schedule periodic interval guidance
+        let elapsed = intervalPeriod;
+        while (elapsed < totalMilliseconds - endingOffset) {
+            const currentDelay = elapsed;
+            setTimeout(async () => {
+                console.log(`Playing interval guidance at ${Math.floor(currentDelay/1000/60)} minutes`);
+                await playGuidanceAudio('interval');
+            }, currentDelay);
+            elapsed += intervalPeriod;
+        }
+
+        // Schedule ending guidance
+        setTimeout(async () => {
+            console.log("Playing ending guidance");
+            await playGuidanceAudio('ending');
+        }, totalMilliseconds - endingOffset);
+
+        // Schedule session completion
+        meditationTimer = setTimeout(async () => {
+            console.log("Completing meditation session");
+            await completeMeditation(duration);
+        }, totalMilliseconds);
+
+    } catch (error) {
+        console.error('Error in meditation:', error);
+        showNotification('Error starting meditation session', 'error');
+    }
+}
+
+async function loadRemainingGuidance(duration) {
+    try {
+        // Load interval and ending guidance
+        for (const phase of ['interval', 'ending']) {
+            console.log(`Loading ${phase} guidance...`);
+            const response = await fetch(`/api/meditation/guidance/${phase}?duration=${duration}`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to load ${phase} guidance`);
+            }
+
+            const audioBlob = await response.blob();
+            meditationAudio[phase] = new Audio(URL.createObjectURL(audioBlob));
+
+            // Wait for audio to load
+            await new Promise((resolve, reject) => {
+                meditationAudio[phase].addEventListener('loadeddata', resolve);
+                meditationAudio[phase].addEventListener('error', reject);
+            });
+            console.log(`${phase} guidance loaded`);
+        }
+    } catch (error) {
+        console.error('Error loading remaining guidance:', error);
+    }
+}
+
+async function playGuidanceAudio(phase) {
+    try {
+        if (!meditationAudio[phase]) {
+            throw new Error(`${phase} guidance audio not found`);
+        }
+
+        console.log(`Playing ${phase} guidance`);
+        meditationAudio[phase].currentTime = 0;
+        await meditationAudio[phase].play();
+
+        // Wait for the guidance to complete
+        await new Promise((resolve) => {
+            meditationAudio[phase].addEventListener('ended', resolve, { once: true });
+        });
+
+        console.log(`${phase} guidance completed`);
+
+    } catch (error) {
+        console.error(`Error playing ${phase} guidance:`, error);
+        showNotification('Error playing meditation guidance', 'error');
+    }
+}
+
+async function stopMeditation() {
+    try {
+        // Clear timer
+        if (meditationTimer) {
+            clearTimeout(meditationTimer);
+            meditationTimer = null;
+        }
+
+        // Stop all audio
+        Object.values(meditationAudio).forEach(audio => {
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+
+    } catch (error) {
+        console.error('Error stopping meditation:', error);
+        showNotification('Error stopping meditation session', 'error');
+    }
+}
+
+async function completeMeditation(duration) {
+    try {
+        const response = await fetch('/api/meditation/complete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                actual_duration: duration
+            })
+        });
+
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            document.getElementById('total-sessions').textContent = data.stats.total_sessions;
+            document.getElementById('total-minutes').textContent = data.stats.total_minutes;
+            showNotification('Meditation session completed successfully!');
+        } else {
+            showNotification(data.message || 'Failed to complete meditation session', 'error');
+        }
+    } catch (error) {
+        console.error('Error completing meditation:', error);
+        showNotification('An error occurred while completing the meditation session', 'error');
+    }
+}
+
+async function updateMeditationStats() {
+    try {
+        const response = await fetch('/api/meditation/stats');
+        const data = await response.json();
+
+        if (data.status === 'success') {
+            document.getElementById('total-sessions').textContent = data.stats.total_sessions;
+            document.getElementById('total-minutes').textContent = data.stats.total_minutes;
+        }
+    } catch (error) {
+        console.error('Error fetching meditation stats:', error);
+    }
+}
+
+// Initialize stats when page loads
+document.addEventListener('DOMContentLoaded', updateMeditationStats);
+</script>
