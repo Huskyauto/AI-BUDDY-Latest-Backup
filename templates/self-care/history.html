@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+
+{% block title %}Self-Care History | AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('self_care.self_care_index') }}">Self-Care</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Activity History</li>
+                </ol>
+            </nav>
+            
+            <h1 class="mb-4">Your Self-Care Activity History</h1>
+            <p class="lead">Track your self-care journey and see your progress over time.</p>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-12">
+            {% if activities %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Past Activities</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Activity</th>
+                                        <th>Type</th>
+                                        <th>Duration</th>
+                                        <th>Mood Change</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for activity in activities %}
+                                        <tr>
+                                            <td>{{ activity.completed_at.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                                            <td>{{ activity.title }}</td>
+                                            <td><span class="badge bg-info">{{ activity.activity_type }}</span></td>
+                                            <td>{{ activity.duration_minutes }} min</td>
+                                            <td>
+                                                {% if activity.mood_before and activity.mood_after %}
+                                                    {% set mood_map = {
+                                                        'very_negative': 1,
+                                                        'negative': 2,
+                                                        'neutral': 3,
+                                                        'positive': 4,
+                                                        'very_positive': 5
+                                                    } %}
+                                                    
+                                                    {% set before_value = mood_map.get(activity.mood_before, 3) %}
+                                                    {% set after_value = mood_map.get(activity.mood_after, 3) %}
+                                                    {% set diff = after_value - before_value %}
+                                                    
+                                                    {% if diff > 0 %}
+                                                        <span class="text-success"><i class="bi bi-arrow-up-circle-fill"></i> Improved</span>
+                                                    {% elif diff < 0 %}
+                                                        <span class="text-danger"><i class="bi bi-arrow-down-circle-fill"></i> Declined</span>
+                                                    {% else %}
+                                                        <span class="text-secondary"><i class="bi bi-dash-circle-fill"></i> No change</span>
+                                                    {% endif %}
+                                                {% else %}
+                                                    <span class="text-muted">Not recorded</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if activity.user_rating %}
+                                                    <div class="rating">
+                                                        {% for i in range(1, 6) %}
+                                                            {% if i <= activity.user_rating %}
+                                                                <i class="bi bi-star-fill text-warning"></i>
+                                                            {% else %}
+                                                                <i class="bi bi-star text-muted"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">Not rated</span>
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Summary Card -->
+                <div class="row mt-4">
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Activities</h5>
+                                <p class="display-4">{{ activities|length }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Total Minutes</h5>
+                                <p class="display-4">{{ activities|sum(attribute='duration_minutes') or 0 }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Average Rating</h5>
+                                {% set rated_activities = activities|selectattr('user_rating', 'defined')|list %}
+                                {% if rated_activities %}
+                                    {% set avg_rating = (rated_activities|sum(attribute='user_rating') / rated_activities|length)|round(1) %}
+                                    <p class="display-4">{{ avg_rating }}</p>
+                                {% else %}
+                                    <p class="display-4">-</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">No activities recorded yet!</h4>
+                    <p>Your self-care activity history will be displayed here once you start completing recommended activities.</p>
+                    <hr>
+                    <p class="mb-0">
+                        <a href="{{ url_for('self_care.self_care_index') }}" class="btn btn-primary">
+                            <i class="bi bi-arrow-left"></i> Back to Recommendations
+                        </a>
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
