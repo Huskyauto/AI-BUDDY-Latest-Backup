@@ -1,0 +1,194 @@
+<!-- Wellness Insights Card -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Daily Wellness Insight</h5>
+        <div id="wellness-quote" class="p-3 bg-light rounded">
+            <blockquote class="blockquote mb-0">
+                <p id="quote-text" class="font-italic">{{ initial_data.quote.text }}</p>
+                <footer class="blockquote-footer">
+                    <span id="quote-author">{{ initial_data.quote.author }}</span>
+                </footer>
+            </blockquote>
+        </div>
+    </div>
+</div>
+
+<!-- Weight Tracking Section -->
+<div class="card mb-4">
+    <div class="card-body">
+        <h5 class="card-title">Weight Tracking</h5>
+        <div class="row">
+            <div class="col-md-8">
+                <div class="weight-chart-container" style="height: 400px;">
+                    <canvas id="weightChart"></canvas>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <form id="weight-log-form" class="mb-3" onsubmit="handleWeightSubmit(event)">
+                    <div class="mb-3">
+                        <label for="log-weight" class="form-label">Log Weight (lbs)</label>
+                        <input type="number" class="form-control" id="log-weight" step="0.1" min="1" required>
+                        <small class="form-text text-muted">Record your current weight to track progress</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="weight-notes" class="form-label">Notes (optional)</label>
+                        <textarea class="form-control" id="weight-notes" rows="2"></textarea>
+                    </div>
+                    <div id="weight-error" class="alert alert-danger" style="display: none;"></div>
+                    <button type="submit" class="btn btn-primary">Log Weight</button>
+                </form>
+                <div id="milestone-message" class="alert alert-success" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Navigation tabs -->
+<ul class="nav nav-tabs mb-4" id="foodTrackerTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="log-tab" data-bs-toggle="tab" data-bs-target="#log" type="button" role="tab">Log Food</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="history-tab" data-bs-toggle="tab" data-bs-target="#history" type="button" role="tab">History</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="foodTrackerContent">
+    <!-- Log Food Tab -->
+    <div class="tab-pane fade show active" id="log" role="tabpanel">
+        <!-- Quick Water Intake -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Quick Water Intake</h5>
+                <div class="input-group">
+                    <button class="btn btn-outline-secondary" type="button" onclick="decrementWater()">-</button>
+                    <input type="number" class="form-control text-center" id="water-amount" value="0" min="0" step="1">
+                    <button class="btn btn-outline-secondary" type="button" onclick="incrementWater()">+</button>
+                    <button class="btn btn-primary" type="button" onclick="logWater()">Log Water</button>
+                </div>
+                <div class="mt-2">
+                    <span>Daily Total: <span id="daily-water">{{ initial_data.totalWater }}</span> oz</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Food Section -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Search Food</h5>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="food-search" placeholder="Search for food...">
+                    <button class="btn btn-primary" type="button" onclick="searchFood()">Search</button>
+                </div>
+                <div id="search-results" class="list-group">
+                    <!-- Search results will be populated here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Food Log Form -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Log Food</h5>
+                <form id="food-log-form" class="needs-validation" novalidate>
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="food-name" class="form-label">Food Name</label>
+                            <input type="text" class="form-control" id="food-name" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="serving-size" class="form-label">Serving Size</label>
+                            <input type="number" class="form-control" id="serving-size" min="0.5" step="0.5" value="1" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="unit" class="form-label">Unit</label>
+                            <select class="form-select" id="unit" required>
+                                <option value="serving">serving</option>
+                                <option value="oz">oz</option>
+                                <option value="g">g</option>
+                                <option value="cup">cup</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="meal-type" class="form-label">Meal Type</label>
+                            <select class="form-select" id="meal-type" required>
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Location</label>
+                            <input type="text" class="form-control" id="location" placeholder="e.g., Home, Work, Restaurant">
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="hunger-before" class="form-label">Hunger Before (1-10)</label>
+                            <input type="range" class="form-range" id="hunger-before" min="1" max="10" value="5">
+                            <div class="d-flex justify-content-between">
+                                <span>Not Hungry</span>
+                                <span>Very Hungry</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fullness-after" class="form-label">Fullness After (1-10)</label>
+                            <input type="range" class="form-range" id="fullness-after" min="1" max="10" value="5">
+                            <div class="d-flex justify-content-between">
+                                <span>Still Hungry</span>
+                                <span>Very Full</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label for="emotional-state" class="form-label">Emotional State</label>
+                            <select class="form-select" id="emotional-state">
+                                <option value="">Select emotion...</option>
+                                <option value="happy">Happy</option>
+                                <option value="satisfied">Satisfied</option>
+                                <option value="neutral">Neutral</option>
+                                <option value="stressed">Stressed</option>
+                                <option value="anxious">Anxious</option>
+                                <option value="sad">Sad</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="satisfaction-level" class="form-label">Satisfaction Level (1-5)</label>
+                            <input type="range" class="form-range" id="satisfaction-level" min="1" max="5" value="3">
+                            <div class="d-flex justify-content-between">
+                                <span>Not Satisfied</span>
+                                <span>Very Satisfied</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes</label>
+                        <textarea class="form-control" id="notes" rows="3" placeholder="Any additional notes about this meal..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Log Food</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Tab -->
+    <div class="tab-pane fade" id="history" role="tabpanel">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Food Log History</h5>
+                <div id="food-log-entries" class="list-group">
+                    <!-- Food entries will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
