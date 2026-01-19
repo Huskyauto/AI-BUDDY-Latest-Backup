@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Fasting Programs - AI-BUDDY{% endblock %}
+
+{% block content %}
+<section class="container mx-auto px-4 py-8">
+    <h1 class="text-2xl font-bold text-teal-500 mb-2">Fasting Programs</h1>
+    <p class="text-gray-600 mb-6">Explore different fasting programs and track your progress with guided support.</p>
+
+    <!-- Intermittent Fasting Section -->
+    <div class="bg-white rounded-lg shadow p-6 mb-8">
+        <h2 class="text-xl font-bold mb-2">Intermittent Fasting</h2>
+        <p class="text-gray-600 mb-4">Track and manage your intermittent fasting schedule with guided programs.</p>
+
+        <div class="space-y-4">
+            <div>
+                <label for="intermittent-program" class="block text-sm font-medium text-gray-700">Select Program:</label>
+                <select id="intermittent-program" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-teal-500 focus:ring-teal-500">
+                    <option value="">Choose a fasting schedule...</option>
+                    <option value="16-8">16:8 Intermittent Fasting</option>
+                    <option value="18-6">18:6 Intermittent Fasting</option>
+                    <option value="20-4">20:4 Intermittent Fasting</option>
+                </select>
+            </div>
+
+            <button onclick="startIntermittentFast()" class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded">
+                Start Intermittent Fast
+            </button>
+        </div>
+    </div>
+
+    <!-- Extended Fasting Programs -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- 3-Day Reset Fast -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">3-Day Reset Fast</h2>
+            <p class="text-gray-600 mb-4">A gentle 3-day fast to reset your metabolism and digestive system.</p>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Benefits:</h3>
+                <p class="text-gray-700">Enhanced metabolic flexibility, improved insulin sensitivity, cellular repair activation.</p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Instructions:</h3>
+                <p class="text-gray-700">Drink water, herbal tea, and electrolytes. Stop if you feel unwell.</p>
+            </div>
+
+            <a href="{{ url_for('wellness_toolbox.fasting_checkin', program_type='3-day') }}" class="block w-full">
+                <button class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded">
+                    Start 3-Day Reset Fast
+                </button>
+            </a>
+        </div>
+
+        <!-- 5-Day Longevity Fast -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">5-Day Longevity Fast</h2>
+            <p class="text-gray-600 mb-4">A comprehensive fast focusing on longevity benefits and cellular regeneration.</p>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Benefits:</h3>
+                <p class="text-gray-700">Autophagy activation, stem cell generation, inflammation reduction.</p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Instructions:</h3>
+                <p class="text-gray-700">Maintain electrolyte balance. Light exercise only. Monitor energy levels.</p>
+            </div>
+
+            <a href="{{ url_for('wellness_toolbox.fasting_checkin', program_type='5-day') }}" class="block w-full">
+                <button class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded">
+                    Start 5-Day Longevity Fast
+                </button>
+            </a>
+        </div>
+
+        <!-- 7-Day Transformation -->
+        <div class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-xl font-semibold mb-4">7-Day Transformation</h2>
+            <p class="text-gray-600 mb-4">Advanced fast for experienced fasters seeking deep healing.</p>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Benefits:</h3>
+                <p class="text-gray-700">Maximum autophagy, immune system reset, extensive cellular repair.</p>
+            </div>
+
+            <div class="mb-4">
+                <h3 class="font-medium mb-2">Instructions:</h3>
+                <p class="text-gray-700">Daily monitoring required. Electrolytes essential. Rest frequently.</p>
+            </div>
+
+            <a href="{{ url_for('wellness_toolbox.fasting_checkin', program_type='7-day') }}" class="block w-full">
+                <button class="w-full bg-teal-500 hover:bg-teal-600 text-white py-2 px-4 rounded">
+                    Start 7-Day Transformation
+                </button>
+            </a>
+        </div>
+    </div>
+</section>
+
+<script>
+function startIntermittentFast() {
+    const programSelect = document.getElementById('intermittent-program');
+    const selectedProgram = programSelect.value;
+
+    if (!selectedProgram) {
+        showNotification('Please select a fasting schedule');
+        return;
+    }
+
+    // Map the selected value to program IDs
+    const programMap = {
+        '16-8': 1,  // Adjust these IDs based on your database
+        '18-6': 2,
+        '20-4': 3
+    };
+
+    fetch('/api/fasting/start', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify({ program_id: programMap[selectedProgram] })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            window.location.href = data.redirect_url || '/wellness-toolbox/fasting-checkin';
+        } else {
+            console.error('Error:', data.message);
+            showNotification(data.message || 'Error starting fasting program', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('An error occurred while starting the fasting program', 'error');
+    });
+}
+
+function showNotification(message, type = 'info') {
+    alert(message);
+}
+</script>
+{% endblock %}
