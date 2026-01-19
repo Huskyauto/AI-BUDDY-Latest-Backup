@@ -1,0 +1,122 @@
+Meditation and Stress Tracking Features Documentation
+Last Updated: January 22, 2025
+
+Overview
+The Wellness Toolbox implements comprehensive meditation tracking and stress monitoring capabilities, integrating both smart ring data and manual stress logging for a complete wellness monitoring solution.
+
+Core Features
+Meditation System
+
+Customizable session durations (5-60 minutes)
+Multiple background sound options
+Voice-guided Vipassana meditation
+Session statistics tracking
+Real-time stress level monitoring
+Stress Tracking System
+
+Manual stress level logging (1-10 scale)
+Symptom tracking
+Notes and context recording
+Historical view of last 6 entries
+Real-time stress level display
+Smart ring integration (optional)
+Technical Implementation
+Meditation Timer Component
+// Key components in wellness_toolbox.js
+- Timer management with periodic updates
+- Background sound handling with volume control
+- Voice guidance system with intro, periodic, and ending messages
+- Session state management
+Stress Tracking System
+// Independent stress monitoring system
+- Continuous stress level updates (30-second intervals)
+- Historical data management
+- Smart ring data integration
+- Symptom and notes logging
+API Endpoints
+Meditation Endpoints
+/api/meditation/start (POST)
+
+Initiates meditation session
+Records initial stress level
+Returns session metadata
+/api/meditation/complete (POST)
+
+Completes active session
+Records final stress measurements
+Updates user statistics
+/api/meditation/stats (GET)
+
+Returns meditation statistics
+Includes streaks and total sessions
+/api/meditation/guidance/<duration> (GET)
+
+Serves meditation guidance audio files
+Customized for session duration
+Stress Tracking Endpoints
+/api/stress/log (POST)
+
+Records manual stress entries
+Supports symptoms and notes
+Validates input (1-10 scale)
+/api/stress/history (GET)
+
+Returns recent stress history
+Limited to last 6 entries
+Includes timestamps and details
+Database Schema
+class MeditationSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    start_time = db.Column(db.DateTime)
+    end_time = db.Column(db.DateTime)
+    duration = db.Column(db.Integer)
+    meditation_type = db.Column(db.String)
+    stress_level_start = db.Column(db.Float)
+    stress_level_end = db.Column(db.Float)
+    status = db.Column(db.String)
+class StressLevel(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    level = db.Column(db.Integer)
+    symptoms = db.Column(db.ARRAY(db.String))
+    notes = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime)
+Frontend Implementation
+Meditation Interface
+Timer display with countdown
+Background sound selection
+Volume control slider
+Session controls (Start/Stop)
+Real-time stress level display
+Session statistics
+Stress Tracking Interface
+Stress level slider (1-10)
+Symptom input field
+Optional notes field
+Historical view of recent entries
+Current stress level display
+Recent Updates
+Isolated stress level monitoring from meditation sessions
+Improved stress history persistence
+Enhanced layout and spacing in history display
+Removed redundant smart ring metrics display
+Added continuous stress level updates
+Best Practices
+Keep stress monitoring independent from meditation sessions
+Update stress levels at regular intervals (30 seconds)
+Maintain clear separation between manual and automated data
+Provide immediate feedback for user actions
+Implement graceful fallbacks for unavailable data
+Error Handling
+Graceful degradation when ring data unavailable
+Clear error messages for failed operations
+Automatic retry for failed data updates
+Persistent storage of manual entries
+Validation of all user inputs
+Future Enhancements
+Enhanced meditation statistics visualization
+Additional background sound options
+Customizable guidance intervals
+Extended historical data analysis
+Advanced stress pattern recognition
