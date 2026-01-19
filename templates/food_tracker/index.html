@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Food Tracker</h1>
+
+    <!-- Initial data passed from server -->
+    <script>
+        window.initialData = {{ initial_data|default({})|tojson|safe }};
+    </script>
+
+    <!-- Daily Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Calories</h5>
+                    <h2 class="display-4"><span id="daily-calories">{{ initial_data.totalCalories|default(0)|round|int }}</span> cal</h2>
+                    <p class="text-muted">Total calories consumed today</p>
+                    <div class="progress">
+                        <div class="progress-bar bg-success" role="progressbar" id="calorie-progress" 
+                             style="width: {{ ((initial_data.totalCalories|default(0)) / (initial_data.calorieGoal|default(2000)) * 100)|round|int }}%">
+                        </div>
+                    </div>
+                    <small class="text-muted">Goal: <span id="calorie-goal">{{ initial_data.calorieGoal|default(2000)|round|int }}</span> cal</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Daily Water Intake</h5>
+                    <h2 class="display-4"><span id="daily-water">{{ initial_data.totalWater|default(0)|round(1) }}</span> oz</h2>
+                    <p class="text-muted">Total water consumed today</p>
+                    <div class="progress">
+                        <div class="progress-bar" role="progressbar" id="water-progress" 
+                             style="width: {{ ((initial_data.totalWater|default(0)) / (initial_data.waterGoal|default(64)) * 100)|round|int }}%">
+                        </div>
+                    </div>
+                    <small class="text-muted">Goal: <span id="water-goal">{{ initial_data.waterGoal|default(64)|round(1) }}</span> oz</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Water Goal Settings</h5>
+                    <!-- Weight-based water goal form -->
+                    <form id="weight-form" class="mb-3">
+                        <div class="mb-3">
+                            <label for="weight" class="form-label">Your Weight (lbs)</label>
+                            {% if initial_data.userWeight is not none %}
+                            <input type="number" class="form-control" id="weight" value="{{ initial_data.userWeight|round(1) }}" min="1" step="0.1" required>
+                            {% else %}
+                            <input type="number" class="form-control" id="weight" value="150" min="1" step="0.1" required>
+                            {% endif %}
+                            <small class="form-text text-muted">This will update your daily calorie goal and suggest a water goal</small>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Update Weight</button>
+                    </form>
+                    <p class="mt-3 mb-1">Current Water Goal: <span id="current-water-goal">{{ initial_data.waterGoal|default(64)|round(1) }}</span> oz</p>
+                    <small class="text-muted">Minimum recommended: 64 oz per day</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "food_tracker/_content.html" %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/food_tracker.js') }}"></script>
+{% endblock %}
