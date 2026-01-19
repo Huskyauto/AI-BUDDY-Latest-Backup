@@ -1,0 +1,371 @@
+import os
+import logging
+from flask import Blueprint, render_template, request, jsonify, send_file
+from flask_login import login_required, current_user
+from extensions import db
+from models import MeditationSession, StressLevel
+from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+from ring_data import get_ring_data
+from gtts import gTTS
+from pathlib import Path
+
+wellness_toolbox_bp = Blueprint('wellness_toolbox', __name__)
+logger = logging.getLogger(__name__)
+
+# Create static directory for meditation sounds if it doesn't exist
+MEDITATION_SOUNDS_DIR = Path("static/meditation_sounds")
+MEDITATION_SOUNDS_DIR.mkdir(parents=True, exist_ok=True)
+
+MEDITATION_GUIDANCE_DIR = Path("static/meditation_guidance")
+MEDITATION_GUIDANCE_DIR.mkdir(parents=True, exist_ok=True)
+
+BACKGROUND_SOUNDS = {
+    "gentle_rainfall": "Gentle rainfall meditation background",
+    "wind_in_trees": "Wind in trees meditation sound",
+    "flowing_water": "Flowing water meditation background",
+    "brown_noise": "Brown noise for deep focus",
+    "ambient_pad": "Ambient pad for relaxation"
+}
+
+def generate_meditation_guidance(duration_minutes):
+    """Generate meditation voice guidance with periodic reminders and ending guidance"""
+    intro_text = f"""Welcome to your {duration_minutes} minute Vipassana meditation session.
+    Begin your meditation journey with guided Vipassana practice.
+    Find a comfortable position, sitting with your back straight but relaxed.
+    Gently close your eyes and take three deep breaths.
+    Feel the natural flow of your breath, observing each inhale and exhale.
+    Let your attention rest on the sensations of breathing."""
+
+    periodic_text = """Continue your mindful observation of breath.
+    If thoughts arise, acknowledge them without judgment.
+    Notice any sensations in your body with gentle awareness.
+    Return your attention to the breath, your anchor to the present moment.
+    Each breath is an opportunity to deepen your practice."""
+
+    ending_text = """As we approach the end of this session,
+    Gradually expand your awareness to your whole body.
+    Take a few deep, conscious breaths.
+    Slowly move your fingers and toes.
+    When you're ready, gently open your eyes, carrying this sense of peace with you."""
+
+    try:
+        # Generate all guidance files if they don't exist
+        intro_file = MEDITATION_GUIDANCE_DIR / f"guidance_{duration_minutes}_intro.mp3"
+        periodic_file = MEDITATION_GUIDANCE_DIR / f"guidance_{duration_minutes}_periodic.mp3"
+        ending_file = MEDITATION_GUIDANCE_DIR / f"guidance_{duration_minutes}_ending.mp3"
+
+        files_to_generate = {
+            intro_file: intro_text,
+            periodic_file: periodic_text,
+            ending_file: ending_text
+        }
+
+        for file_path, text in files_to_generate.items():
+            if not file_path.exists():
+                tts = gTTS(text=text, lang='en', slow=True)
+                tts.save(str(file_path))
+                logger.info(f"Generated meditation guidance file: {file_path.name}")
+
+        return {
+            'intro': str(intro_file),
+            'periodic': str(periodic_file),
+            'ending': str(ending_file)
+        }
+    except Exception as e:
+        logger.error(f"Error generating meditation guidance: {e}", exc_info=True)
+        return None
+
+@wellness_toolbox_bp.route('/wellness-toolbox')
+@login_required
+def index():
+    """Main page for wellness toolbox"""
+    try:
+        show_ring_data = current_user.can_view_ring_data()
+        meditation_description = """
+        Begin your meditation journey with guided Vipassana practice.
+        This ancient technique helps reduce stress, increase focus, and promote overall well-being.
+        Let our voice guidance lead you through a mindful meditation experience.
+        """
+
+        durations = [5, 10, 15, 20, 30]
+
+        return render_template('wellness_toolbox/index.html',
+                          user=current_user,
+                          show_ring_data=show_ring_data,
+                          meditation_description=meditation_description,
+                          durations=durations,
+                          background_sounds=BACKGROUND_SOUNDS)
+    except Exception as e:
+        logger.error(f"Error loading wellness toolbox: {e}", exc_info=True)
+        return render_template('wellness_toolbox/index.html',
+                          error="Error loading wellness toolbox")
+
+@wellness_toolbox_bp.route('/api/meditation/guidance/<int:duration>')
+@login_required
+def get_meditation_guidance(duration):
+    """Get meditation voice guidance files"""
+    try:
+        guidance_files = generate_meditation_guidance(duration)
+        if guidance_files and all(os.path.exists(f) for f in guidance_files.values()):
+            return jsonify({
+                'status': 'success',
+                'files': guidance_files
+            })
+        else:
+            logger.error("Failed to generate or find guidance files")
+            return jsonify({'status': 'error', 'message': 'Failed to generate guidance'}), 500
+    except Exception as e:
+        logger.error(f"Error serving meditation guidance: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/meditation/start', methods=['POST'])
+@login_required
+def start_meditation():
+    """Start a new meditation session with initial stress measurement"""
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No data provided'}), 400
+
+        duration = int(data.get('duration', 20))  # Default 20 minutes
+        meditation_type = data.get('type', 'vipassana')
+
+        logger.debug(f"Starting meditation session: duration={duration}, type={meditation_type}")
+
+        # Get initial stress measurement if user has ring access
+        initial_stress = None
+        if current_user.can_view_ring_data():
+            ring_data = get_ring_data(user_id=current_user.id)
+            if ring_data and ring_data.get('show_ring_data'):
+                initial_stress = float(ring_data['oura'].get('stress_level', 0))
+
+        session = MeditationSession(
+            user_id=current_user.id,
+            start_time=datetime.now(ZoneInfo("UTC")),
+            duration=duration,
+            meditation_type=meditation_type,
+            stress_level_start=initial_stress,
+            status='in_progress'
+        )
+
+        db.session.add(session)
+        db.session.commit()
+
+        logger.info(f"Created meditation session: {session.id}")
+        logger.debug(f"Initial stress level: {initial_stress}")
+
+        return jsonify({
+            'status': 'success',
+            'session_id': session.id,
+            'duration': duration,
+            'type': meditation_type,
+            'initial_stress': initial_stress
+        })
+
+    except Exception as e:
+        logger.error(f"Error starting meditation: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/meditation/complete', methods=['POST'])
+@login_required
+def complete_meditation():
+    """Complete a meditation session with final stress measurement"""
+    try:
+        data = request.get_json()
+        actual_duration = data.get('actual_duration', 0)  # Get actual meditation duration
+
+        # Get final stress measurement if user has ring access
+        final_stress = None
+        if current_user.can_view_ring_data():
+            ring_data = get_ring_data(user_id=current_user.id)
+            if ring_data and ring_data.get('show_ring_data'):
+                final_stress = float(ring_data['oura'].get('stress_level', 0))
+
+        session = MeditationSession.query.filter_by(
+            user_id=current_user.id,
+            status='in_progress'
+        ).order_by(MeditationSession.start_time.desc()).first()
+
+        if not session:
+            return jsonify({'status': 'error', 'message': 'No active meditation session found'}), 404
+
+        # Update session with completion details and actual duration
+        session.end_time = datetime.now(ZoneInfo("UTC"))
+        session.duration = actual_duration  # Use actual duration instead of planned duration
+        session.stress_level_end = final_stress
+        session.status = 'completed'
+
+        # Update user stats
+        current_user.total_sessions = MeditationSession.query.filter_by(
+            user_id=current_user.id,
+            status='completed'
+        ).count()
+
+        current_user.total_meditation_minutes = db.session.query(
+            db.func.sum(MeditationSession.duration)
+        ).filter_by(
+            user_id=current_user.id,
+            status='completed'
+        ).scalar() or 0
+
+        db.session.commit()
+
+        logger.info(f"Meditation session completed for user {current_user.id}")
+        logger.debug(f"Final stress: {final_stress}, Duration: {actual_duration}")
+
+        # Always include current stress level in response
+        current_stress = None
+        if current_user.can_view_ring_data():
+            ring_data = get_ring_data(user_id=current_user.id)
+            if ring_data and ring_data.get('show_ring_data'):
+                current_stress = float(ring_data['oura'].get('stress_level', 0))
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Meditation session completed',
+            'stats': {
+                'current_streak': current_user.current_streak,
+                'longest_streak': current_user.longest_streak,
+                'total_sessions': current_user.total_sessions,
+                'total_minutes': current_user.total_meditation_minutes,
+                'final_stress': final_stress,
+                'current_stress': current_stress #added current stress
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error completing meditation: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/meditation/stats')
+@login_required
+def get_meditation_stats():
+    """Get user's meditation statistics"""
+    try:
+        # Calculate average stress reduction
+        recent_sessions = MeditationSession.query\
+            .filter_by(user_id=current_user.id, status='completed')\
+            .order_by(MeditationSession.start_time.desc())\
+            .limit(30)\
+            .all()
+
+        avg_stress_reduction = None
+        if recent_sessions:
+            total_reduction = sum(s.stress_reduction for s in recent_sessions if s.stress_reduction is not None)
+            count_with_reduction = len([s for s in recent_sessions if s.stress_reduction is not None])
+            if count_with_reduction > 0:
+                avg_stress_reduction = total_reduction / count_with_reduction
+
+        return jsonify({
+            'status': 'success',
+            'stats': {
+                'current_streak': current_user.current_streak,
+                'longest_streak': current_user.longest_streak,
+                'total_sessions': current_user.total_sessions,
+                'total_minutes': current_user.total_meditation_minutes,
+                'average_stress_reduction': avg_stress_reduction
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching meditation stats: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/meditation/history')
+@login_required
+def get_meditation_history():
+    """Get user's meditation history with stress measurements"""
+    try:
+        sessions = MeditationSession.query\
+            .filter_by(user_id=current_user.id)\
+            .order_by(MeditationSession.start_time.desc())\
+            .limit(30)\
+            .all()
+
+        return jsonify({
+            'status': 'success',
+            'history': [{
+                'id': session.id,
+                'date': session.start_time.isoformat(),
+                'duration': session.duration,
+                'type': session.meditation_type,
+                'status': session.status,
+                'initial_stress': session.stress_level_start,
+                'final_stress': session.stress_level_end,
+                'stress_reduction': session.stress_reduction,
+                'notes': session.notes
+            } for session in sessions]
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching meditation history: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/stress/log', methods=['POST'])
+@login_required
+def log_stress():
+    """Log current stress level manually"""
+    try:
+        data = request.get_json()
+        level = int(data.get('level', 5))  # 1-10 scale
+        symptoms = data.get('symptoms', [])
+        notes = data.get('notes', '')
+
+        # Validate stress level
+        if not 1 <= level <= 10:
+            return jsonify({
+                'status': 'error', 
+                'message': 'Stress level must be between 1 and 10'
+            }), 400
+
+        stress_log = StressLevel(
+            user_id=current_user.id,
+            level=level,
+            symptoms=symptoms,
+            notes=notes,
+            timestamp=datetime.now(ZoneInfo("UTC"))
+        )
+
+        db.session.add(stress_log)
+        db.session.commit()
+        logger.info(f"Manual stress level logged for user {current_user.id}: Level {level}")
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Stress level logged successfully'
+        })
+
+    except Exception as e:
+        logger.error(f"Error logging stress: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@wellness_toolbox_bp.route('/api/stress/history')
+@login_required
+def get_stress_history():
+    """Get user's stress level history"""
+    try:
+        # Get last 30 days of stress logs
+        thirty_days_ago = datetime.now(ZoneInfo("UTC")) - timedelta(days=30)
+        stress_logs = StressLevel.query\
+            .filter_by(user_id=current_user.id)\
+            .filter(StressLevel.timestamp >= thirty_days_ago)\
+            .order_by(StressLevel.timestamp.desc())\
+            .all()
+
+        return jsonify({
+            'status': 'success',
+            'history': [{
+                'id': log.id,
+                'level': log.level,
+                'symptoms': log.symptoms,
+                'notes': log.notes,
+                'timestamp': log.timestamp.isoformat()
+            } for log in stress_logs]
+        })
+
+    except Exception as e:
+        logger.error(f"Error fetching stress history: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
