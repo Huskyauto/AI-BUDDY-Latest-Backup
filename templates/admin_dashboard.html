@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard - AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Admin Dashboard</h1>
+            <div class="alert alert-success">
+                <strong>Admin Access:</strong> Welcome to the Administrator Dashboard, huskyauto@gmail.com.
+            </div>
+        </div>
+    </div>
+    
+    <div class="row">
+        <!-- Stats Highlights -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Users</h5>
+                    <h2 class="display-4">{{ total_users }}</h2>
+                    <p class="text-muted">Total registered users</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Active Users</h5>
+                    <h2 class="display-4">{{ active_users }}</h2>
+                    <p class="text-muted">Last 7 days</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <h5 class="card-title">Chat Conversations</h5>
+                    <h2 class="display-4">{{ total_chats }}</h2>
+                    <p class="text-muted">Total conversations</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <!-- Tabs Navigation -->
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="users-tab" data-toggle="tab" href="#users" role="tab" aria-controls="users" aria-selected="true">Users</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="api-tab" data-toggle="tab" href="#api" role="tab" aria-controls="api" aria-selected="false">API Usage</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="reports-tab" data-toggle="tab" href="#reports" role="tab" aria-controls="reports" aria-selected="false">Reports</a>
+                </li>
+            </ul>
+            
+            <!-- Tab Content -->
+            <div class="tab-content p-3 border border-top-0 rounded-bottom" id="adminTabsContent">
+                <!-- Users Tab -->
+                <div class="tab-pane fade show active" id="users" role="tabpanel" aria-labelledby="users-tab">
+                    <h3 class="mb-3">User Management</h3>
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Joined</th>
+                                    <th>Last Active</th>
+                                    <th>Ring Access</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td colspan="6" class="text-center">Loading user data...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- API Usage Tab -->
+                <div class="tab-pane fade" id="api" role="tabpanel" aria-labelledby="api-tab">
+                    <h3 class="mb-3">API Usage Statistics</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <canvas id="apiUsageChart" width="400" height="300"></canvas>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0">API Response Times (avg)</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div id="apiResponseTimes">
+                                        <p class="text-center">Loading API data...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Reports Tab -->
+                <div class="tab-pane fade" id="reports" role="tabpanel" aria-labelledby="reports-tab">
+                    <h3 class="mb-3">Report Generation</h3>
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-3">Available Reports</h5>
+                            <div class="list-group">
+                                <a href="#" id="userReportBtn" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    User Statistics Report
+                                    <span class="btn btn-sm btn-primary">Generate PDF</span>
+                                </a>
+                                <a href="#" id="apiReportBtn" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    API Usage Report
+                                    <span class="btn btn-sm btn-primary">Generate PDF</span>
+                                </a>
+                                <a href="#" id="combinedReportBtn" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                    Combined Activity Report
+                                    <span class="btn btn-sm btn-primary">Generate PDF</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.4/dist/Chart.min.js"></script>
+<script>
+    $(document).ready(function() {
+        // Load user data for the table
+        $.ajax({
+            url: '/admin/user-stats',
+            method: 'GET',
+            success: function(data) {
+                let tableContent = '';
+                
+                // Sort users by ID for consistency
+                data.user_engagement.sort((a, b) => a.id - b.id);
+                
+                data.user_engagement.forEach(user => {
+                    tableContent += `
+                        <tr>
+                            <td>${user.id}</td>
+                            <td>${user.username}</td>
+                            <td>${user.email}</td>
+                            <td>${user.joined}</td>
+                            <td>${user.last_active}</td>
+                            <td><strong>${user.has_ring_access ? 
+'<span class="badge bg-success text-white" style="font-size: 16px; padding: 8px 12px; font-weight: 800; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); border: 2px solid #28a745; box-shadow: 0 0 5px rgba(0,0,0,0.3);">RING ACCESS</span>' : 
+'<span class="badge bg-danger text-white" style="font-size: 16px; padding: 8px 12px; font-weight: 800; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.7); border: 2px solid #dc3545; box-shadow: 0 0 5px rgba(0,0,0,0.3);">NO ACCESS</span>'
+}</strong></td>
+                        </tr>
+                    `;
+                });
+                
+                $('#usersTable tbody').html(tableContent);
+                
+                // Could add pagination here if the user list grows large
+            },
+            error: function(err) {
+                console.error('Error fetching user stats:', err);
+                $('#usersTable tbody').html('<tr><td colspan="6" class="text-center text-danger">Error loading user data. Please try again.</td></tr>');
+            }
+        });
+        
+        // Load API usage data and create chart
+        $.ajax({
+            url: '/admin/api-usage',
+            method: 'GET',
+            success: function(data) {
+                // Create the API usage pie chart
+                const apiLabels = data.api_totals.map(item => item.api);
+                const apiCounts = data.api_totals.map(item => item.count);
+                
+                const ctx = document.getElementById('apiUsageChart').getContext('2d');
+                const apiChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: apiLabels,
+                        datasets: [{
+                            data: apiCounts,
+                            backgroundColor: [
+                                '#4e73df',
+                                '#1cc88a',
+                                '#36b9cc',
+                                '#f6c23e',
+                                '#e74a3b'
+                            ],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        title: {
+                            display: true,
+                            text: 'API Call Distribution'
+                        }
+                    }
+                });
+                
+                // Display response times with improved visibility and dark text
+                let responseTimeHtml = '<div class="card border-0 shadow-sm mb-4"><div class="card-body p-0"><ul class="list-group list-group-flush">';
+                data.api_totals.forEach(api => {
+                    // Get performance-based color for response time
+                    let badgeClass = 'bg-success';
+                    let backgroundColor = '#28a745';
+                    let borderColor = '#1e7e34';
+                    
+                    if (api.avg_response_time > 1.2) {
+                        badgeClass = 'bg-warning';
+                        backgroundColor = '#ffc107';
+                        borderColor = '#d39e00';
+                    }
+                    if (api.avg_response_time > 2.0) {
+                        badgeClass = 'bg-danger';
+                        backgroundColor = '#dc3545';
+                        borderColor = '#bd2130';
+                    }
+                    
+                    responseTimeHtml += `
+                        <li class="list-group-item d-flex justify-content-between align-items-center" style="border-left: 5px solid ${borderColor}; padding-left: 15px;">
+                            <strong style="color: #222; font-size: 16px;">${api.api}</strong>
+                            <span class="badge ${badgeClass} text-white" style="font-size: 15px; padding: 8px 12px; font-weight: 800; letter-spacing: 0.5px; text-shadow: 1px 1px 2px rgba(0,0,0,0.6); border: 2px solid ${borderColor}; box-shadow: 0 0 5px rgba(0,0,0,0.2);">
+                                ${api.avg_response_time.toFixed(2)}s
+                            </span>
+                        </li>
+                    `;
+                });
+                responseTimeHtml += '</ul></div></div>';
+                
+                $('#apiResponseTimes').html(responseTimeHtml);
+            },
+            error: function(err) {
+                console.error('Error fetching API usage stats:', err);
+                $('#apiResponseTimes').html('<p class="text-center text-danger">Error loading API data. Please try again.</p>');
+            }
+        });
+        
+        // Handle report generation with direct downloads
+        $('#userReportBtn').on('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/admin/reports/generate-user-report';
+        });
+        
+        $('#apiReportBtn').on('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/admin/reports/generate-api-report';
+        });
+        
+        $('#combinedReportBtn').on('click', function(e) {
+            e.preventDefault();
+            window.location.href = '/admin/reports/generate-combined-report';
+        });
+    });
+</script>
+{% endblock %}
