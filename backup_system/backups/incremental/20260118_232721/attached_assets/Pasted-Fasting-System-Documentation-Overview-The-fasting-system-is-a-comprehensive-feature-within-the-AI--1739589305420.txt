@@ -1,0 +1,254 @@
+Fasting System Documentation
+Overview
+The fasting system is a comprehensive feature within the AI-BUDDY platform that enables users to:
+
+Choose from predefined fasting programs
+Track their fasting progress
+Complete daily check-ins
+Monitor health metrics
+Receive guided support throughout their fasting journey
+System Architecture
+Backend Components
+Models
+class FastingProgram(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    duration_days = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text)
+    benefits = db.Column(db.Text)
+    instructions = db.Column(db.Text)
+    daily_guidance = db.Column(db.JSON)
+    contraindications = db.Column(db.Text)
+class FastingSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey('fasting_program.id'), nullable=False)
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default='active')
+    check_ins = db.relationship('FastingCheckIn', backref='session', lazy=True)
+class FastingCheckIn(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('fasting_session.id'), nullable=False)
+    day_number = db.Column(db.Integer, nullable=False)
+    check_in_time = db.Column(db.DateTime, default=datetime.utcnow)
+    mood = db.Column(db.String(50))
+    energy_level = db.Column(db.Integer)
+    weight = db.Column(db.Float)
+    symptoms = db.Column(db.JSON)
+    notes = db.Column(db.Text)
+API Endpoints
+Get Available Programs
+
+Route: /api/fasting/programs
+Method: GET
+Authentication: Required
+Description: Returns list of available fasting programs
+Start Fasting Session
+
+Route: /api/fasting/start
+Method: POST
+Authentication: Required
+Payload: { "program_id": integer }
+Description: Initiates a new fasting session
+Get Active Session
+
+Route: /api/fasting/active
+Method: GET
+Authentication: Required
+Description: Retrieves user's active fasting session details
+Daily Check-in
+
+Route: /api/fasting/checkin
+Method: POST
+Authentication: Required
+Payload:
+{
+    "mood": string,
+    "energy_level": integer,
+    "weight": float,
+    "symptoms": array,
+    "notes": string
+}
+Reset Fasting Session
+
+Route: /api/fasting/reset
+Method: POST
+Authentication: Required
+Description: Cancels active fasting session
+Frontend Implementation
+Key Components
+Program Selection Interface
+
+Displays available programs in card format
+Shows program details:
+Name
+Duration
+Description
+Benefits
+Instructions
+Start button for each program
+Active Session Display
+
+Progress bar showing current day
+Daily guidance display
+Check-in form
+Session history
+Reset option
+Check-in Form
+
+Mood selection
+Energy level slider (1-10)
+Optional weight input
+Symptom checkboxes
+Notes field
+JavaScript Integration
+// Example of fasting session management
+document.addEventListener('DOMContentLoaded', function() {
+    // Load active session
+    fetch('/api/fasting/active')
+        .then(response => response.json())
+        .then(data => {
+            if (data.has_active_session) {
+                showActiveSession(data.session);
+            }
+        });
+    // Start new session
+    document.querySelectorAll('.start-fast').forEach(button => {
+        button.addEventListener('click', async function() {
+            const programId = this.dataset.programId;
+            const response = await fetch('/api/fasting/start', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ program_id: programId })
+            });
+            // Handle response...
+        });
+    });
+});
+User Flow
+Program Selection
+
+User browses available programs
+Reviews program details
+Selects desired program
+Clicks start button
+Active Session
+
+Views daily guidance
+Monitors progress
+Completes daily check-ins
+Reviews history
+Check-in Process
+
+Fills out daily form
+Submits check-in
+Receives confirmation
+Views updated progress
+Error Handling & Data Validation
+Backend Validation
+# Example from fasting.py
+@fasting_bp.route('/api/fasting/checkin', methods=['POST'])
+@login_required
+def daily_checkin():
+    try:
+        data = request.get_json()
+        if not data:
+            return jsonify({'status': 'error', 'message': 'No check-in data provided'}), 400
+        session = FastingSession.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+        if not session:
+            return jsonify({'status': 'error', 'message': 'No active session found'}), 400
+        # Validate required fields
+        if 'mood' not in data or 'energy_level' not in data:
+            return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+        # Process check-in...
+Frontend Validation
+// Example of form validation
+document.getElementById('checkin-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const mood = document.querySelector('select[name="mood"]').value;
+    const energyLevel = document.querySelector('input[name="energy_level"]').value;
+    
+    if (!mood || !energyLevel) {
+        showNotification('Please fill in all required fields', 'error');
+        return;
+    }
+    // Submit form...
+});
+Best Practices
+Data Management
+
+Single active session per user
+Automatic cancellation of existing sessions
+Daily check-in validation
+Progress tracking through check-ins
+Security
+
+Authentication required for all endpoints
+Input validation
+SQL injection prevention
+XSS protection
+Performance
+
+Efficient database queries
+Proper indexing
+Client-side caching
+Optimized API responses
+Deployment & Maintenance
+Database Management
+
+Regular backups
+Index optimization
+Data cleanup procedures
+Performance monitoring
+Error Monitoring
+
+Comprehensive logging
+Error tracking
+User feedback collection
+Performance metrics
+Future Enhancements
+Planned Features
+
+Custom program creation
+Social sharing
+Achievement system
+Advanced analytics
+Technical Improvements
+
+Real-time updates
+Offline support
+Mobile responsiveness
+Enhanced data visualization
+Troubleshooting Guide
+Common Issues
+Check-in Not Saving
+
+Verify active session exists
+Check required fields
+Confirm no duplicate check-in
+Review error logs
+Session Not Starting
+
+Verify program ID exists
+Check user authentication
+Review database connection
+Check error response
+Progress Not Updating
+
+Verify check-in saved successfully
+Check date calculations
+Review session status
+Clear browser cache
+Support & Contact
+For technical support:
+
+Review documentation
+Check error logs
+Contact development team
+Submit bug reports
+Last Updated: February 7, 2025
