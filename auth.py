@@ -1,0 +1,259 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from flask_login import login_user, logout_user, login_required, current_user
+from models import User, db
+from werkzeug.security import generate_password_hash, check_password_hash
+import logging
+from sqlalchemy import func
+import re
+from flask_mail import Mail, Message
+import os
+
+auth_bp = Blueprint('auth', __name__)
+logger = logging.getLogger(__name__)
+mail = Mail()
+
+def is_valid_email(email):
+    """Validate email format"""
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return re.match(pattern, email) is not None
+
+def generate_temp_username(email):
+    """Generate a temporary username from email address"""
+    base = email.split('@')[0]
+    base = ''.join(e for e in base if e.isalnum())
+    username = base
+    count = 1
+    while User.query.filter(func.lower(User.username) == func.lower(username)).first():
+        username = f"{base}{count}"
+        count += 1
+    return username
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+def register():
+    """Handle user registration with enhanced validation and error handling"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    if request.method == 'POST':
+        try:
+            email = request.form.get('email', '').strip().lower()
+            password = request.form.get('password')
+
+            logger.info(f"[AUTH] Attempting registration for email: {email}")
+
+            # Validate input
+            if not email or not password:
+                logger.warning("[AUTH] Registration attempt with missing fields")
+                flash('Please fill in all fields.')
+                return render_template('register.html')
+
+            if not is_valid_email(email):
+                logger.warning(f"[AUTH] Invalid email format: {email}")
+                flash('Please enter a valid email address.')
+                return render_template('register.html')
+
+            if len(password) < 6:
+                logger.warning("[AUTH] Password too short")
+                flash('Password must be at least 6 characters long.')
+                return render_template('register.html')
+
+            # Case-insensitive email check using SQLAlchemy func.lower()
+            existing_user = User.query.filter(func.lower(User.email) == email.lower()).first()
+            if existing_user:
+                logger.warning(f"[AUTH] Registration attempt with existing email: {email}")
+                flash('This email address is already registered.')
+                return render_template('register.html')
+
+            try:
+                # Create new user
+                temp_username = generate_temp_username(email)
+                user = User(
+                    email=email,
+                    username=temp_username,
+                    is_ring_data_authorized=False,
+                    daily_water_goal=64.0
+                )
+                user.set_password(password)
+
+                db.session.add(user)
+                db.session.commit()
+                logger.info(f"[AUTH] Successfully registered new user: {email}")
+
+                # Log the user in
+                login_user(user)
+                flash('Registration successful! You can now set your display name in your profile.')
+                return redirect(url_for('dashboard.index'))
+
+            except Exception as e:
+                db.session.rollback()
+                logger.error(f"[AUTH] Database error during registration: {str(e)}", exc_info=True)
+                flash('An error occurred during registration. Please try again.')
+                return render_template('register.html')
+
+        except Exception as e:
+            logger.error(f"[AUTH] Registration failed: {str(e)}", exc_info=True)
+            flash('An error occurred during registration. Please try again.')
+            return render_template('register.html')
+
+    return render_template('register.html')
+
+@auth_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password')
+        remember = True if request.form.get('remember') else False
+
+        if not email or not password:
+            flash('Please fill in all fields.')
+            logger.warning("[AUTH] Login attempt with missing fields")
+            return render_template('auth/login.html')
+
+        # Case-insensitive email query
+        user = User.query.filter(func.lower(User.email) == func.lower(email)).first()
+
+        if not user or not user.check_password(password):
+            flash('Please check your login details and try again.')
+            logger.warning(f"[AUTH] Failed login attempt for email: {email}")
+            return render_template('auth/login.html')
+
+        # Update last_login timestamp
+        from models import get_local_time
+        user.last_login = get_local_time()
+        db.session.commit()
+        
+        login_user(user, remember=remember)
+        
+        # Special handling for admin user
+        if email.lower() == 'huskyauto@gmail.com':
+            logger.info(f"[AUTH] ADMIN USER {email} logged in successfully")
+            # Auto-authorize ring data access for admin account
+            if not user.is_ring_data_authorized:
+                user.is_ring_data_authorized = True
+                db.session.commit()
+                logger.info(f"[AUTH] Auto-authorized ring data access for admin user")
+            # Extra admin verification for the dashboard
+            if user.id != 1 or user.username != 'HuskyAuto':
+                logger.warning(f"[AUTH] Admin email with incorrect ID/username: {user.id}/{user.username}")
+        else:
+            logger.info(f"[AUTH] User {email} logged in successfully")
+            
+        return redirect(url_for('dashboard.index'))
+
+    return render_template('auth/login.html')
+
+@auth_bp.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.')
+    return redirect(url_for('auth.login'))
+
+@auth_bp.route('/update-username', methods=['POST'])
+@login_required
+def update_username():
+    """Handle username update requests"""
+    try:
+        data = request.get_json()
+        new_username = data.get('username', '').strip()
+
+        if not new_username:
+            return jsonify({'success': False, 'message': 'Username cannot be empty'}), 400
+
+        if len(new_username) > 64:
+            return jsonify({'success': False, 'message': 'Username is too long'}), 400
+
+        # Check if username is already taken
+        existing_user = User.query.filter(
+            User.username == new_username,
+            User.id != current_user.id
+        ).first()
+
+        if existing_user:
+            return jsonify({'success': False, 'message': 'Username is already taken'}), 400
+
+        # Update username
+        current_user.username = new_username
+        db.session.commit()
+        logger.info(f"Username updated for user {current_user.email} to {new_username}")
+        return jsonify({'success': True, 'message': 'Username updated successfully'})
+
+    except Exception as e:
+        logger.error(f"Error updating username: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'message': 'Failed to update username'}), 500
+
+@auth_bp.route('/reset_password_request', methods=['GET', 'POST'])
+def reset_password_request():
+    """Handle password reset request"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    if request.method == 'POST':
+        email = request.form.get('email')
+        user = User.query.filter(func.lower(User.email) == func.lower(email)).first()
+
+        if user:
+            try:
+                token = user.get_reset_password_token()
+                reset_url = url_for('auth.reset_password', token=token, _external=True)
+                msg = Message('Password Reset Request',
+                            sender='noreply@ai-buddy.com',
+                            recipients=[user.email])
+                msg.body = f'''To reset your password, visit the following link:
+{reset_url}
+
+If you did not make this request then simply ignore this email and no changes will be made.
+'''
+                mail.send(msg)
+                flash('Check your email for instructions to reset your password.')
+                logger.info(f"Password reset email sent to {email}")
+            except Exception as e:
+                logger.error(f"Failed to send password reset email: {e}", exc_info=True)
+                flash('An error occurred while sending the password reset email. Please try again.')
+        else:
+            logger.warning(f"Password reset attempted for non-existent email: {email}")
+            # Don't reveal if email exists
+            flash('If that email address exists in our database, you will receive password reset instructions.')
+
+        return redirect(url_for('auth.login'))
+
+    return render_template('auth/reset_password_request.html')
+
+@auth_bp.route('/reset_password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    """Handle password reset with token"""
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard.index'))
+
+    user = User.verify_reset_password_token(token)
+    if not user:
+        flash('That is an invalid or expired reset link')
+        return redirect(url_for('auth.reset_password_request'))
+
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if not password:
+            flash('Please enter a new password.')
+            return render_template('auth/reset_password.html')
+
+        if len(password) < 6:
+            flash('Password must be at least 6 characters long.')
+            return render_template('auth/reset_password.html')
+
+        try:
+            user.set_password(password)
+            db.session.commit()
+            flash('Your password has been reset.')
+            logger.info(f"Password reset successful for user: {user.email}")
+            return redirect(url_for('auth.login'))
+        except Exception as e:
+            db.session.rollback()
+            logger.error(f"Password reset failed: {e}", exc_info=True)
+            flash('An error occurred while resetting your password. Please try again.')
+            return render_template('auth/reset_password.html')
+
+    return render_template('auth/reset_password.html')
