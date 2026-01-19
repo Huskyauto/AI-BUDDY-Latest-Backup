@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mx-auto px-4 py-4">
+    <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+            <!-- Header with Audio Toggle -->
+            <div class="p-4 text-white" style="background: linear-gradient(to right, #0066ff, #4195ff);">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <div class="rounded-circle bg-white p-2 d-inline-flex align-items-center justify-content-center" style="border: 2px solid #42d392;">
+                                <i class="bi bi-robot fs-4 text-primary"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h1 class="mb-0 fs-4 fw-semibold">Health Risk Analysis</h1>
+                            <div class="fs-6 text-white-50">AI-Powered Health Assistant</div>
+                        </div>
+                    </div>
+                    <!-- Audio Controls -->
+                    <div class="d-flex align-items-center">
+                        <!-- Play/Pause Button -->
+                        <button id="playPauseBtn" class="btn btn-outline-light me-2" style="display: none;">
+                            <i class="bi bi-play-fill"></i>
+                        </button>
+                        <!-- Stop Button -->
+                        <button id="stopBtn" class="btn btn-outline-light me-3" style="display: none;">
+                            <i class="bi bi-stop-fill"></i>
+                        </button>
+                        <!-- Audio Toggle Button -->
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="audioToggle">
+                            <label class="form-check-label text-white" for="audioToggle">
+                                <i class="bi bi-volume-up-fill"></i> Voice Output
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Content -->
+            <div class="p-3">
+                <div id="chat-messages" class="space-y-3 overflow-y-auto mb-3" style="height: 320px;">
+                    <!-- Messages will be inserted here -->
+                </div>
+
+                <!-- Thinking Bubble -->
+                <div id="thinking-bubble" class="alert alert-light mb-2 py-2" style="display: none;">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-grow spinner-grow-sm text-primary me-2" role="status">
+                            <span class="visually-hidden">Thinking...</span>
+                        </div>
+                        <span class="text-muted">AI is thinking...</span>
+                    </div>
+                </div>
+
+                <!-- Message Input with Voice Input Button -->
+                <div class="mt-3">
+                    <form id="chat-form" class="d-flex">
+                        <input type="text" 
+                               id="message-input"
+                               class="form-control rounded-start border-end-0"
+                               placeholder="Type your health-related question..."
+                               required>
+                        <button type="button" 
+                                id="voice-input-btn"
+                                class="btn btn-outline-primary border-start-0 border-end-0"
+                                title="Click to speak">
+                            <i class="bi bi-mic-fill"></i>
+                        </button>
+                        <button type="submit"
+                                class="btn btn-primary rounded-end px-4">
+                            <span>Send</span>
+                            <i class="bi bi-send-fill ms-2"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing variable declarations ...
+    const chatMessages = document.getElementById('chat-messages');
+    const chatForm = document.getElementById('chat-form');
+    const messageInput = document.getElementById('message-input');
+    const audioToggle = document.getElementById('audioToggle');
+    const voiceInputBtn = document.getElementById('voice-input-btn');
+    const thinkingBubble = document.getElementById('thinking-bubble');
+    const playPauseBtn = document.getElementById('playPauseBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    let chatHistory = [];
+    let audioEnabled = false;
+    let currentAudio = null;
+    let isPlaying = false;
+    let recognition = null;
+    let isRecording = false;
+
+    // Initialize audio preference from localStorage
+    audioToggle.checked = localStorage.getItem('audioEnabled') === 'true';
+    audioEnabled = audioToggle.checked;
+
+    // Update play/pause button icon
+    function updatePlayPauseIcon() {
+        const icon = playPauseBtn.querySelector('i');
+        icon.className = isPlaying ? 'bi bi-pause-fill' : 'bi bi-play-fill';
+    }
+
+    // Show/hide audio controls
+    function showAudioControls(show) {
+        playPauseBtn.style.display = show ? 'block' : 'none';
+        stopBtn.style.display = show ? 'block' : 'none';
+    }
+
+    // Stop audio function
+    function stopAudio() {
+        if (currentAudio) {
+            currentAudio.pause();
+            currentAudio.currentTime = 0;
+            isPlaying = false;
+            updatePlayPauseIcon();
+            showAudioControls(false);
+            currentAudio = null;
+        }
+    }
+
+    // Play/Pause button handler
+    playPauseBtn.addEventListener('click', () => {
+        if (currentAudio) {
+            if (isPlaying) {
+                currentAudio.pause();
+            } else {
+                currentAudio.play();
+            }
+            isPlaying = !isPlaying;
+            updatePlayPauseIcon();
+        }
+    });
+
+    // Stop button handler
+    stopBtn.addEventListener('click', stopAudio);
+
+    // Handle audio toggle changes
+    audioToggle.addEventListener('change', function() {
+        audioEnabled = this.checked;
+        localStorage.setItem('audioEnabled', audioEnabled);
+        if (!audioEnabled) {
+            stopAudio();
+        }
+    });
+
+    // Updated audio playback function
+    async function playAudioResponse(text) {
+        try {
+            // Stop any currently playing audio
+            stopAudio();
+
+            const response = await fetch('/api/text-to-speech', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ text: text })
+            });
+
+            if (response.ok) {
+                const audioBlob = await response.blob();
+                const audioUrl = URL.createObjectURL(audioBlob);
+                currentAudio = new Audio(audioUrl);
+
+                // Show controls when audio is loaded
+                currentAudio.addEventListener('loadedmetadata', () => {
+                    showAudioControls(true);
+                });
+
+                // Update state when audio ends
+                currentAudio.addEventListener('ended', () => {
+                    isPlaying = false;
+                    updatePlayPauseIcon();
+                    showAudioControls(false);
+                    currentAudio = null;
+                });
+
+                currentAudio.play();
+                isPlaying = true;
+                updatePlayPauseIcon();
+            }
+        } catch (error) {
+            console.error('Error playing audio:', error);
+            showAudioControls(false);
+        }
+    }
+
+    // Initialize speech recognition
+    if ('webkitSpeechRecognition' in window) {
+        recognition = new webkitSpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        recognition.onstart = function() {
+            console.log('Recognition started');
+            isRecording = true;
+            updateMicrophoneButton();
+        };
+
+        recognition.onresult = function(event) {
+            console.log('Recognition result received');
+            const transcript = event.results[0][0].transcript;
+            messageInput.value = transcript;
+            isRecording = false;
+            updateMicrophoneButton();
+        };
+
+        recognition.onerror = function(event) {
+            console.error('Speech recognition error:', event.error);
+            isRecording = false;
+            updateMicrophoneButton();
+        };
+
+        recognition.onend = function() {
+            console.log('Recognition ended');
+            isRecording = false;
+            updateMicrophoneButton();
+        };
+
+        function updateMicrophoneButton() {
+            console.log('Updating button state, isRecording:', isRecording);
+            if (isRecording) {
+                voiceInputBtn.classList.remove('btn-outline-primary');
+                voiceInputBtn.classList.add('btn-danger');
+                voiceInputBtn.querySelector('i').classList.remove('bi-mic-fill');
+                voiceInputBtn.querySelector('i').classList.add('bi-mic-mute-fill');
+            } else {
+                voiceInputBtn.classList.remove('btn-danger');
+                voiceInputBtn.classList.add('btn-outline-primary');
+                voiceInputBtn.querySelector('i').classList.remove('bi-mic-mute-fill');
+                voiceInputBtn.querySelector('i').classList.add('bi-mic-fill');
+            }
+        }
+
+        // Voice input button handler
+        voiceInputBtn.addEventListener('click', function() {
+            console.log('Voice button clicked, current state:', isRecording);
+            if (isRecording) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        });
+
+        // Add form submit handler to ensure microphone state is reset
+        chatForm.addEventListener('submit', function() {
+            if (isRecording) {
+                recognition.stop();
+            }
+        });
+    } else {
+        voiceInputBtn.style.display = 'none';
+        console.log('Speech recognition not supported');
+    }
+
+    // Add initial greeting
+    addMessage({
+        type: 'assistant',
+        content: "Hello! I'm your AI health assistant. I can help analyze potential health risks and provide personalized wellness recommendations based on your biometric data and lifestyle factors. What would you like to know about?"
+    });
+
+
+    function addMessage(message) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `alert ${
+            message.type === 'user' 
+                ? 'alert-primary text-end' 
+                : 'alert-light'
+        } mb-2 py-2`;
+
+        messageDiv.innerHTML = message.content;
+        chatMessages.appendChild(messageDiv);
+
+        // Keep auto-scroll only for AI Buddy chat window
+        if (chatMessages.id === 'chat-messages') {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        chatHistory.push(message);
+
+        // Play audio for assistant messages if enabled
+        if (message.type === 'assistant' && audioEnabled) {
+            playAudioResponse(message.content);
+        }
+    }
+
+    chatForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        addMessage({
+            type: 'user',
+            content: message
+        });
+
+        messageInput.value = '';
+        messageInput.disabled = true;
+
+        // Show thinking bubble
+        thinkingBubble.style.display = 'block';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+        try {
+            const response = await fetch('/api/health-chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: message,
+                    history: chatHistory
+                })
+            });
+
+            // Hide thinking bubble
+            thinkingBubble.style.display = 'none';
+
+            const data = await response.json();
+
+            if (data.success) {
+                addMessage({
+                    type: 'assistant',
+                    content: data.response
+                });
+            } else {
+                addMessage({
+                    type: 'assistant',
+                    content: "I apologize, but I encountered an error processing your request. Please try again."
+                });
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            // Hide thinking bubble on error
+            thinkingBubble.style.display = 'none';
+            addMessage({
+                type: 'assistant',
+                content: "I apologize, but I encountered an error processing your request. Please try again."
+            });
+        }
+
+        messageInput.disabled = false;
+        messageInput.focus();
+    });
+});
+</script>
+{% endblock %}
