@@ -1,0 +1,25 @@
+2025-01-20 00:43:19,006 - app - INFO - [app.py:39] - [APP_INIT] Starting Flask application creation...
+2025-01-20 00:43:19,007 - app - DEBUG - [app.py:49] - [APP_INIT] Secret key configured
+2025-01-20 00:43:19,007 - app - DEBUG - [app.py:66] - [APP_INIT] Database configuration completed
+2025-01-20 00:43:19,008 - app - INFO - [app.py:84] - [APP_INIT] Initializing Flask extensions...
+2025-01-20 00:43:19,021 - app - INFO - [app.py:93] - [APP_INIT] Testing database connection...
+2025-01-20 00:43:19,530 - app - INFO - [app.py:96] - [APP_INIT] Database connection test successful
+2025-01-20 00:43:20,134 - app - INFO - [app.py:103] - [APP_INIT] Database tables created/verified
+2025-01-20 00:43:20,134 - app - INFO - [app.py:106] - [APP_INIT] Registering blueprints...
+2025-01-20 00:43:20,615 - food_tracker - INFO - [food_tracker.py:20] - Edamam API configuration - App ID present: True
+2025-01-20 00:43:20,615 - food_tracker - INFO - [food_tracker.py:21] - Edamam API configuration - API Key present: True
+2025-01-20 00:43:20,632 - ring_routes - INFO - [ring_routes.py:23] - OpenAI client initialized successfully
+2025-01-20 00:43:20,633 - location_wellness - ERROR - [location_wellness.py:30] - GOOGLE_MAPS_API_KEY environment variable is not set!
+2025-01-20 00:43:20,647 - app - INFO - [app.py:135] - [APP_INIT] Registered Authentication blueprint successfully
+2025-01-20 00:43:20,648 - app - INFO - [app.py:135] - [APP_INIT] Registered Chat blueprint successfully
+2025-01-20 00:43:20,651 - app - INFO - [app.py:135] - [APP_INIT] Registered Food Tracker blueprint successfully
+2025-01-20 00:43:20,652 - app - INFO - [app.py:135] - [APP_INIT] Registered Dashboard blueprint successfully
+2025-01-20 00:43:20,652 - app - INFO - [app.py:135] - [APP_INIT] Registered Ring Integration blueprint successfully
+2025-01-20 00:43:20,655 - app - INFO - [app.py:135] - [APP_INIT] Registered CBT blueprint successfully
+2025-01-20 00:43:20,657 - app - INFO - [app.py:135] - [APP_INIT] Registered Journal blueprint successfully
+2025-01-20 00:43:20,659 - app - INFO - [app.py:135] - [APP_INIT] Registered Forum blueprint successfully
+2025-01-20 00:43:20,660 - app - INFO - [app.py:135] - [APP_INIT] Registered Location Wellness blueprint successfully
+2025-01-20 00:43:20,661 - app - INFO - [app.py:135] - [APP_INIT] Registered Health Prediction blueprint successfully
+2025-01-20 00:43:20,663 - app - INFO - [app.py:135] - [APP_INIT] Registered Wellness Toolbox blueprint successfully
+2025-01-20 00:43:20,664 - app - INFO - [app.py:158] - [APP_INIT] Flask application created and configured successfully
+2025-01-20 00:43:20,665 - flask_migrate - ERROR - [__init__.py:113] - Error: Directory migrations already exists and is not empty
