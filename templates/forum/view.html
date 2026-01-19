@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('forum.index') }}">Forum</a></li>
+            <li class="breadcrumb-item active">{{ post.title }}</li>
+        </ol>
+    </nav>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-info alert-dismissible fade show auto-dismiss" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <h1 class="card-title">{{ post.title }}</h1>
+                <span class="badge bg-secondary">{{ post.category }}</span>
+            </div>
+
+            <div class="card-text mb-4">
+                {{ post.content | nl2br }}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center">
+                <div class="text-muted">
+                    <small>
+                        Posted by {{ post.author.username }} on <span data-timestamp="{{ post.created_at.isoformat() }}">{{ post.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        {% if post.updated_at != post.created_at %}
+                            <br>Last updated on <span data-timestamp="{{ post.updated_at.isoformat() }}">{{ post.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                        {% endif %}
+                    </small>
+                </div>
+                <button class="btn btn-outline-danger like-button" data-post-id="{{ post.id }}">
+                    <i class="bi bi-heart-fill"></i> 
+                    <span class="like-count">{{ post.likes }}</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Replies Section -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Replies</h5>
+        </div>
+        <div class="card-body">
+            {% if current_user.is_authenticated %}
+            <form class="mb-4" method="POST" action="{{ url_for('forum.add_reply', post_id=post.id) }}">
+                <div class="mb-3">
+                    <textarea class="form-control" name="content" rows="3" placeholder="Write your reply..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Post Reply</button>
+            </form>
+            {% endif %}
+
+            <div id="repliesContainer">
+                {% for reply in post.replies %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="card-text">{{ reply.content | nl2br }}</div>
+                        <div class="d-flex justify-content-between align-items-center mt-2">
+                            <div class="text-muted">
+                                <small>
+                                    Replied by {{ reply.author.username }} on <span data-timestamp="{{ reply.created_at.isoformat() }}">{{ reply.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                    {% if reply.updated_at != reply.created_at %}
+                                        <br>Last updated on <span data-timestamp="{{ reply.updated_at.isoformat() }}">{{ reply.updated_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <button class="btn btn-outline-danger like-button-reply" data-reply-id="{{ reply.id }}">
+                                <i class="bi bi-heart-fill"></i>
+                                <span class="like-count">{{ reply.likes }}</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                <p class="text-muted">No replies yet. Be the first to reply!</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/forum.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-dismiss alerts after 3 seconds
+    const autoDissmissAlerts = document.querySelectorAll('.auto-dismiss');
+    autoDissmissAlerts.forEach(alert => {
+        setTimeout(() => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+        }, 3000);
+    });
+
+    // Like post functionality
+    const likeButton = document.querySelector('.like-button');
+    if (likeButton) {
+        likeButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            const postId = this.dataset.postId;
+            fetch(`/forum/post/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeCount = this.querySelector('.like-count');
+                likeCount.textContent = data.likes;
+            });
+        });
+    }
+
+    // Like reply functionality
+    const likeReplyButtons = document.querySelectorAll('.like-button-reply');
+    likeReplyButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const replyId = this.dataset.replyId;
+            fetch(`/forum/reply/${replyId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const likeCount = this.querySelector('.like-count');
+                likeCount.textContent = data.likes;
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
