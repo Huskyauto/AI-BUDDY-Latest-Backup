@@ -1,0 +1,54 @@
+Fork Management Guide
+Overview
+This document outlines the recommended forking strategy for managing updates and preserving working versions of the AI-BUDDY application.
+Daily Fork Strategy
+Why Use Daily Forks?
+1.	Isolation of Updates: Keep working versions separate from development versions
+2.	Work Preservation: Maintain clean snapshots of working code
+3.	Risk Management: Prevent loss of working code when making significant changes
+4.	Version Control: Maintain a history of working versions
+Best Practices
+1.	Create Date-Based Forks
+•	Name format: AI-BUDDY-YYYY-MM-DD
+•	Create a new fork at the start of each development session
+•	Use the Replit UI: Three dots menu (⋮) → "Create new fork"/"Create remix"
+2.	Working with Forks
+•	Always start new features/updates in the latest fork
+•	Test changes thoroughly before creating the next fork
+•	Keep the original working version untouched
+3.	When to Create a New Fork
+•	Before starting major new features
+•	At the beginning of each development day
+•	After achieving a stable, working version
+Backup Considerations
+The current backup system has limitations:
+•	Backups can be overwritten during multiple edit attempts
+•	Limited history retention
+To mitigate these limitations:
+1.	Create a new fork before making significant changes
+2.	Test changes in the new fork first
+3.	If changes don't work, create another fork from the last working version
+Fork Management Process
+1.	Starting New Development
+# Create new fork through Replit UI
+AI-BUDDY-YYYY-MM-DD
+2.	Testing Changes
+•	Make and test changes in the new fork
+•	If successful, continue development
+•	If unsuccessful, create a new fork from the last working version
+3.	Preserving Working Versions
+•	Keep successful forks as reference points
+•	Document major changes in each fork's changelog
+•	Use dated forks as restore points if needed
+Tips for Success
+1.	Always verify the new fork is working before making changes
+2.	Document significant changes in the changelog
+3.	Keep track of which fork contains the last working version
+4.	Create new forks liberally - better to have too many backups than too few
+5.	Test thoroughly before considering a fork as a "working version"
+Future Improvements
+•	Request for daily automatic forking capability in Replit
+•	Better integration between forks and backup system
+•	Automated fork cleanup and management tools
+
+
