@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h1>Meditation Challenges</h1>
+
+  <button class="btn btn-success mb-4" onclick="window.location.href='/create-challenge'">Create Challenge</button>
+
+  <h2>Active Challenges</h2>
+  <div class="row">
+    {% for challenge in active_challenges %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ challenge.name }}</h5>
+            <p class="card-text">{{ challenge.description }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge {% if challenge.status == 'active' %}bg-success{% elif challenge.status == 'upcoming' %}bg-info{% else %}bg-secondary{% endif %}">
+                Status: {{ challenge.status.title() }}
+              </span>
+            </div>
+            <p><strong>Duration:</strong> {{ challenge.duration_requirement }} minutes/day</p>
+            <p><strong>Frequency:</strong> {{ challenge.frequency_requirement }} sessions/week</p>
+            <p><strong>Start Date:</strong> {{ challenge.start_date.strftime('%Y-%m-%d') }}</p>
+            <p><strong>End Date:</strong> {{ challenge.end_date.strftime('%Y-%m-%d') }}</p>
+            {% if current_user in challenge.participants %}
+              <button class="btn btn-secondary" disabled>You're Registered</button>
+            {% else %}
+              {% if challenge.can_join(current_user) %}
+                <button class="btn btn-primary" onclick="joinChallenge({{ challenge.id }})">Join Challenge</button>
+              {% else %}
+                <button class="btn btn-secondary" disabled>Registration Closed</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No active challenges at the moment.</p>
+    {% endfor %}
+  </div>
+
+  <h2>Upcoming Challenges</h2>
+  <div class="row">
+    {% for challenge in upcoming_challenges %}
+      <div class="col-md-4 mb-4">
+        <div class="card">
+          <div class="card-body">
+            <h5 class="card-title">{{ challenge.name }}</h5>
+            <p class="card-text">{{ challenge.description }}</p>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <span class="badge {% if challenge.status == 'active' %}bg-success{% elif challenge.status == 'upcoming' %}bg-info{% else %}bg-secondary{% endif %}">
+                Status: {{ challenge.status.title() }}
+              </span>
+            </div>
+            <p><strong>Duration:</strong> {{ challenge.duration_requirement }} minutes/day</p>
+            <p><strong>Frequency:</strong> {{ challenge.frequency_requirement }} sessions/week</p>
+            <p><strong>Start Date:</strong> {{ challenge.start_date.strftime('%Y-%m-%d') }}</p>
+            <p><strong>End Date:</strong> {{ challenge.end_date.strftime('%Y-%m-%d') }}</p>
+            {% if current_user in challenge.participants %}
+              <button class="btn btn-secondary" disabled>You're Registered</button>
+            {% else %}
+              {% if challenge.can_join(current_user) %}
+                <button class="btn btn-primary" onclick="joinChallenge({{ challenge.id }})">Join Challenge</button>
+              {% else %}
+                <button class="btn btn-secondary" disabled>Registration Closed</button>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <p>No upcoming challenges at the moment.</p>
+    {% endfor %}
+  </div>
+</div>
+
+<script>
+function joinChallenge(challengeId) {
+    fetch(`/join-challenge/${challengeId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            location.reload();
+        } else {
+            alert(data.message || 'Error joining challenge');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Error joining challenge. Please try again.');
+    });
+}
+</script>
+{% endblock %}
