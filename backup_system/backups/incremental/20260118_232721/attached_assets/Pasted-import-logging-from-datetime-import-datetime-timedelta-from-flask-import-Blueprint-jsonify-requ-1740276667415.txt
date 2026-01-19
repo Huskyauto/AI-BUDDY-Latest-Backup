@@ -1,0 +1,355 @@
+import logging
+from datetime import datetime, timedelta
+from flask import Blueprint, jsonify, request, render_template
+from flask_login import login_required, current_user
+from models import db, FastingProgram, FastingSession, FastingCheckIn, get_local_time, format_timestamp
+
+logger = logging.getLogger(__name__)
+fasting_bp = Blueprint('fasting', __name__)
+
+def init_default_programs():
+    """Initialize default fasting programs if they don't exist"""
+    try:
+        if FastingProgram.query.count() == 0:
+            default_programs = [
+                {
+                    'name': '3-Day Reset Fast',
+                    'duration_days': 3,
+                    'description': 'A gentle 3-day fast to reset your metabolism and digestive system.',
+                    'benefits': 'Enhanced metabolic flexibility, improved insulin sensitivity, cellular repair activation.',
+                    'instructions': 'Drink water, herbal tea, and electrolytes. Stop if you feel unwell.',
+                    'daily_guidance': {
+                        '1': 'Day 1: Focus on hydration. Expect mild hunger. Listen to guided meditation.',
+                        '2': 'Day 2: Energy may dip. Take light walks. Practice mindfulness.',
+                        '3': 'Day 3: You may feel mental clarity. Prepare for breaking fast tomorrow.'
+                    },
+                    'contraindications': 'Not suitable for pregnant women, those with eating disorders, or severe medical conditions.'
+                },
+                {
+                    'name': '5-Day Longevity Fast',
+                    'duration_days': 5,
+                    'description': 'A comprehensive fast focusing on longevity benefits and cellular regeneration.',
+                    'benefits': 'Autophagy activation, stem cell generation, inflammation reduction.',
+                    'instructions': 'Maintain electrolyte balance. Light exercise only. Monitor energy levels.',
+                    'daily_guidance': {
+                        '1': 'Day 1: Begin fasting after dinner. Stay well hydrated.',
+                        '2': 'Day 2: Your body is transitioning to ketosis. Rest as needed.',
+                        '3': 'Day 3: Autophagy increasing. Practice gentle yoga.',
+                        '4': 'Day 4: Growth hormone peaks. Light stretching recommended.',
+                        '5': 'Day 5: Prepare for refeeding. Review break-fast protocol.'
+                    },
+                    'contraindications': 'Consult physician before starting. Not for those with medical conditions.'
+                },
+                {
+                    'name': '7-Day Transformation',
+                    'duration_days': 7,
+                    'description': 'Advanced fast for experienced fasters seeking deep healing.',
+                    'benefits': 'Maximum autophagy, immune system reset, extensive cellular repair.',
+                    'instructions': 'Daily monitoring required. Electrolytes essential. Rest frequently.',
+                    'daily_guidance': {
+                        '1': 'Day 1: Begin tracking vitals. Set up your environment.',
+                        '2': 'Day 2: Ketosis beginning. Stay near home today.',
+                        '3': 'Day 3: Deep ketosis achieved. Moderate activity only.',
+                        '4': 'Day 4: Cellular cleaning peaks. Rest and meditate.',
+                        '5': 'Day 5: Stem cell production increases. Light walking.',
+                        '6': 'Day 6: Maintain electrolytes. Gentle movement.',
+                        '7': 'Day 7: Prepare for careful refeeding process.'
+                    },
+                    'contraindications': 'For experienced fasters only. Medical supervision recommended.'
+                }
+            ]
+
+            for program_data in default_programs:
+                program = FastingProgram(**program_data)
+                db.session.add(program)
+
+            db.session.commit()
+            logger.info("Default fasting programs initialized successfully")
+    except Exception as e:
+        logger.error(f"Error initializing default fasting programs: {e}")
+        db.session.rollback()
+
+@fasting_bp.route('/api/fasting/start', methods=['POST'])
+@login_required
+def start_fasting_session():
+    """Start a new fasting session with proper timezone handling"""
+    try:
+        data = request.get_json()
+        program_id = data.get('program_id')
+
+        if not program_id:
+            logger.error("[FASTING] Missing program_id in request")
+            return jsonify({'status': 'error', 'message': 'Program ID required'}), 400
+
+        program = FastingProgram.query.get(program_id)
+        if not program:
+            logger.error(f"[FASTING] Program not found with ID: {program_id}")
+            return jsonify({'status': 'error', 'message': 'Invalid program ID'}), 404
+
+        # Cancel any existing active sessions
+        active_sessions = FastingSession.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).all()
+
+        current_time = get_local_time()
+        for session in active_sessions:
+            session.status = 'cancelled'
+            session.end_date = current_time
+
+        # Create new fasting session
+        session = FastingSession(
+            user_id=current_user.id,
+            program_id=program_id,
+            start_date=current_time,
+            status='active'
+        )
+        db.session.add(session)
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'session_id': session.id,
+            'message': 'Fasting session started successfully',
+            'program': {
+                'name': program.name,
+                'duration_days': program.duration_days,
+                'daily_guidance': program.daily_guidance,
+                'description': program.description,
+                'benefits': program.benefits,
+                'instructions': program.instructions
+            },
+            'start_time': format_timestamp(session.start_date).isoformat()
+        })
+
+    except Exception as e:
+        logger.error(f"[FASTING] Error starting fasting session: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+
+@fasting_bp.route('/api/fasting/active')
+@login_required
+def get_active_session():
+    """Get user's active fasting session with proper timezone handling"""
+    try:
+        session = FastingSession.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+
+        if not session:
+            return jsonify({
+                'status': 'success',
+                'has_active_session': False
+            })
+
+        program = session.program
+        current_time = get_local_time()
+
+        # Calculate days elapsed using timezone-aware timestamps
+        days_elapsed = (current_time - session.start_date).days
+        current_day = days_elapsed + 1 if days_elapsed >= 0 else 1
+
+        check_ins = [{
+            'day_number': c.day_number,
+            'completed': c.completed,
+            'check_in_time': format_timestamp(c.check_in_time).isoformat(),
+            'mood': c.mood,
+            'energy_level': c.energy_level,
+            'weight': c.weight,
+            'symptoms': c.symptoms,
+            'notes': c.notes
+        } for c in session.check_ins]
+
+        return jsonify({
+            'status': 'success',
+            'has_active_session': True,
+            'session': {
+                'id': session.id,
+                'program': {
+                    'id': program.id,
+                    'name': program.name,
+                    'duration_days': program.duration_days,
+                    'daily_guidance': program.daily_guidance,
+                    'description': program.description,
+                    'benefits': program.benefits,
+                    'instructions': program.instructions
+                },
+                'start_date': format_timestamp(session.start_date).isoformat(),
+                'current_day': current_day,
+                'current_time': format_timestamp(current_time).isoformat(),
+                'check_ins': check_ins,
+                'progress': {
+                    'completed_days': len(check_ins),
+                    'remaining_days': program.duration_days - len(check_ins)
+                }
+            }
+        })
+    except Exception as e:
+        logger.error(f"[FASTING] Error fetching active session: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@fasting_bp.route('/api/fasting/programs')
+@login_required
+def get_fasting_programs():
+    """Get list of available fasting programs"""
+    try:
+        programs = FastingProgram.query.all()
+        return jsonify({
+            'status': 'success',
+            'programs': [{
+                'id': p.id,
+                'name': p.name,
+                'duration_days': p.duration_days,
+                'description': p.description,
+                'benefits': p.benefits,
+                'instructions': p.instructions
+            } for p in programs]
+        })
+    except Exception as e:
+        logger.error(f"Error fetching fasting programs: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+@fasting_bp.route('/api/fasting/reset', methods=['POST'])
+@login_required
+def reset_fasting_session():
+    """Reset/cancel the active fasting session"""
+    try:
+        # Find and cancel any active sessions for this user
+        active_sessions = FastingSession.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).all()
+
+        for session in active_sessions:
+            session.status = 'cancelled'
+            session.end_date = get_local_time()
+
+            # Delete all associated check-ins
+            FastingCheckIn.query.filter_by(session_id=session.id).delete()
+
+        db.session.commit()
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Fasting session reset successfully'
+        })
+    except Exception as e:
+        logger.error(f"Error resetting fasting session: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+@fasting_bp.route('/api/fasting/checkin', methods=['POST'])
+@login_required
+def daily_checkin():
+    """Record a daily check-in for a fasting session with improved error handling"""
+    try:
+        data = request.get_json()
+        if not data:
+            logger.error("No data received in check-in request")
+            return jsonify({'status': 'error', 'message': 'No check-in data provided'}), 400
+
+        # Get active session for current user
+        session = FastingSession.query.filter_by(
+            user_id=current_user.id,
+            status='active'
+        ).first()
+
+        if not session:
+            logger.error(f"No active fasting session found for user {current_user.id}")
+            return jsonify({'status': 'error', 'message': 'No active fasting session found'}), 400
+
+        current_day = (get_local_time() - session.start_date).days + 1
+        logger.info(f"Processing check-in for user {current_user.id}, session {session.id}, day {current_day}")
+
+        # Check if already checked in today
+        existing_checkin = FastingCheckIn.query.filter_by(
+            session_id=session.id,
+            day_number=current_day
+        ).first()
+
+        if existing_checkin:
+            logger.warning(f"User {current_user.id} attempted duplicate check-in for day {current_day}")
+            return jsonify({'status': 'error', 'message': 'Already checked in for today'}), 400
+
+        # Validate required fields
+        if 'mood' not in data or 'energy_level' not in data:
+            logger.error("Missing required fields in check-in data")
+            return jsonify({'status': 'error', 'message': 'Missing required fields'}), 400
+
+        # Create check-in record with local time
+        check_in = FastingCheckIn(
+            session_id=session.id,
+            day_number=current_day,
+            completed=True,
+            check_in_time=get_local_time(),
+            mood=data.get('mood'),
+            energy_level=data.get('energy_level'),
+            weight=data.get('weight'),
+            symptoms=data.get('symptoms', []),
+            notes=data.get('notes')
+        )
+        db.session.add(check_in)
+        logger.info(f"Created check-in record for session {session.id}, day {current_day}")
+
+        # If this is the last day, mark the session as completed
+        if current_day >= session.program.duration_days:
+            session.status = 'completed'
+            session.end_date = get_local_time()
+            logger.info(f"Marking session {session.id} as completed")
+
+        db.session.commit()
+        logger.info(f"Successfully saved check-in for session {session.id}, day {current_day}")
+
+        return jsonify({
+            'status': 'success',
+            'message': 'Check-in recorded successfully',
+            'day_completed': current_day,
+            'next_day': current_day + 1 if current_day < session.program.duration_days else None
+        })
+
+    except Exception as e:
+        logger.error(f"Error recording check-in: {e}", exc_info=True)
+        db.session.rollback()
+        return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+
+# Initialize default programs when the blueprint is registered
+init_default_programs()
+
+@fasting_bp.route('/fasting/start')
+@login_required
+def start_page():
+    """Display the fasting program start page"""
+    return render_template('fasting/start.html')
+
+@fasting_bp.route('/api/fasting/programs/<int:program_id>')
+@login_required
+def get_program_details(program_id):
+    """Get detailed information about a specific fasting program"""
+    try:
+        program = FastingProgram.query.get(program_id)
+        if not program:
+            return jsonify({
+                'status': 'error',
+                'message': 'Program not found'
+            }), 404
+
+        return jsonify({
+            'status': 'success',
+            'program': {
+                'id': program.id,
+                'name': program.name,
+                'duration_days': program.duration_days,
+                'description': program.description,
+                'benefits': program.benefits,
+                'instructions': program.instructions,
+                'daily_guidance': program.daily_guidance
+            }
+        })
+    except Exception as e:
+        logger.error(f"[FASTING] Error fetching program details: {e}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch program details'
+        }), 500
