@@ -1,0 +1,198 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Initialize all accordions
+    const accordionItems = document.querySelectorAll('.accordion-item');
+
+    // Add click handlers to all accordion buttons
+    accordionItems.forEach(item => {
+        const button = item.querySelector('.accordion-button');
+        const content = item.querySelector('.accordion-collapse');
+
+        if (button && content) {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+
+                // Toggle current item
+                button.setAttribute('aria-expanded', !isExpanded);
+                content.classList.toggle('show');
+
+                // Optional: Close other items when opening this one
+                if (!isExpanded) {
+                    accordionItems.forEach(otherItem => {
+                        if (otherItem !== item) {
+                            const otherButton = otherItem.querySelector('.accordion-button');
+                            const otherContent = otherItem.querySelector('.accordion-collapse');
+                            if (otherButton && otherContent) {
+                                otherButton.setAttribute('aria-expanded', 'false');
+                                otherContent.classList.remove('show');
+                            }
+                        }
+                    });
+                }
+            });
+        }
+    });
+
+    // Load static content for sections
+    loadSectionContent('behavioral', `
+        <ul class="list-unstyled">
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Regular monitoring shows patterns of eating habits during high-stress periods"
+                      class="insight-item">
+                    <i class="fas fa-lightbulb text-primary me-2"></i>
+                    Observed patterns in eating habits during stressful periods
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Understanding emotional triggers helps develop better coping strategies"
+                      class="insight-item">
+                    <i class="fas fa-brain text-warning me-2"></i>
+                    Identified emotional triggers leading to mindless eating
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Awareness of this pattern can help establish regular meal scheduling"
+                      class="insight-item">
+                    <i class="fas fa-clock text-info me-2"></i>
+                    Notice tendency to skip meals when feeling overwhelmed
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Understanding comfort food patterns helps develop healthier alternatives"
+                      class="insight-item">
+                    <i class="fas fa-heart text-danger me-2"></i>
+                    Recognize comfort food patterns during anxiety
+                </span>
+            </li>
+        </ul>
+    `);
+
+    loadSectionContent('exercises', `
+        <ul class="list-unstyled">
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Write down automatic thoughts before meals"
+                      class="insight-item">
+                    <i class="fas fa-pencil-alt text-primary me-2"></i>
+                    Thought Record: Document automatic thoughts before meals
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Practice mindful breathing to center yourself before eating"
+                      class="insight-item">
+                    <i class="fas fa-wind text-success me-2"></i>
+                    Mindfulness Exercise: 5-minute breathing before eating
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Learn to differentiate between physical and emotional hunger"
+                      class="insight-item">
+                    <i class="fas fa-balance-scale text-info me-2"></i>
+                    Emotion Scale: Rate hunger vs emotional needs
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Establish consistent eating patterns to regulate metabolism"
+                      class="insight-item">
+                    <i class="fas fa-calendar-check text-warning me-2"></i>
+                    Activity Planning: Schedule regular meal times
+                </span>
+            </li>
+        </ul>
+    `);
+
+    loadSectionContent('reframing', `
+        <ul class="list-unstyled">
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Transform negative self-talk into constructive awareness"
+                      class="insight-item">
+                    <i class="fas fa-sync text-primary me-2"></i>
+                    "I always overeat" → "I'm learning to listen to my body's signals"
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Recognize your ability to make mindful choices"
+                      class="insight-item">
+                    <i class="fas fa-brain text-warning me-2"></i>
+                    "I have no control" → "I can make conscious choices about my eating"
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Focus on progress and growth rather than perfection"
+                      class="insight-item">
+                    <i class="fas fa-chart-line text-success me-2"></i>
+                    "I'm a failure" → "I'm making progress and learning from setbacks"
+                </span>
+            </li>
+        </ul>
+    `);
+
+    loadSectionContent('nextSteps', `
+        <ul class="list-unstyled">
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Choose one pattern that resonates most with your current situation"
+                      class="insight-item">
+                    <i class="fas fa-arrow-right text-primary me-2"></i>
+                    Continue monitoring emotional states before meals
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Build consistency in your mindfulness practice"
+                      class="insight-item">
+                    <i class="fas fa-meditation text-success me-2"></i>
+                    Practice one mindfulness exercise daily
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Document challenging situations to identify patterns"
+                      class="insight-item">
+                    <i class="fas fa-book text-info me-2"></i>
+                    Use thought records for challenging situations
+                </span>
+            </li>
+            <li class="mb-2">
+                <span data-bs-toggle="popover" 
+                      data-bs-trigger="hover focus"
+                      data-bs-content="Regular check-ins help track progress and adjust strategies"
+                      class="insight-item">
+                    <i class="fas fa-calendar-check text-warning me-2"></i>
+                    Schedule follow-up session to review progress
+                </span>
+            </li>
+        </ul>
+    `);
+});
+
+function loadSectionContent(sectionId, content) {
+    const section = document.querySelector(`#${sectionId} .accordion-body`);
+    if (section) {
+        section.innerHTML = content;
+    }
+}
