@@ -1,0 +1,514 @@
+2025-01-11 13:09:54,532 - backup_manager - INFO - Database connection test successful
+2025-01-11 13:09:54,534 - backup_manager - INFO - Database engine initialized successfully
+2025-01-11 13:09:54,534 - backup_manager - INFO - Backup directories created and secured: backup_system/backups
+
+Starting backup test...
+2025-01-11 13:09:55,165 - backup_manager - INFO - Database connection test successful
+2025-01-11 13:09:55,165 - backup_manager - INFO - Database engine initialized successfully
+2025-01-11 13:09:55,165 - backup_manager - INFO - Backup directories created and secured: backup_system/backups
+2025-01-11 13:09:55,166 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:09:55,291 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:09:55,291 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:09:55,291 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:09:55,291 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:09:55,292 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:09:55,412 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:09:55,412 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:09:55,412 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:09:55,412 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:09:55,413 - backup_manager - INFO - Maintaining 2 verified backups
+2025-01-11 13:09:55,413 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:09:55,564 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:09:55,564 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:09:55,565 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:09:55,565 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:09:55,565 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:09:55,687 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:09:55,687 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:09:55,687 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:09:55,687 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:09:55,687 - __main__ - INFO - Found 2 full backups
+
+Testing full backup:
+--------------------------------------------------
+2025-01-11 13:09:55,688 - backup_manager - INFO - Backup directories created and 2025-01-11 13:09:56,349 - backup_manager - INFO - Database connection test successful
+2025-01-11 13:09:56,349 - backup_manager - INFO - Database engine initialized successfully
+2025-01-11 13:09:56,489 - backup_manager - INFO - Database connection test successful
+2025-01-11 13:09:56,490 - backup_manager - INFO - Created database backup directory: backup_system/backups/full_backups/20250111_130956/database
+2025-01-11 13:09:57,022 - backup_manager - INFO - Backing up table: users (1/11)
+2025-01-11 13:09:57,366 - backup_manager - INFO - Table users: 100.0% complete (3/3 rows)
+2025-01-11 13:09:57,366 - backup_manager - INFO - Backing up table: biomarker_insights (2/11)
+2025-01-11 13:09:57,636 - backup_manager - INFO - Table biomarker_insights: 100.0% complete (11/11 rows)
+2025-01-11 13:09:57,636 - backup_manager - INFO - Backing up table: chat_history (3/11)
+2025-01-11 13:09:57,849 - backup_manager - INFO - Table chat_history: 100.0% complete (3/3 rows)
+2025-01-11 13:09:57,849 - backup_manager - INFO - Backing up table: food_log (4/11)
+2025-01-11 13:09:58,065 - backup_manager - INFO - Table food_log: 100.0% complete (1/1 rows)
+2025-01-11 13:09:58,065 - backup_manager - INFO - Backing up table: forum_posts (5/11)
+2025-01-11 13:09:58,295 - backup_manager - INFO - Table forum_posts: 100.0% complete (2/2 rows)
+2025-01-11 13:09:58,295 - backup_manager - INFO - Backing up table: journal_entry (6/11)
+2025-01-11 13:09:58,514 - backup_manager - INFO - Table journal_entry: 100.0% complete (1/1 rows)
+2025-01-11 13:09:58,514 - backup_manager - INFO - Backing up table: mood (7/11)
+2025-01-11 13:09:58,761 - backup_manager - INFO - Table mood: 100.0% complete (2/2 rows)
+2025-01-11 13:09:58,761 - backup_manager - INFO - Backing up table: water_log (8/11)
+2025-01-11 13:09:58,975 - backup_manager - INFO - Table water_log: 100.0% complete (2/2 rows)
+2025-01-11 13:09:58,976 - backup_manager - INFO - Backing up table: weight_log (9/11)
+2025-01-11 13:09:59,196 - backup_manager - INFO - Table weight_log: 100.0% complete (6/6 rows)
+2025-01-11 13:09:59,196 - backup_manager - INFO - Backing up table: alembic_version (10/11)
+2025-01-11 13:09:59,411 - backup_manager - INFO - Table alembic_version: 100.0% complete (1/1 rows)
+2025-01-11 13:09:59,411 - backup_manager - INFO - Backing up table: wellness_quotes (11/11)
+2025-01-11 13:09:59,624 - backup_manager - INFO - Compressing database backup...
+2025-01-11 13:09:59,628 - backup_manager - INFO - Database backup compressed: 74.7% reduction
+2025-01-11 13:09:59,628 - backup_manager - INFO - Final backup size: 0.01 MB
+2025-01-11 13:09:59,628 - backup_manager - INFO - Total tables backed up: 11
+2025-01-11 13:09:59,628 - backup_manager - INFO - Creating code backup...
+2025-01-11 13:09:59,628 - backup_manager - DEBUG - Creating temporary backup at: backup_system/backups/full_backups/20250111_130956/temp_code_backup_20250111_130956.tar.gz
+2025-01-11 13:09:59,696 - backup_manager - DEBUG - Added to backup: generated-icon.png
+2025-01-11 13:09:59,703 - backup_manager - DEBUG - Added to backup: replit.nix
+2025-01-11 13:09:59,704 - backup_manager - DEBUG - Added to backup: cbt.py
+2025-01-11 13:09:59,705 - backup_manager - DEBUG - Added to backup: .breakpoints
+2025-01-11 13:09:59,705 - backup_manager - DEBUG - Added to backup: README.md
+2025-01-11 13:09:59,706 - backup_manager - DEBUG - Added to backup: alembic.ini
+2025-01-11 13:09:59,706 - backup_manager - DEBUG - Added to backup: test_incremental.txt
+2025-01-11 13:09:59,707 - backup_manager - DEBUG - Added to backup: pyproject.toml
+2025-01-11 13:09:59,707 - backup_manager - DEBUG - Added to backup: test_change.txt
+2025-01-11 13:09:59,713 - backup_manager - DEBUG - Added to backup: uv.lock
+2025-01-11 13:09:59,714 - backup_manager - DEBUG - Added to backup: forum.py
+2025-01-11 13:09:59,714 - backup_manager - DEBUG - Added to backup: .replit
+2025-01-11 13:09:59,714 - backup_manager - DEBUG - Added to backup: package.json
+2025-01-11 13:09:59,715 - backup_manager - DEBUG - Added to backup: package-lock.json
+2025-01-11 13:09:59,715 - backup_manager - DEBUG - Added to backup: .env
+2025-01-11 13:09:59,715 - backup_manager - DEBUG - Added to backup: migrations.py
+2025-01-11 13:09:59,715 - backup_manager - DEBUG - Added to backup: auth.py
+2025-01-11 13:09:59,717 - backup_manager - DEBUG - Added to backup: food_tracker.py
+2025-01-11 13:09:59,717 - backup_manager - DEBUG - Added to backup: dashboard.py
+2025-01-11 13:09:59,718 - backup_manager - DEBUG - Added to backup: ring_data.py
+2025-01-11 13:09:59,719 - backup_manager - DEBUG - Added to backup: chat.py
+2025-01-11 13:09:59,719 - backup_manager - DEBUG - Added to backup: CHANGELOG.md
+2025-01-11 13:09:59,720 - backup_manager - DEBUG - Added to backup: location_wellness.py
+2025-01-11 13:09:59,721 - backup_manager - DEBUG - Added to backup: ring_routes.py
+2025-01-11 13:09:59,722 - backup_manager - DEBUG - Added to backup: models.py
+2025-01-11 13:09:59,722 - backup_manager - DEBUG - Added to backup: setup_auth.py
+2025-01-11 13:09:59,722 - backup_manager - DEBUG - Added to backup: main.py
+2025-01-11 13:09:59,723 - backup_manager - DEBUG - Added to backup: app.py
+2025-01-11 13:09:59,723 - backup_manager - DEBUG - Added to backup: run_migrations.py
+2025-01-11 13:09:59,724 - backup_manager - DEBUG - Added to backup: journal.py
+2025-01-11 13:09:59,724 - backup_manager - DEBUG - Added to backup: templates/login.html
+2025-01-11 13:09:59,724 - backup_manager - DEBUG - Added to backup: templates/register.html
+2025-01-11 13:09:59,725 - backup_manager - DEBUG - Added to backup: templates/chat.html
+2025-01-11 13:09:59,725 - backup_manager - DEBUG - Added to backup: templates/cbt_coaching.html
+2025-01-11 13:09:59,725 - backup_manager - DEBUG - Added to backup: templates/dbt_coaching.html
+2025-01-11 13:09:59,726 - backup_manager - DEBUG - Added to backup: templates/index.html
+2025-01-11 13:09:59,726 - backup_manager - DEBUG - Added to backup: templates/base.html
+2025-01-11 13:09:59,727 - backup_manager - DEBUG - Added to backup: templates/food_tracker.html
+2025-01-11 13:09:59,727 - backup_manager - DEBUG - Added to backup: templates/location_wellness.html
+2025-01-11 13:09:59,727 - backup_manager - DEBUG - Added to backup: templates/404.html
+2025-01-11 13:09:59,727 - backup_manager - DEBUG - Added to backup: templates/500.html
+2025-01-11 13:09:59,728 - backup_manager - DEBUG - Added to backup: templates/dashboard.html
+2025-01-11 13:09:59,728 - backup_manager - DEBUG - Added to backup: templates/food_tracker/_water_section.html
+2025-01-11 13:09:59,729 - backup_manager - DEBUG - Added to backup: templates/food_tracker/_content.html
+2025-01-11 13:09:59,729 - backup_manager - DEBUG - Added to backup: templates/food_tracker/index.html
+2025-01-11 13:09:59,730 - backup_manager - DEBUG - Added to backup: templates/journal/new.html
+2025-01-11 13:09:59,730 - backup_manager - DEBUG - Added to backup: templates/journal/index.html
+2025-01-11 13:09:59,731 - backup_manager - DEBUG - Added to backup: templates/journal/view.html
+2025-01-11 13:09:59,731 - backup_manager - DEBUG - Added to backup: templates/forum/new.html
+2025-01-11 13:09:59,731 - backup_manager - DEBUG - Added to backup: templates/forum/index.html
+2025-01-11 13:09:59,732 - backup_manager - DEBUG - Added to backup: templates/forum/view.html
+2025-01-11 13:09:59,732 - backup_manager - DEBUG - Added to backup: templates/auth/register.html
+2025-01-11 13:09:59,732 - backup_manager - DEBUG - Added to backup: templates/auth/reset_password_request.html
+2025-01-11 13:09:59,733 - backup_manager - DEBUG - Added to backup: templates/auth/reset_password.html
+2025-01-11 13:09:59,733 - backup_manager - DEBUG - Added to backup: templates/auth/login.html
+2025-01-11 13:09:59,733 - backup_manager - DEBUG - Added to backup: static/js/auth.js
+2025-01-11 13:09:59,734 - backup_manager - DEBUG - Added to backup: static/js/cbt.js
+2025-01-11 13:09:59,734 - backup_manager - DEBUG - Added to backup: static/js/dashboard.js
+2025-01-11 13:09:59,735 - backup_manager - DEBUG - Added to backup: static/js/mood_visualization.js
+2025-01-11 13:09:59,736 - backup_manager - DEBUG - Added to backup: static/js/food_tracker.js
+2025-01-11 13:09:59,736 - backup_manager - DEBUG - Added to backup: static/js/chat.js
+2025-01-11 13:09:59,737 - backup_manager - DEBUG - Added to backup: static/js/location_wellness.js
+2025-01-11 13:09:59,737 - backup_manager - DEBUG - Added to backup: static/js/ring_data.js
+2025-01-11 13:09:59,738 - backup_manager - DEBUG - Added to backup: static/css/custom.css
+2025-01-11 13:09:59,738 - backup_manager - DEBUG - Added to backup: static/images/ai-buddy-logo.svg
+2025-01-11 13:09:59,759 - backup_manager - DEBUG - Added to backup: static/images/ai-buddy-logo.png
+2025-01-11 13:09:59,766 - backup_manager - DEBUG - Added to backup: .upm/store.json
+2025-01-11 13:09:59,851 - backup_manager - DEBUG - Added to backup: attached_assets/a-logo-with-the-text-ai-buddy-in-bold-blue-upperca-bM213UunTn2Qfqgdb4PxOQ-cwC4XTEUQ7eiVHokLBcWeA - Copy.png
+2025-01-11 13:09:59,862 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-27 063717.png
+2025-01-11 13:09:59,867 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 094444.png
+2025-01-11 13:09:59,870 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 094400.png
+2025-01-11 13:09:59,872 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 094219.png
+2025-01-11 13:09:59,874 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 095906.png
+2025-01-11 13:09:59,878 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 095830.png
+2025-01-11 13:09:59,882 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 095745.png
+2025-01-11 13:09:59,888 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 095706.png
+2025-01-11 13:09:59,899 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 100732.png
+2025-01-11 13:09:59,908 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 104759.png
+2025-01-11 13:09:59,910 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 105143.png
+2025-01-11 13:09:59,912 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 105440.png
+2025-01-11 13:09:59,915 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 105713.png
+2025-01-11 13:09:59,917 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 110102.png
+2025-01-11 13:09:59,919 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 110826.png
+2025-01-11 13:09:59,922 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 111052.png
+2025-01-11 13:09:59,925 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 111324.png
+2025-01-11 13:09:59,936 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 111729.png
+2025-01-11 13:09:59,947 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 112320.png
+2025-01-11 13:09:59,949 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 112739.png
+2025-01-11 13:09:59,951 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28.png
+2025-01-11 13:09:59,952 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 114344.png
+2025-01-11 13:09:59,953 - backup_manager - DEBUG - Added to backup: attached_assets/ultrahuman.ts
+2025-01-11 13:09:59,954 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 114803.png
+2025-01-11 13:09:59,956 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 115517.png
+2025-01-11 13:09:59,958 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-28 115847.png
+2025-01-11 13:09:59,973 - backup_manager - DEBUG - Added to backup: attached_assets/1000053814.jpg
+2025-01-11 13:09:59,986 - backup_manager - DEBUG - Added to backup: attached_assets/1000053815.jpg
+2025-01-11 13:10:00,003 - backup_manager - DEBUG - Added to backup: attached_assets/1000053813.jpg
+2025-01-11 13:10:00,011 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 153032.png
+2025-01-11 13:10:00,016 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 153422.png
+2025-01-11 13:10:00,021 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 153344.png
+2025-01-11 13:10:00,025 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 153751.png
+2025-01-11 13:10:00,028 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 153731.png
+2025-01-11 13:10:00,041 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 154436.png
+2025-01-11 13:10:00,050 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 154745.png
+2025-01-11 13:10:00,054 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 155008.png
+2025-01-11 13:10:00,057 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 155248.png
+2025-01-11 13:10:00,060 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 155446.png
+2025-01-11 13:10:00,063 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 155800.png
+2025-01-11 13:10:00,065 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 160009.png
+2025-01-11 13:10:00,067 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 160204.png
+2025-01-11 13:10:00,070 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 160603.png
+2025-01-11 13:10:00,072 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 161110.png
+2025-01-11 13:10:00,074 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 161422.png
+2025-01-11 13:10:00,078 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 161744.png
+2025-01-11 13:10:00,079 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 161657.png
+2025-01-11 13:10:00,082 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 162256.png
+2025-01-11 13:10:00,084 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 162113.png
+2025-01-11 13:10:00,085 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 162628.png
+2025-01-11 13:10:00,086 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 163142.png
+2025-01-11 13:10:00,087 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 163344.png
+2025-01-11 13:10:00,088 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 163652.png
+2025-01-11 13:10:00,089 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 164601.png
+2025-01-11 13:10:00,100 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 165208.png
+2025-01-11 13:10:00,110 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 170034.png
+2025-01-11 13:10:00,112 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 172209.png
+2025-01-11 13:10:00,114 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 172504.png
+2025-01-11 13:10:00,114 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 172658.png
+2025-01-11 13:10:00,115 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 173047.png
+2025-01-11 13:10:00,119 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 174306.png
+2025-01-11 13:10:00,122 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 174537.png
+2025-01-11 13:10:00,127 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 175655.png
+2025-01-11 13:10:00,131 - backup_manager - DEBUG - Added to backup: attached_assets/glad to have you help.png
+2025-01-11 13:10:00,134 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-30 175606.png
+2025-01-11 13:10:00,136 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 154524.png
+2025-01-11 13:10:00,140 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 154917.png
+2025-01-11 13:10:00,141 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 155239.png
+2025-01-11 13:10:00,145 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 155940.png
+2025-01-11 13:10:00,148 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 155919.png
+2025-01-11 13:10:00,152 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 155900.png
+2025-01-11 13:10:00,153 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 192513.png
+2025-01-11 13:10:00,154 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 192351.png
+2025-01-11 13:10:00,157 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 193807.png
+2025-01-11 13:10:00,161 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 200501.png
+2025-01-11 13:10:00,163 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 200429.png
+2025-01-11 13:10:00,164 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 200354.png
+2025-01-11 13:10:00,165 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 202219.png
+2025-01-11 13:10:00,168 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 202644.png
+2025-01-11 13:10:00,180 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 205931.png
+2025-01-11 13:10:00,191 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 205830.png
+2025-01-11 13:10:00,195 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 210027.png
+2025-01-11 13:10:00,200 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 211847.png
+2025-01-11 13:10:00,205 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 211823.png
+2025-01-11 13:10:00,210 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 211758.png
+2025-01-11 13:10:00,212 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 213031.png
+2025-01-11 13:10:00,215 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 213725.png
+2025-01-11 13:10:00,219 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 214146.png
+2025-01-11 13:10:00,222 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 214519.png
+2025-01-11 13:10:00,225 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2024-12-31 215215.png
+2025-01-11 13:10:00,226 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 064155.png
+2025-01-11 13:10:00,229 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 064354.png
+2025-01-11 13:10:00,230 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 083815.png
+2025-01-11 13:10:00,243 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 084719.png
+2025-01-11 13:10:00,246 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 084802.png
+2025-01-11 13:10:00,251 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 085036.png
+2025-01-11 13:10:00,252 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 082518.png
+2025-01-11 13:10:00,255 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 091209.png
+2025-01-11 13:10:00,259 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 091559.png
+2025-01-11 13:10:00,261 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 093349.png
+2025-01-11 13:10:00,263 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 094839.png
+2025-01-11 13:10:00,268 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 095553.png
+2025-01-11 13:10:00,274 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 100837.png
+2025-01-11 13:10:00,278 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 101533.png
+2025-01-11 13:10:00,281 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 165742.png
+2025-01-11 13:10:00,282 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 170033.png
+2025-01-11 13:10:00,284 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-01 170833.png
+2025-01-11 13:10:00,285 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 033548.png
+2025-01-11 13:10:00,286 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 034602.png
+2025-01-11 13:10:00,288 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 035645.png
+2025-01-11 13:10:00,289 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 052724.png
+2025-01-11 13:10:00,290 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 170245.png
+2025-01-11 13:10:00,291 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-02 170912.png
+2025-01-11 13:10:00,301 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 034332.png
+2025-01-11 13:10:00,312 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 035403.png
+2025-01-11 13:10:00,318 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 035333.png
+2025-01-11 13:10:00,322 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 035303.png
+2025-01-11 13:10:00,326 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 040301.png
+2025-01-11 13:10:00,329 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 040232.png
+2025-01-11 13:10:00,330 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 041650.png
+2025-01-11 13:10:00,333 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 042220.png
+2025-01-11 13:10:00,678 - backup_manager - DEBUG - Added to backup: attached_assets/shd-1.0.0-b1.zip
+2025-01-11 13:10:00,683 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 063738.png
+2025-01-11 13:10:00,684 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 143316.png
+2025-01-11 13:10:00,688 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 144559.png
+2025-01-11 13:10:00,689 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 145204.png
+2025-01-11 13:10:00,691 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1735937994944.txt
+2025-01-11 13:10:00,693 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 150141.png
+2025-01-11 13:10:00,697 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 150526.png
+2025-01-11 13:10:00,699 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 150809.png
+2025-01-11 13:10:00,702 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 161909.png
+2025-01-11 13:10:00,703 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 162055.png
+2025-01-11 13:10:00,705 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 162333.png
+2025-01-11 13:10:00,706 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 162945.png
+2025-01-11 13:10:00,707 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 163356.png
+2025-01-11 13:10:00,710 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 163908.png
+2025-01-11 13:10:00,714 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 163844.png
+2025-01-11 13:10:00,725 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 163823.png
+2025-01-11 13:10:00,726 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 205535.png
+2025-01-11 13:10:00,726 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1735960483880.txt
+2025-01-11 13:10:00,728 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 211659.png
+2025-01-11 13:10:00,730 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 212007.png
+2025-01-11 13:10:00,731 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 212349.png
+2025-01-11 13:10:00,732 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 212628.png
+2025-01-11 13:10:00,733 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 212931.png
+2025-01-11 13:10:00,735 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 213556.png
+2025-01-11 13:10:00,737 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 215454.png
+2025-01-11 13:10:00,738 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1735963334062.txt
+2025-01-11 13:10:00,740 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 220706.png
+2025-01-11 13:10:00,743 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 222357.png
+2025-01-11 13:10:00,746 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 222428.png
+2025-01-11 13:10:00,749 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 224902.png
+2025-01-11 13:10:00,752 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 224835.png
+2025-01-11 13:10:00,754 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 230354.png
+2025-01-11 13:10:00,759 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 230954.png
+2025-01-11 13:10:00,761 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 232454.png
+2025-01-11 13:10:00,763 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 233153.png
+2025-01-11 13:10:00,765 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-03 233230.png
+2025-01-11 13:10:00,768 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 054036.png
+2025-01-11 13:10:00,771 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 055914.png
+2025-01-11 13:10:00,774 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 055749.png
+2025-01-11 13:10:00,777 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 055711.png
+2025-01-11 13:10:00,779 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 054148.png
+2025-01-11 13:10:00,787 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 060901.png
+2025-01-11 13:10:00,791 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 060840.png
+2025-01-11 13:10:00,796 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 060806.png
+2025-01-11 13:10:00,806 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 060745.png
+2025-01-11 13:10:00,811 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1735992817398.txt
+2025-01-11 13:10:00,814 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 061719.png
+2025-01-11 13:10:00,820 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 063159.png
+2025-01-11 13:10:00,826 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 064422.png
+2025-01-11 13:10:00,831 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 064810.png
+2025-01-11 13:10:00,834 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 071821.png
+2025-01-11 13:10:00,836 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 204812.png
+2025-01-11 13:10:00,838 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 205310.png
+2025-01-11 13:10:00,840 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 205928.png
+2025-01-11 13:10:00,862 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 205809.png
+2025-01-11 13:10:00,906 - backup_manager - DEBUG - Added to backup: attached_assets/AI Buddy logo_Ai Buddy.jpg
+2025-01-11 13:10:00,925 - backup_manager - DEBUG - Added to backup: attached_assets/AI Buddy logo_Ai Buddy.png
+2025-01-11 13:10:00,930 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 213114.png
+2025-01-11 13:10:00,934 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 213503.png
+2025-01-11 13:10:00,936 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 215909.png
+2025-01-11 13:10:00,943 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 220720.png
+2025-01-11 13:10:00,947 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 220637.png
+2025-01-11 13:10:00,951 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 220659.png
+2025-01-11 13:10:00,956 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 221252.png
+2025-01-11 13:10:00,960 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 221220.png
+2025-01-11 13:10:00,964 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 221141.png
+2025-01-11 13:10:00,967 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222015.png
+2025-01-11 13:10:00,971 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 221954.png
+2025-01-11 13:10:00,975 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 221928.png
+2025-01-11 13:10:00,977 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222447.png
+2025-01-11 13:10:00,981 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222423.png
+2025-01-11 13:10:00,985 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222359.png
+2025-01-11 13:10:00,987 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222805.png
+2025-01-11 13:10:00,993 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222743.png
+2025-01-11 13:10:00,997 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 222718.png
+2025-01-11 13:10:01,001 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-04 223100.png
+2025-01-11 13:10:01,002 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 091141.png
+2025-01-11 13:10:01,004 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 091656.png
+2025-01-11 13:10:01,007 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 091944.png
+2025-01-11 13:10:01,008 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 092139.png
+2025-01-11 13:10:01,009 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 092906.png
+2025-01-11 13:10:01,011 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 093513.png
+2025-01-11 13:10:01,013 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 094413.png
+2025-01-11 13:10:01,015 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 094338.png
+2025-01-11 13:10:01,016 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1736092150572.txt
+2025-01-11 13:10:01,017 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 095637.png
+2025-01-11 13:10:01,018 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1736093047636.txt
+2025-01-11 13:10:01,021 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 100457.png
+2025-01-11 13:10:01,022 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 102932.png
+2025-01-11 13:10:01,023 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1736094755139.txt
+2025-01-11 13:10:01,025 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 104342.png
+2025-01-11 13:10:01,026 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 110630.png
+2025-01-11 13:10:01,029 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 111607.png
+2025-01-11 13:10:01,031 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 124807.png
+2025-01-11 13:10:01,033 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 125109.png
+2025-01-11 13:10:01,036 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 125608.png
+2025-01-11 13:10:01,038 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 182308.png
+2025-01-11 13:10:01,040 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 182235.png
+2025-01-11 13:10:01,041 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-render-template-request-jsonify-from-flask-login-import-login-requir-1736125182107.txt
+2025-01-11 13:10:01,042 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 193114.png
+2025-01-11 13:10:01,042 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 194244.png
+2025-01-11 13:10:01,043 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 201505.png
+2025-01-11 13:10:01,044 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 202124.png
+2025-01-11 13:10:01,046 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 202607.png
+2025-01-11 13:10:01,047 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 203457.png
+2025-01-11 13:10:01,048 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 203918.png
+2025-01-11 13:10:01,049 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 210438.png
+2025-01-11 13:10:01,050 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-05 211223.png
+2025-01-11 13:10:01,051 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 042143.png
+2025-01-11 13:10:01,052 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 043419.png
+2025-01-11 13:10:01,055 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 043835.png
+2025-01-11 13:10:01,058 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 043747.png
+2025-01-11 13:10:01,062 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 045224.png
+2025-01-11 13:10:01,067 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 045641.png
+2025-01-11 13:10:01,068 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 192510.png
+2025-01-11 13:10:01,069 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 193352.png
+2025-01-11 13:10:01,070 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-06 204208.png
+2025-01-11 13:10:01,073 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 052906.png
+2025-01-11 13:10:01,075 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 054204.png
+2025-01-11 13:10:01,078 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 054803.png
+2025-01-11 13:10:01,080 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 055750.png
+2025-01-11 13:10:01,082 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 060430.png
+2025-01-11 13:10:01,083 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-import-os-import-logging-from-datetime-import-datetime-timedelta-from-typing-import-Dict-Any-O-1736337961627.txt
+2025-01-11 13:10:01,083 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-jsonify-from-flask-login-import-login-required-current-user-from-rin-1736339631603.txt
+2025-01-11 13:10:01,086 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 154052.png
+2025-01-11 13:10:01,088 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 154634.png
+2025-01-11 13:10:01,091 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 054837.png
+2025-01-11 13:10:01,093 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 161846.png
+2025-01-11 13:10:01,094 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-flask-import-Blueprint-jsonify-from-flask-login-import-login-required-current-user-from-rin-1736375229811.txt
+2025-01-11 13:10:01,096 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 163010.png
+2025-01-11 13:10:01,099 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 163417.png
+2025-01-11 13:10:01,101 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 163733.png
+2025-01-11 13:10:01,102 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-System-Fixes-and-Updates-Log-Last-Updated-January-08-2025-Version-Control-System-Version-Tags-1736375975283.txt
+2025-01-11 13:10:01,104 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 164330.png
+2025-01-11 13:10:01,105 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-from-datetime-import-datetime-from-app-import-db-from-flask-login-import-UserMixin-from-werkzeug--1736376317618.txt
+2025-01-11 13:10:01,108 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 171033.png
+2025-01-11 13:10:01,110 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 165028.png
+2025-01-11 13:10:01,113 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 172025.png
+2025-01-11 13:10:01,115 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-08 173554.png
+2025-01-11 13:10:01,118 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 054615.png
+2025-01-11 13:10:01,120 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 055310.png
+2025-01-11 13:10:01,123 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 055653.png
+2025-01-11 13:10:01,125 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 060229.png
+2025-01-11 13:10:01,128 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 061134.png
+2025-01-11 13:10:01,147 - backup_manager - DEBUG - Added to backup: attached_assets/1000054158.jpg
+2025-01-11 13:10:01,169 - backup_manager - DEBUG - Added to backup: attached_assets/1000054159.jpg
+2025-01-11 13:10:01,171 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 205220.png
+2025-01-11 13:10:01,173 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 211831.png
+2025-01-11 13:10:01,174 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 211807.png
+2025-01-11 13:10:01,175 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 212438.png
+2025-01-11 13:10:01,176 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-INFO-main-Creating-Flask-application-INFO-app-Creating-Flask-application-INFO-app-Settin-1736479713052.txt
+2025-01-11 13:10:01,176 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-DEBUG-ring-routes-Sending-request-to-GPT-4o-DEBUG-openai-base-client-Request-options-method--1736479900908.txt
+2025-01-11 13:10:01,177 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 213807.png
+2025-01-11 13:10:01,180 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-09 214101.png
+2025-01-11 13:10:01,181 - backup_manager - DEBUG - Added to backup: attached_assets/Pasted-2025-01-11-12-25-10-287-backup-manager-INFO-Database-engine-initialized-successfully-2025-01-1-1736598336281.txt
+2025-01-11 13:10:01,182 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-11 063428.png
+2025-01-11 13:10:01,185 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-11 064640.png
+2025-01-11 13:10:01,189 - backup_manager - DEBUG - Added to backup: attached_assets/Screenshot 2025-01-11 065925.png
+2025-01-11 13:10:01,189 - backup_manager - DEBUG - Added to backup: backup_system/schedule_backups.py
+2025-01-11 13:10:01,190 - backup_manager - DEBUG - Added to backup: backup_system/file_utils.py
+2025-01-11 13:10:01,190 - backup_manager - DEBUG - Added to backup: backup_system/compression.py
+2025-01-11 13:10:01,191 - backup_manager - DEBUG - Added to backup: backup_system/full_backup_manager.py
+2025-01-11 13:10:01,191 - backup_manager - DEBUG - Added to backup: backup_system/backup_state.py
+2025-01-11 13:10:01,192 - backup_manager - DEBUG - Added to backup: backup_system/database_backup.py
+2025-01-11 13:10:01,192 - backup_manager - DEBUG - Added to backup: backup_system/test_backup.py
+2025-01-11 13:10:01,193 - backup_manager - DEBUG - Added to backup: backup_system/restore_backup.py
+2025-01-11 13:10:01,193 - backup_manager - DEBUG - Added to backup: backup_system/incremental_backup.py
+2025-01-11 13:10:01,194 - backup_manager - DEBUG - Added to backup: backup_system/__init__.py
+2025-01-11 13:10:01,195 - backup_manager - DEBUG - Added to backup: backup_system/backup_manager.py
+2025-01-11 13:10:01,195 - backup_manager - DEBUG - Added to backup: backup_system/backup_verification.py
+2025-01-11 13:10:01,196 - backup_manager - DEBUG - Added to backup: docs/water_logging_fix.md
+2025-01-11 13:10:01,196 - backup_manager - DEBUG - Added to backup: docs/location_wellness_feature.md
+2025-01-11 13:10:01,196 - backup_manager - DEBUG - Added to backup: docs/feature_documentation_template.md
+2025-01-11 13:10:01,197 - backup_manager - DEBUG - Added to backup: docs/CHANGELOG.md
+2025-01-11 13:10:01,197 - backup_manager - DEBUG - Added to backup: docs/fork_setup_guide.md
+2025-01-11 13:10:01,198 - backup_manager - DEBUG - Added to backup: docs/biomarker_insights_fix.md
+2025-01-11 13:10:01,198 - backup_manager - DEBUG - Added to backup: docs/setup_guide.md
+2025-01-11 13:10:01,199 - backup_manager - DEBUG - Added to backup: docs/biomarker_insights_troubleshooting.md
+2025-01-11 13:10:01,199 - backup_manager - DEBUG - Added to backup: docs/biomarker_insights_setup.md
+2025-01-11 13:10:01,207 - backup_manager - DEBUG - Added to backup: docs/SYSTEM_UPDATES.md
+2025-01-11 13:10:01,218 - backup_manager - DEBUG - Added to backup: docs/versions/VERSION.md
+2025-01-11 13:10:01,219 - backup_manager - DEBUG - Added to backup: docs/versions/fixes/water_logging_v1.0.1.md
+2025-01-11 13:10:01,219 - backup_manager - DEBUG - Added to backup: docs/versions/fixes/README.md
+2025-01-11 13:10:01,220 - backup_manager - DEBUG - Added to backup: docs/versions/fixes/database_migration_v1.0.3.md
+2025-01-11 13:10:01,221 - backup_manager - DEBUG - Added to backup: docs/versions/fixes/chat_history_v1.0.1.md
+2025-01-11 13:10:01,221 - backup_manager - DEBUG - Added to backup: migrations/README
+2025-01-11 13:10:01,222 - backup_manager - DEBUG - Added to backup: migrations/alembic.ini
+2025-01-11 13:10:01,222 - backup_manager - DEBUG - Added to backup: migrations/env.py
+2025-01-11 13:10:01,222 - backup_manager - DEBUG - Added to backup: migrations/script.py.mako
+2025-01-11 13:10:01,449 - backup_manager - INFO - Code backup created successfully: 26.07 MB
+2025-01-11 13:10:01,449 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:01,632 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:01,632 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:01,632 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:01,632 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:01,643 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:01,800 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:01,800 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:01,801 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:01,801 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:01,801 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:01,930 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:01,931 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:01,932 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:01,932 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:01,932 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:02,118 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:02,118 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:02,118 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:02,118 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:02,118 - backup_manager - INFO - Removing old backup: backup_system/backups/full_backups/20250111_130808
+2025-01-11 13:10:02,126 - backup_manager - INFO - Maintaining 2 verified backups
+2025-01-11 13:10:02,126 - backup_manager - INFO - Full backup completed successfully at: backup_system/backups/full_backups/20250111_130956
+2025-01-11 13:10:02,126 - backup_manager - INFO - Total backup size: 26.08 MB
+Full Backup created at: backup_system/backups/full_backups/20250111_130956
+2025-01-11 13:10:02,784 - backup_manager - INFO - Database connection test successful
+2025-01-11 13:10:02,788 - backup_manager - INFO - Database engine initialized successfully
+2025-01-11 13:10:02,788 - backup_manager - INFO - Backup directories created and secured: backup_system/backups
+2025-01-11 13:10:02,789 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:02,932 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:02,932 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:02,933 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:02,933 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:02,933 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:03,060 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:03,060 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:03,060 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:03,060 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:03,061 - backup_manager - INFO - Maintaining 2 verified backups
+2025-01-11 13:10:03,061 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:03,210 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:03,210 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:03,210 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:03,211 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:03,211 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:03,355 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:03,355 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:03,355 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:03,355 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:03,355 - __main__ - INFO - Found 2 full backups
+
+Testing incremental backup:
+--------------------------------------------------
+2025-01-11 13:10:05,356 - backup_manager - INFO - Backup directories created and secured: backup_system/backups
+2025-01-11 13:10:05,359 - backup_manager - INFO - Compressed test_incremental.txt: -125.7% reduction (Level 9)
+2025-01-11 13:10:05,695 - backup_manager - INFO - Incremental backup completed at: backup_system/backups/incremental/20250111_131005
+2025-01-11 13:10:05,696 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:05,890 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:05,890 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:05,890 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:05,891 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:05,891 - backup_manager - INFO - Database backup verified: 11 tables
+2025-01-11 13:10:06,049 - backup_manager - INFO - Code backup compression ratio: 10.5%
+2025-01-11 13:10:06,049 - backup_manager - INFO - Files in backup: 379
+2025-01-11 13:10:06,050 - backup_manager - INFO - Total backup size: 26.08 MB
+2025-01-11 13:10:06,050 - backup_manager - INFO - Backup integrity verification completed successfully
+2025-01-11 13:10:06,050 - backup_manager - INFO - Maintaining 2 verified backups
+Incremental Backup created at: backup_system/backups/incremental/20250111_131005
+Backup manifest not found at: backup_system/backups/incremental/20250111_131005/backup_manifest.json
+Incremental backup verification failed
