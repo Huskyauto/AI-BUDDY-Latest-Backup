@@ -1,0 +1,453 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <h1 class="text-teal mb-4 fs-2">Welcome back, {{ current_user.email }}</h1>
+
+    <!-- Therapy Navigation -->
+    <div class="card mb-4">
+        <div class="card-body p-3 p-md-4">
+            <nav class="nav nav-tabs mb-3 flex-nowrap overflow-auto">
+                <a class="nav-link active" data-bs-toggle="tab" href="#overview">Overview</a>
+                <a class="nav-link" data-bs-toggle="tab" href="#analytics">Analytics</a>
+                <a class="nav-link" data-bs-toggle="tab" href="#cbt">
+                    CBT
+                    <div class="small text-muted d-none d-md-block">(Cognitive Behavioral Therapy)</div>
+                    <div class="small text-muted">Coaching</div>
+                </a>
+                <a class="nav-link" data-bs-toggle="tab" href="#dbt">
+                    DBT
+                    <div class="small text-muted d-none d-md-block">(Dialectical Behavior Therapy)</div>
+                    <div class="small text-muted">Coaching</div>
+                </a>
+                <a class="nav-link" data-bs-toggle="tab" href="#act">
+                    ACT
+                    <div class="small text-muted d-none d-md-block">(Acceptance & Commitment Therapy)</div>
+                    <div class="small text-muted">Coaching</div>
+                </a>
+                <a class="nav-link" data-bs-toggle="tab" href="#ipt">
+                    IPT
+                    <div class="small text-muted d-none d-md-block">(Interpersonal Therapy)</div>
+                    <div class="small text-muted">Coaching</div>
+                </a>
+            </nav>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Overview Tab Content -->
+                <div class="tab-pane fade show active" id="overview">
+                    <div class="mb-4">
+                        <h3 class="h6 mb-3">Understanding Our Coaching Approaches</h3>
+                        <div class="row g-3">
+                            <div class="col-12 col-md-3">
+                                <h4 class="h6 text-teal mb-2">CBT (Cognitive Behavioral Therapy)</h4>
+                                <p class="text-muted small">CBT focuses on identifying and changing unhelpful thought patterns and behaviors around food. This evidence-based approach helps you understand the connection between your thoughts, feelings, and eating habits.</p>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <h4 class="h6 text-teal mb-2">DBT (Dialectical Behavior Therapy)</h4>
+                                <p class="text-muted small">DBT combines mindfulness with emotional regulation techniques. It helps you develop skills for mindful eating, managing food-related stress, and building a balanced approach to nutrition.</p>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <h4 class="h6 text-teal mb-2">ACT (Acceptance & Commitment Therapy)</h4>
+                                <p class="text-muted small">ACT helps you develop psychological flexibility by accepting your thoughts and feelings while committing to behavior change aligned with your values. It focuses on mindfulness, acceptance, and value-driven actions.</p>
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <h4 class="h6 text-teal mb-2">IPT (Interpersonal Therapy)</h4>
+                                <p class="text-muted small">IPT focuses on how relationships and communication patterns influence eating behaviors. This approach addresses social eating, emotional support, and resolving interpersonal issues that may trigger emotional eating.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab Content -->
+                <div class="tab-pane fade" id="analytics">
+                    <div class="mb-4">
+                        <h3 class="h5 mb-3">Mood Pattern Analysis</h3>
+                        <div class="card">
+                            <div class="card-body">
+                                <div style="height: 400px;">
+                                    <canvas id="moodPatternChart"></canvas>
+                                </div>
+                                <p class="text-muted small mt-3">
+                                    Track your emotional well-being over time with this interactive mood pattern visualization.
+                                    Click on data points to see detailed information about each mood entry.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CBT Tab Content -->
+                <div class="tab-pane fade" id="cbt">
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <h3 class="h5 mb-3">CBT Coaching</h3>
+                            <p class="text-muted mb-4">Access your personalized CBT coaching session with AI-powered insights.</p>
+                            <a href="{{ url_for('cbt.cbt_coaching') }}" class="btn btn-primary">Start CBT Coaching Session</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- DBT Tab Content -->
+                <div class="tab-pane fade" id="dbt">
+                    <div class="mb-4">
+                        <h3 class="h5 mb-3">DBT Coaching</h3>
+                        <p class="text-muted mb-4">Access your personalized DBT coaching session with AI-powered insights.</p>
+                        <a href="{{ url_for('cbt.dbt_coaching') }}" class="btn btn-primary">Start DBT Coaching Session</a>
+                    </div>
+                </div>
+                <!-- ACT Tab Content -->
+                <div class="tab-pane fade" id="act">
+                    <div class="mb-4">
+                        <h3 class="h5 mb-3">ACT Coaching</h3>
+                        <p class="text-muted mb-4">Access your personalized ACT coaching session with AI-powered insights focused on psychological flexibility and value-based living.</p>
+                        <a href="{{ url_for('cbt.act_coaching') }}" class="btn btn-primary">Start ACT Coaching Session</a>
+                    </div>
+                </div>
+                
+                <!-- IPT Tab Content -->
+                <div class="tab-pane fade" id="ipt">
+                    <div class="mb-4">
+                        <h3 class="h5 mb-3">IPT Coaching</h3>
+                        <p class="text-muted mb-4">Access your personalized Interpersonal Therapy coaching session with AI-powered insights focused on relationship patterns and communication that influence eating behaviors.</p>
+                        <a href="{{ url_for('cbt.ipt_coaching') }}" class="btn btn-primary">Start IPT Coaching Session</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Oura Ring Data Section -->
+    <div class="card mb-4" id="oura-ring-section">
+        <div class="card-body p-3 p-md-4">
+            {% if current_user.can_view_ring_data() %}
+                <h2 class="h5 mb-3">Oura Ring Data</h2>
+                <p class="text-muted small mb-3">Monitor your physiological well-being with comprehensive biometric tracking.</p>
+
+                <div class="ring-data">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Heart Rate</span>
+                                <span class="ring-data-value text-teal" data-oura-heart-rate>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Stress Level</span>
+                                <span class="ring-data-value text-teal" data-oura-stress>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Heart Rate Variability</span>
+                                <span class="ring-data-value text-teal" data-oura-hrv>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Skin Temperature</span>
+                                <span class="ring-data-value text-teal" data-oura-temp>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ current_user.get_ring_access_message() }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Ultrahuman Ring Data Section -->
+    <div class="card mb-4" id="ultrahuman-ring-section">
+        <div class="card-body p-3 p-md-4">
+            {% if current_user.can_view_ring_data() %}
+                <h2 class="h5 mb-3">Ultrahuman Ring Data</h2>
+                <p class="text-muted small mb-3">Track vital metrics to optimize your daily performance</p>
+
+                <div class="ring-data">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-6">
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Heart Rate</span>
+                                <span class="ring-data-value text-teal" data-ultrahuman-heart-rate>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Recovery Index</span>
+                                <span class="ring-data-value text-teal" data-ultrahuman-recovery>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">VO2 Max</span>
+                                <span class="ring-data-value text-teal" data-ultrahuman-vo2max>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12 col-md-6">
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Heart Rate Variability</span>
+                                <span class="ring-data-value text-teal" data-ultrahuman-hrv>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                            <div class="ring-data-item">
+                                <span class="ring-data-label">Skin Temperature</span>
+                                <span class="ring-data-value text-teal" data-ultrahuman-temp>
+                                    <span class="spinner-border spinner-border-sm" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h3 class="h6 mb-3">Biomarker Insights</h3>
+                    <p class="text-muted small mb-3">AI-powered suggestions based on your biomarker patterns</p>
+                    <div id="biomarker-insights">
+                        <!-- Dynamic content will be inserted here by JavaScript -->
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info mb-0">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ current_user.get_ring_access_message() }}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- AI Insights Section -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-4">AI Insights</h2>
+            <div class="daily-tip mb-4">
+                <span class="badge bg-light text-dark mb-2">Daily Tip</span>
+                <h6>{{ insights.daily_tip.title }}</h6>
+                <p class="text-muted small">{{ insights.daily_tip.description }}</p>
+                <p class="text-success fst-italic">"{{ insights.daily_tip.affirmation }}"</p>
+            </div>
+
+            <div class="accordion" id="insightsAccordion">
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#immediateActions">
+                            Immediate Actions
+                        </button>
+                    </h3>
+                    <div id="immediateActions" class="accordion-collapse collapse show">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled mb-0">
+                                {% for action in insights.immediate_actions %}
+                                <li class="mb-2">
+                                    <i class="fas fa-check-circle text-success me-2"></i>
+                                    {{ action }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#longTermStrategies">
+                            Long-term Strategies
+                        </button>
+                    </h3>
+                    <div id="longTermStrategies" class="accordion-collapse collapse">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled mb-0">
+                                {% for strategy in insights.long_term_strategies %}
+                                <li class="mb-2">
+                                    <i class="fas fa-star text-warning me-2"></i>
+                                    {{ strategy }}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Location Wellness -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h2 class="h5 mb-4">Location Wellness</h2>
+
+            <!-- Location Navigation Tabs -->
+            <ul class="nav nav-tabs mb-3" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tracking-tab" data-bs-toggle="tab" data-bs-target="#tracking" type="button" role="tab">
+                        Location Tracking
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Location Tracking Tab -->
+                <div class="tab-pane fade show active" id="tracking" role="tabpanel">
+                    <p class="text-muted">Get mindful eating suggestions when near food locations</p>
+
+                    <div class="location-status mb-3">
+                        <div class="d-flex align-items-center mb-2">
+                            <div class="me-2">📍</div>
+                            <div>
+                                <div class="fw-bold">Location Status</div>
+                                <div class="text-muted small">Last Update: <span id="location-last-update">Not Available</span> <span id="location-status-active" class="text-success" style="display: none;">Active</span></div>
+                            </div>
+                        </div>
+                        <div id="tracking-active-message" class="alert alert-success mb-3" style="display: none;">
+                            <i class="fas fa-check-circle me-2"></i>
+                            Location Tracking Active
+                            <p class="small mb-0 mt-1">You'll receive alerts when near food locations.</p>
+                        </div>
+                        <button id="start-location-tracking" class="btn btn-primary w-100">Start Location Tracking</button>
+                        <button id="stop-location-tracking" class="btn btn-danger w-100" style="display: none;">Stop Location Tracking</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="mindful-eating-suggestions" class="mt-4" style="display: none;">
+                <h3 class="h6 mb-3">Mindful Eating Suggestions</h3>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-2">• Take a moment to check your actual hunger level (1-10)</li>
+                    <li class="mb-2">• Consider if you're eating from physical hunger or emotional needs</li>
+                    <li class="mb-2">• Remember your health goals and values</li>
+                    <li class="mb-2">• Think about how you'll feel after eating - will it align with your goals?</li>
+                    <li class="mb-2">• Practice mindful eating by taking smaller bites and eating slowly</li>
+                    <li class="mb-2">• Listen to your body's natural hunger and fullness signals</li>
+                    <li class="mb-2">• Consider going for a short walk or drinking water first</li>
+                    <li class="mb-2">• Remember that every meal is an opportunity to nourish your body</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Mood -->
+    <div class="card">
+        <div class="card-body p-3 p-md-4">
+            <h2 class="h5 mb-3">Today's Mood</h2>
+            <p class="text-muted small mb-4">Track how you're feeling</p>
+
+            <div class="mood-selector d-flex mb-4 overflow-auto pb-2">
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😌</div>
+                    <div class="mood-label">Peaceful</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😊</div>
+                    <div class="mood-label">Happy</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">🥳</div>
+                    <div class="mood-label">Excited</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">🤗</div>
+                    <div class="mood-label">Grateful</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😌</div>
+                    <div class="mood-label">Relaxed</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">🤔</div>
+                    <div class="mood-label">Thoughtful</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😐</div>
+                    <div class="mood-label">Neutral</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😕</div>
+                    <div class="mood-label">Uncertain</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😔</div>
+                    <div class="mood-label">Sad</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😫</div>
+                    <div class="mood-label">Stressed</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😤</div>
+                    <div class="mood-label">Frustrated</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😰</div>
+                    <div class="mood-label">Anxious</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😴</div>
+                    <div class="mood-label">Tired</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">🤒</div>
+                    <div class="mood-label">Unwell</div>
+                </div>
+                <div class="mood-option text-center mx-2">
+                    <div class="mood-emoji mb-2">😶</div>
+                    <div class="mood-label">Numb</div>
+                </div>
+            </div>
+
+            <div class="form-floating mb-3">
+                <textarea class="form-control" id="moodNotes" style="height: 100px" placeholder="Add notes about your mood"></textarea>
+                <label for="moodNotes">Add any notes about how you're feeling...</label>
+            </div>
+
+            <!-- Add success message div -->
+            <div id="moodSaveSuccess" class="alert alert-success d-none mb-3">
+                Mood saved successfully!
+            </div>
+
+            <button id="moodSaveBtn" class="btn btn-primary w-100">Save Mood</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Make sure Bootstrap JS is loaded before our custom scripts -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ring_data.js') }}"></script>
+<script src="{{ url_for('static', filename='js/cbt.js') }}"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/mood_visualization.js') }}"></script>
+<script src="{{ url_for('static', filename='js/location_wellness.js') }}"></script>
+{% endblock %}
