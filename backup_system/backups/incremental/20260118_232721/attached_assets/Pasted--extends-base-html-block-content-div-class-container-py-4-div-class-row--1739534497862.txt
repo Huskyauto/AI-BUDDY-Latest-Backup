@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <h1>Location Wellness</h1>
+            <p class="text-muted">Get mindful eating suggestions when near food locations</p>
+
+            <!-- Settings Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Settings</h5>
+                    <div class="settings-content">
+                        <div class="mb-3">
+                            <label for="apiKeyInput" class="form-label">Google Maps API Key Status</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="apiKeyInput" value="••••••••" readonly>
+                                <button class="btn btn-outline-secondary" type="button" id="testApiKey">
+                                    <i class="fas fa-vial me-2"></i>Test API Key
+                                </button>
+                            </div>
+                            <div id="apiKeyStatus" class="form-text"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Test Section -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">API Test</h5>
+                    <p class="text-muted">Test Places API detection with current location</p>
+                    <button id="test-places-api" class="btn btn-info">
+                        <i class="fas fa-vial me-2"></i>Test Places API
+                    </button>
+                    <div id="test-results" class="mt-3" style="display: none;">
+                        <h6>Test Results:</h6>
+                        <pre id="test-output" class="bg-light p-3 rounded"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Location Status Section -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <!-- Location Status Section -->
+                    <div class="mb-4">
+                        <div class="d-flex align-items-center">
+                            <div class="me-3">
+                                <i class="fas fa-map-marker-alt text-primary"></i>
+                            </div>
+                            <div>
+                                <h5 class="mb-0">Location Status</h5>
+                                <p class="text-muted mb-0">Last Update: <span id="location-last-update">Not Available</span></p>
+                                <span id="location-status-active" class="badge bg-success" style="display: none;">Active</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tracking Controls -->
+                    <div class="d-grid gap-2">
+                        <button id="start-location-tracking" class="btn btn-success">
+                            <i class="fas fa-play me-2"></i>Start Location Tracking
+                        </button>
+                        <button id="stop-location-tracking" class="btn btn-danger" style="display: none;">
+                            <i class="fas fa-stop me-2"></i>Stop Location Tracking
+                        </button>
+                    </div>
+
+                    <!-- Active Tracking Message -->
+                    <div id="tracking-active-message" class="alert alert-success mt-3" style="display: none;">
+                        <i class="fas fa-check-circle me-2"></i>
+                        <span>Location Tracking Active</span>
+                        <p class="small mb-0">You'll receive mindful eating alerts when near food locations.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Map Section -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Nearby Places</h5>
+                    <div id="map" style="height: 400px; width: 100%; margin-bottom: 20px;"></div>
+                    <div id="places-list" class="list-group">
+                        <!-- Places will be populated here by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mindful Eating Suggestions -->
+            <div id="mindful-eating-suggestions" class="card mt-4" style="display: none;">
+                <div class="card-body">
+                    <h5 class="card-title">Mindful Eating Suggestions</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">• Take a moment to check your hunger level (1-10)</li>
+                        <li class="mb-2">• Consider if you're eating from physical hunger or emotional needs</li>
+                        <li class="mb-2">• Remember your health goals and values</li>
+                        <li class="mb-2">• Think about how you'll feel after eating - will it align with your goals?</li>
+                        <li class="mb-2">• Practice mindful eating by taking smaller bites and eating slowly</li>
+                        <li class="mb-2">• Listen to your body's natural hunger and fullness signals</li>
+                        <li class="mb-2">• Consider going for a short walk or drinking water first</li>
+                        <li class="mb-2">• Remember that every meal is an opportunity to nourish your body</li>
+                    </ul>
+                    <div id="suggestionsList" class="mt-4">
+                        <!-- Dynamic suggestions will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<!-- Google Maps JavaScript API with geometry library -->
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places,geometry"></script>
+<script src="{{ url_for('static', filename='js/location_wellness.js') }}"></script>
+{% endblock %}
+{% endblock %}
