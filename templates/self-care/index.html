@@ -1,0 +1,344 @@
+{% extends "base.html" %}
+
+{% block title %}Self-Care Recommendations | AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">Interactive Self-Care Recommendations</h1>
+            <p class="lead">Personalized recommendations based on your wellness data, location, and preferences.</p>
+        </div>
+    </div>
+
+    <!-- Manual Wellness Check-In Banner -->
+    <div class="row mt-3 mb-4">
+        <div class="col-md-12">
+            <div class="card bg-light {% if current_user.is_biometric_user() %}border-info{% else %}border-primary{% endif %}">
+                <div class="card-body d-flex justify-content-between align-items-center">
+                    <div>
+                        {% if current_user.is_biometric_user() %}
+                            <h5 class="card-title mb-1">Supplement Your Biometric Data</h5>
+                            <p class="card-text mb-0">Add context to your smart ring data with a quick wellness check-in.</p>
+                        {% else %}
+                            <h5 class="card-title mb-1">No Smart Ring? No Problem!</h5>
+                            <p class="card-text mb-0">Take a quick wellness check-in to get personalized recommendations without biometric devices.</p>
+                        {% endif %}
+                    </div>
+                    <a href="{{ url_for('self_care.wellness_check_in') }}" class="btn btn-primary">Wellness Check-In</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Stress Level Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title d-flex justify-content-between align-items-center">
+                        Your Current State
+                        {% if stress_data_source %}
+                            <span class="badge {% if stress_data_source == 'smart_ring' or stress_data_source == 'oura_api' or stress_data_source == 'ultrahuman_api' %}bg-info{% elif stress_data_source == 'manual_check_in' %}bg-success{% elif stress_data_source == 'time_based' %}bg-secondary{% else %}bg-secondary{% endif %} rounded-pill">
+                                {% if stress_data_source == 'smart_ring' or stress_data_source == 'oura_api' or stress_data_source == 'ultrahuman_api' %}
+                                    Real-time biometric data
+                                {% elif stress_data_source == 'manual_check_in' %}
+                                    Manual check-in data
+                                {% elif stress_data_source == 'time_based' %}
+                                    Time-based estimate
+                                {% else %}
+                                    {{ stress_data_source|replace('_', ' ')|capitalize }}
+                                {% endif %}
+                            </span>
+                        {% endif %}
+                    </h5>
+                    
+                    <!-- Stress Level -->
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="me-3 fw-bold" style="width: 90px;">Stress Level:</div>
+                        {% if stress_level == 'high' %}
+                            <div class="state-indicator bg-danger me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>High stress detected</strong> - Take time for some self-care activities</p>
+                        {% elif stress_level == 'moderate' %}
+                            <div class="state-indicator bg-warning me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Moderate stress level</strong> - Consider taking a short break</p>
+                        {% elif stress_level == 'low' %}
+                            <div class="state-indicator bg-success me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Low stress level</strong> - This is a good time for proactive self-care</p>
+                        {% else %}
+                            <div class="state-indicator bg-secondary me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0">
+                                <strong>Current state unknown</strong> - 
+                                {% if current_user.is_biometric_user() %}
+                                    Smart ring data is not currently available. 
+                                {% endif %}
+                                <a href="{{ url_for('self_care.wellness_check_in') }}" class="text-primary">Complete a wellness check-in</a> to get accurate recommendations.
+                            </p>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Activity Level -->
+                    <div class="d-flex align-items-center mt-3">
+                        <div class="me-3 fw-bold" style="width: 90px;">Activity:</div>
+                        {% if activity_level == 'active' %}
+                            <div class="state-indicator bg-success me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Active</strong> - Great job staying active</p>
+                            {% if activity_data_source == 'time_based' %}
+                                <span class="badge bg-secondary ms-2">Time-based estimate</span>
+                            {% endif %}
+                        {% elif activity_level == 'moderate' %}
+                            <div class="state-indicator bg-info me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Moderate activity</strong> - Good balance of activity</p>
+                            {% if activity_data_source == 'time_based' %}
+                                <span class="badge bg-secondary ms-2">Time-based estimate</span>
+                            {% endif %}
+                        {% elif activity_level == 'low' %}
+                            <div class="state-indicator bg-warning me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Low activity level</strong> - Consider adding movement</p>
+                            {% if activity_data_source == 'time_based' %}
+                                <span class="badge bg-secondary ms-2">Time-based estimate</span>
+                            {% endif %}
+                        {% else %}
+                            <div class="state-indicator bg-secondary me-3" style="width: 20px; height: 20px; border-radius: 50%;"></div>
+                            <p class="mb-0"><strong>Activity unknown</strong></p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="mb-3">Personalized Recommendations</h3>
+            
+            <div id="recommendations-container">
+                {% if recommendations %}
+                    <div class="row">
+                        {% for recommendation in recommendations %}
+                            <div class="col-md-4 mb-4">
+                                <div class="card h-100 recommendation-card">
+                                    <div class="card-header d-flex justify-content-between align-items-center">
+                                        <span class="badge rounded-pill 
+                                            {% if recommendation.priority >= 4 %}bg-danger
+                                            {% elif recommendation.priority == 3 %}bg-warning
+                                            {% else %}bg-info{% endif %}">
+                                            {{ recommendation.recommendation_type|capitalize }}
+                                        </span>
+                                        <small class="text-muted">Priority: {{ recommendation.priority }}/5</small>
+                                    </div>
+                                    <div class="card-body">
+                                        <h5 class="card-title">{{ recommendation.title }}</h5>
+                                        <p class="card-text">{{ recommendation.description }}</p>
+                                        
+                                        {% if recommendation.reasoning %}
+                                            <div class="accordion" id="accordion-reasoning-{{ recommendation.id }}">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header" id="heading-{{ recommendation.id }}">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ recommendation.id }}" aria-expanded="false" aria-controls="collapse-{{ recommendation.id }}">
+                                                            Why this recommendation?
+                                                        </button>
+                                                    </h2>
+                                                    <div id="collapse-{{ recommendation.id }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ recommendation.id }}" data-bs-parent="#accordion-reasoning-{{ recommendation.id }}">
+                                                        <div class="accordion-body">
+                                                            {{ recommendation.reasoning }}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="card-footer">
+                                        <div class="d-flex justify-content-between">
+                                            <a href="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}" class="btn btn-primary btn-sm">View Details</a>
+                                            
+                                            <div class="btn-group" role="group">
+                                                <form method="POST" action="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="accept">
+                                                    <button type="submit" class="btn btn-outline-success btn-sm me-1">Accept</button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="decline">
+                                                    <button type="submit" class="btn btn-outline-secondary btn-sm">Skip</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="alert alert-info">
+                        <p>No active recommendations right now. We'll generate new recommendations based on:</p>
+                        <ul>
+                            {% if current_user.is_biometric_user() %}
+                                <li>Your real-time biometric data from smart ring/watch</li>
+                                <li>Time of day and location context</li>
+                                <li>Your preferences and past activities</li>
+                                <li>Patterns detected in your health data</li>
+                            {% else %}
+                                <li>Your manual wellness check-in data</li>
+                                <li>Time of day and location context</li>
+                                <li>Your preferences and past activities</li>
+                                <li>General wellness best practices</li>
+                            {% endif %}
+                        </ul>
+                        <div class="d-flex align-items-center mt-3">
+                            <button id="generate-recommendations" class="btn btn-primary">Generate Recommendations</button>
+                            {% if not current_user.is_biometric_user() %}
+                                <a href="{{ url_for('self_care.wellness_check_in') }}" class="btn btn-outline-success ms-2">
+                                    Complete Wellness Check-In First
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Activities Section -->
+    <div class="row mt-4">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h3>Recent Self-Care Activities</h3>
+                <a href="{{ url_for('self_care.activity_history') }}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            
+            {% if activities %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th>Type</th>
+                                <th>Date</th>
+                                <th>Duration</th>
+                                <th>Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities %}
+                                <tr>
+                                    <td>{{ activity.title }}</td>
+                                    <td><span class="badge bg-info">{{ activity.activity_type }}</span></td>
+                                    <td>{{ activity.completed_at.strftime('%Y-%m-%d %I:%M %p') }}</td>
+                                    <td>{{ activity.duration_minutes }} min</td>
+                                    <td>
+                                        {% if activity.user_rating %}
+                                            <div class="rating">
+                                                {% for i in range(1, 6) %}
+                                                    {% if i <= activity.user_rating %}
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                    {% else %}
+                                                        <i class="bi bi-star text-muted"></i>
+                                                    {% endif %}
+                                                {% endfor %}
+                                            </div>
+                                        {% else %}
+                                            <span class="text-muted">Not rated</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-secondary">
+                    <p>No self-care activities logged yet. Start by accepting a recommendation above!</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="notification-toast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header">
+            <strong class="me-auto">Self-Care Recommendations</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body">
+            <!-- Toast message content -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Get user's location if available (for better recommendations)
+    function getLocation() {
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    localStorage.setItem('user_latitude', position.coords.latitude);
+                    localStorage.setItem('user_longitude', position.coords.longitude);
+                    console.debug('Location saved for recommendations');
+                },
+                function(error) {
+                    console.debug('Geolocation error:', error);
+                }
+            );
+        }
+    }
+
+    // Try to get location when page loads
+    getLocation();
+    
+    // Handle recommendation generation button
+    const generateButton = document.getElementById('generate-recommendations');
+    if (generateButton) {
+        generateButton.addEventListener('click', function() {
+            generateRecommendations();
+        });
+    }
+    
+    // Function to generate new recommendations
+    function generateRecommendations() {
+        const lat = localStorage.getItem('user_latitude');
+        const lon = localStorage.getItem('user_longitude');
+        
+        let url = '/self-care/api/recommendations';
+        if (lat && lon) {
+            url += `?latitude=${lat}&longitude=${lon}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success' && data.recommendations && data.recommendations.length > 0) {
+                    // Reload the page to show new recommendations
+                    location.reload();
+                } else {
+                    showToast('Unable to generate recommendations at this time.');
+                }
+            })
+            .catch(error => {
+                console.error('Error generating recommendations:', error);
+                showToast('Error generating recommendations. Please try again later.');
+            });
+    }
+    
+    // Function to show toast notification
+    function showToast(message) {
+        const toastEl = document.getElementById('notification-toast');
+        const toastBody = toastEl.querySelector('.toast-body');
+        toastBody.textContent = message;
+        
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+    }
+    
+    // Initialize all tooltips
+    const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function(tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+});
+</script>
+{% endblock %}
