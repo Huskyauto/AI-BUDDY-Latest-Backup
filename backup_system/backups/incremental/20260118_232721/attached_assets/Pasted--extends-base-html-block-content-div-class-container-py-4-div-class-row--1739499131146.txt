@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">CBT (Cognitive Behavioral Therapy) Coaching</h2>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            <p class="text-muted mb-4">
+                Personalized cognitive behavioral therapy insights and exercises based on your mood patterns and activities.
+                Click on each section to learn more about different CBT techniques and practices.
+                Hover over insights for more detailed explanations.
+            </p>
+
+            {% if error %}
+            <div class="alert alert-warning">{{ error }}</div>
+            {% else %}
+            <div class="accordion" id="cbtAccordion">
+                <!-- Cognitive Patterns Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#thoughtPatterns">
+                            Cognitive Patterns Identified
+                        </button>
+                    </h3>
+                    <div id="thoughtPatterns" class="accordion-collapse collapse show" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for pattern in insights.mood_patterns.patterns %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ pattern.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-brain text-teal me-2"></i>
+                                        {{ pattern.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Behavioral Insights Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#behavioral">
+                            Behavioral Insights
+                        </button>
+                    </h3>
+                    <div id="behavioral" class="accordion-collapse collapse" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for insight in insights.behavioral_insights %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ insight.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-lightbulb text-teal me-2"></i>
+                                        {{ insight.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CBT Exercises Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#exercises">
+                            CBT Exercises
+                        </button>
+                    </h3>
+                    <div id="exercises" class="accordion-collapse collapse" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for exercise in insights.exercises %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ exercise.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-dumbbell text-teal me-2"></i>
+                                        {{ exercise.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mindful Eating Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mindful">
+                            Mindful Eating Practices
+                        </button>
+                    </h3>
+                    <div id="mindful" class="accordion-collapse collapse" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for practice in insights.mindful_eating %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ practice.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-utensils text-teal me-2"></i>
+                                        {{ practice.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Cognitive Reframing Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#reframing">
+                            Cognitive Reframing Examples
+                        </button>
+                    </h3>
+                    <div id="reframing" class="accordion-collapse collapse" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for example in insights.reframing_examples %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ example.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-sync text-teal me-2"></i>
+                                        {{ example.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Next Steps Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#nextSteps">
+                            Next Steps
+                        </button>
+                    </h3>
+                    <div id="nextSteps" class="accordion-collapse collapse" data-bs-parent="#cbtAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-unstyled">
+                                {% for step in insights.next_steps %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ step.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-arrow-right text-teal me-2"></i>
+                                        {{ step.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.insight-item {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+.insight-item:hover {
+    color: #0d6efd;
+}
+.popover {
+    max-width: 300px;
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl, {
+            html: true,
+            placement: 'auto'
+        })
+    })
+
+    // Destroy popovers when their triggers are removed from the DOM
+    document.addEventListener('hidden.bs.collapse', function(e) {
+        popoverList.forEach(function(popover) {
+            popover.hide()
+        })
+    })
+})
+</script>
+{% endblock %}
