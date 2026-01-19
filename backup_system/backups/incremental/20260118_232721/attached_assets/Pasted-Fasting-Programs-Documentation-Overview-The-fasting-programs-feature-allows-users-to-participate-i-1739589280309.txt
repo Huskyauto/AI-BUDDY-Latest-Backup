@@ -1,0 +1,262 @@
+Fasting Programs Documentation
+Overview
+The fasting programs feature allows users to participate in structured fasting protocols with guided support, progress tracking, and health monitoring. This document outlines the technical implementation and functionality of the fasting programs module.
+
+System Architecture
+Components
+Backend (Python/Flask)
+
+FastingProgram model
+FastingSession model
+FastingCheckIn model
+REST API endpoints
+Database interactions
+Frontend (JavaScript/HTML)
+
+Program selection interface
+Active session management
+Check-in form
+Progress visualization
+Health monitoring dashboard
+Database Models
+FastingProgram
+class FastingProgram(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    duration_days = db.Column(db.Integer, nullable=False)
+    description = db.Column(db.Text)
+    benefits = db.Column(db.Text)
+    instructions = db.Column(db.Text)
+    daily_guidance = db.Column(db.JSON)
+    contraindications = db.Column(db.Text)
+FastingSession
+class FastingSession(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    program_id = db.Column(db.Integer, db.ForeignKey('fasting_program.id'), nullable=False)
+    start_date = db.Column(db.DateTime, default=datetime.utcnow)
+    end_date = db.Column(db.DateTime)
+    status = db.Column(db.String(20), default='active')
+    check_ins = db.relationship('FastingCheckIn', backref='session', lazy=True)
+FastingCheckIn
+class FastingCheckIn(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('fasting_session.id'), nullable=False)
+    day_number = db.Column(db.Integer, nullable=False)
+    check_in_time = db.Column(db.DateTime, default=datetime.utcnow)
+    mood = db.Column(db.String(50))
+    energy_level = db.Column(db.Integer)
+    weight = db.Column(db.Float)
+    symptoms = db.Column(db.JSON)
+    notes = db.Column(db.Text)
+API Endpoints
+1. Get Available Programs
+GET /api/fasting/programs
+Response:
+{
+    "status": "success",
+    "programs": [
+        {
+            "id": 1,
+            "name": "3-Day Reset Fast",
+            "duration_days": 3,
+            "description": "...",
+            "benefits": "...",
+            "instructions": "..."
+        },
+        ...
+    ]
+}
+2. Start Fasting Session
+POST /api/fasting/start
+Request:
+{
+    "program_id": 1
+}
+Response:
+{
+    "status": "success",
+    "session_id": 123,
+    "message": "Fasting session started successfully",
+    "program": {
+        "name": "3-Day Reset Fast",
+        "duration_days": 3,
+        "daily_guidance": {...}
+    }
+}
+3. Get Active Session
+GET /api/fasting/active
+Response:
+{
+    "status": "success",
+    "has_active_session": true,
+    "session": {
+        "id": 123,
+        "program": {...},
+        "start_date": "2025-02-06T18:24:05.334044",
+        "current_day": 2,
+        "check_ins": [...],
+        "progress": {
+            "completed_days": 1,
+            "remaining_days": 2
+        }
+    }
+}
+4. Daily Check-in
+POST /api/fasting/checkin
+Request:
+{
+    "mood": "good",
+    "energy_level": 7,
+    "weight": 70.5,
+    "symptoms": ["headache", "fatigue"],
+    "notes": "Feeling better than yesterday"
+}
+Response:
+{
+    "status": "success",
+    "message": "Check-in recorded successfully",
+    "day_completed": 2,
+    "next_day": 3
+}
+5. Reset Fasting Session
+POST /api/fasting/reset
+Response:
+{
+    "status": "success",
+    "message": "Fasting session reset successfully"
+}
+Frontend Implementation
+Program Selection
+Displays available fasting programs in cards
+Each card shows:
+Program name
+Duration
+Description
+Benefits
+Instructions
+Start button
+Active Session Display
+Shows current program progress
+Displays daily guidance
+Provides check-in form
+Shows progress visualization
+Displays check-in history
+Includes reset option
+Check-in Form
+Mood selection
+Energy level slider (1-10)
+Optional weight input
+Symptom checkboxes
+Notes textarea
+Submit button
+User Flow
+Program Selection
+
+User views available programs
+Reviews program details
+Selects desired program
+Clicks start button
+Active Session
+
+Views daily guidance
+Monitors progress
+Completes daily check-ins
+Reviews history
+Check-in Process
+
+Fills out daily form
+Submits check-in
+Receives confirmation
+Views updated progress
+Program Completion
+
+Receives completion message
+Reviews full history
+Can start new program
+Technical Implementation Details
+Initial Setup
+Database models created using SQLAlchemy
+Default programs initialized through init_default_programs()
+Blueprint registered in Flask application
+Session Management
+Single active session per user
+Automatic cancellation of existing sessions
+Progress tracking through check-ins
+Session status updates (active/completed/cancelled)
+Data Validation
+Required fields checking
+Duplicate check-in prevention
+Program existence verification
+User authentication validation
+Error Handling
+Comprehensive try-catch blocks
+Detailed error logging
+User-friendly error messages
+Database transaction management
+Troubleshooting Guide
+Common Issues
+Check-in Not Saving
+
+Verify active session exists
+Check required fields
+Confirm no duplicate check-in
+Review error logs
+Program Not Starting
+
+Verify program ID exists
+Check user authentication
+Review database connection
+Check error response
+Progress Not Updating
+
+Verify check-in saved successfully
+Check date calculations
+Review session status
+Clear browser cache
+Best Practices
+Regular Monitoring
+
+Check error logs
+Monitor user feedback
+Track system performance
+Review data integrity
+Maintenance
+
+Regular database backups
+Log rotation
+Data cleanup
+Performance optimization
+Security Considerations
+Authentication
+
+All endpoints require login
+Session validation
+User data isolation
+Data Protection
+
+Input validation
+SQL injection prevention
+XSS protection
+CSRF protection
+Future Enhancements
+Planned Features
+
+Social sharing
+Achievement system
+Custom program creation
+Advanced analytics
+Technical Improvements
+
+Real-time updates
+Offline support
+Performance optimization
+Mobile responsiveness
+Support and Contact
+For technical support or feature requests:
+
+Review documentation
+Check error logs
+Contact development team
+Submit bug reports
+Last Updated: February 6, 2025
