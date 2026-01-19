@@ -1,0 +1,96 @@
+Text-to-Speech Implementation Documentation
+Overview
+The AI-BUDDY health prediction module includes a text-to-speech feature that converts AI responses into natural-sounding speech. This feature uses Google Text-to-Speech (gTTS) and includes optimizations for more natural speech patterns and improved delivery speed.
+
+Implementation Details
+Core Components
+Technology: Google Text-to-Speech (gTTS)
+File Location: health_prediction.py
+Route: /api/text-to-speech
+Method: POST
+Text Processing Pipeline
+The system implements a sophisticated text cleaning process to optimize speech output:
+
+Text Cleaning Function (clean_text_for_speech):
+
+def clean_text_for_speech(text):
+    # Remove markdown formatting
+    text = re.sub(r'\*\*?(.*?)\*\*?', r'\1', text)
+    
+    # Simplify punctuation for flow
+    text = re.sub(r'[!?]', '.', text)
+    
+    # Convert list items to flowing speech
+    text = re.sub(r'^\s*[-•*]\s*', ', ', text, flags=re.MULTILINE)
+    text = re.sub(r'^\s*\d+\.\s*', ', ', text, flags=re.MULTILINE)
+    
+    # Paragraph structure optimization
+    text = re.sub(r'\n{2,}', '. ', text)
+    text = re.sub(r'\n', ' ', text)
+Speech Generation Process:
+
+Text is cleaned and normalized
+Content is split into manageable sentences
+Speech is generated with optimized parameters
+Audio is served as an MP3 file
+Optimizations Made
+Speech Rate Adjustment:
+
+Implemented slow=False in gTTS configuration
+Split long text into natural sentence boundaries
+Removed unnecessary pauses and breaks
+Text Flow Improvements:
+
+Converted list items to natural speech patterns
+Simplified punctuation for better flow
+Removed parenthetical content
+Added natural sentence breaks
+Performance Optimizations:
+
+Implemented temporary file cleanup
+Used unique file names per thread
+Optimized audio file delivery
+Configuration
+Frontend Toggle
+The feature can be enabled/disabled via a toggle in the UI:
+
+// Audio preferences persistence
+let audioEnabled = localStorage.getItem('audioEnabled') === 'true';
+audioToggle.checked = audioEnabled;
+Backend Settings
+# Audio generation settings
+tts = gTTS(text=final_text, lang='en', slow=False)
+Usage Example
+Frontend Request:
+const response = await fetch('/api/text-to-speech', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ text: messageContent })
+});
+Audio Playback:
+const audioBlob = await response.blob();
+const audioUrl = URL.createObjectURL(audioBlob);
+const audio = new Audio(audioUrl);
+await audio.play();
+Best Practices
+Text Preparation:
+
+Keep sentences concise
+Use natural punctuation
+Avoid special characters
+Split long content into shorter phrases
+Audio Handling:
+
+Clean up audio resources after playback
+Handle playback errors gracefully
+Implement proper audio controls
+Future Improvements
+Potential areas for enhancement:
+
+Implement speech rate control via API parameters
+Add voice selection options
+Implement caching for frequently used responses
+Add support for multiple languages
+Improve prosody and intonation
