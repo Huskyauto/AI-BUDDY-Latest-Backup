@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="h4 mb-0">DBT (Dialectical Behavior Therapy) Coaching</h2>
+                <a href="{{ url_for('dashboard.index') }}" class="btn btn-outline-primary no-auto-scroll">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+            <script>
+                // Explicitly disable auto-scrolling when returning to dashboard
+                document.addEventListener('DOMContentLoaded', function() {
+                    const dashboardLinks = document.querySelectorAll('a[href*="dashboard"]');
+                    dashboardLinks.forEach(link => {
+                        link.addEventListener('click', function(e) {
+                            // Store a flag to prevent auto-scrolling
+                            sessionStorage.setItem('preventAutoScroll', 'true');
+                            // Make sure history doesn't auto-restore scroll position
+                            if ('scrollRestoration' in history) {
+                                history.scrollRestoration = 'manual';
+                            }
+                        });
+                    });
+                });
+            </script>
+            <p class="text-muted mb-4">
+                Explore personalized DBT techniques and insights based on your mood patterns and activities.
+                Click on each section to learn more about different DBT skills and practices.
+                Hover over insights for more detailed explanations.
+            </p>
+
+            {% if error %}
+            <div class="alert alert-warning">{{ error }}</div>
+            {% else %}
+            <div class="accordion" id="dbtInsightsAccordion">
+                <!-- Mindfulness Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#mindfulnessSection">
+                            Mindfulness Practice
+                        </button>
+                    </h3>
+                    <div id="mindfulnessSection" class="accordion-collapse collapse show" data-bs-parent="#dbtInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.mindfulness.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for practice in insights.mindfulness.patterns %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ practice.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-leaf text-teal me-2"></i>
+                                        {{ practice.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emotion Regulation Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#emotionSection">
+                            Emotion Regulation
+                        </button>
+                    </h3>
+                    <div id="emotionSection" class="accordion-collapse collapse" data-bs-parent="#dbtInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.emotion_regulation.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for pattern in insights.emotion_regulation.patterns %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ pattern.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-heart text-teal me-2"></i>
+                                        {{ pattern.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Distress Tolerance Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#distressSection">
+                            Distress Tolerance
+                        </button>
+                    </h3>
+                    <div id="distressSection" class="accordion-collapse collapse" data-bs-parent="#dbtInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.distress_tolerance.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for pattern in insights.distress_tolerance.patterns %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ pattern.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-shield-alt text-teal me-2"></i>
+                                        {{ pattern.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Interpersonal Effectiveness Section -->
+                <div class="accordion-item">
+                    <h3 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#interpersonalSection">
+                            Interpersonal Effectiveness
+                        </button>
+                    </h3>
+                    <div id="interpersonalSection" class="accordion-collapse collapse" data-bs-parent="#dbtInsightsAccordion">
+                        <div class="accordion-body">
+                            <p class="mb-3">{{ insights.interpersonal_effectiveness.summary }}</p>
+                            <ul class="list-unstyled">
+                                {% for pattern in insights.interpersonal_effectiveness.patterns %}
+                                <li class="mb-2">
+                                    <span data-bs-toggle="popover"
+                                          data-bs-trigger="hover focus"
+                                          data-bs-content="{{ pattern.detail }}"
+                                          class="insight-item">
+                                        <i class="fas fa-users text-teal me-2"></i>
+                                        {{ pattern.summary }}
+                                    </span>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.insight-item {
+    cursor: help;
+    border-bottom: 1px dotted #666;
+}
+.insight-item:hover {
+    color: #0d6efd;
+}
+.popover {
+    max-width: 300px;
+}
+.text-teal {
+    color: #20c997;
+}
+</style>
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize all popovers
+    var popoverTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="popover"]'))
+    var popoverList = popoverTriggerList.map(function (popoverTriggerEl) {
+        return new bootstrap.Popover(popoverTriggerEl, {
+            html: true,
+            placement: 'auto'
+        })
+    })
+
+    // Cleanup popovers when accordion sections are collapsed
+    document.addEventListener('hidden.bs.collapse', function(e) {
+        popoverList.forEach(function(popover) {
+            popover.hide()
+        })
+    })
+})
+</script>
+{% endblock %}
+{% endblock %}
