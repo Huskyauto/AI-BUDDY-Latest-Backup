@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">New Journal Entry</h1>
+    
+    <form method="POST" class="needs-validation" novalidate>
+        <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+        
+        <div class="mb-3">
+            <label for="mood" class="form-label">How are you feeling?</label>
+            <select class="form-select" id="mood" name="mood">
+                <option value="">Choose...</option>
+                <option value="Happy">Happy</option>
+                <option value="Sad">Sad</option>
+                <option value="Anxious">Anxious</option>
+                <option value="Excited">Excited</option>
+                <option value="Calm">Calm</option>
+                <option value="Frustrated">Frustrated</option>
+                <option value="Grateful">Grateful</option>
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label for="content" class="form-label">Content</label>
+            <textarea class="form-control" id="content" name="content" rows="10" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Save Entry</button>
+            <a href="{{ url_for('journal.index') }}" class="btn btn-outline-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
