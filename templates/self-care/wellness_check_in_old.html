@@ -1,0 +1,485 @@
+{% extends "base.html" %}
+
+{% block title %}Wellness Check-In | AI-BUDDY{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8 offset-md-2">
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="h4 m-0">Manual Wellness Check-In</h2>
+                </div>
+                <div class="card-body">
+                    {% if current_user.is_biometric_user() %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle-fill me-2"></i>
+                        <strong>Biometric User:</strong> While your smart ring provides valuable data, manual check-ins can supplement it with additional context that sensors can't capture.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-success mb-4">
+                        <i class="bi bi-heart-pulse-fill me-2"></i>
+                        <strong>Alternative to Biometric Devices:</strong> This manual check-in helps the system understand your current well-being without requiring a smart ring or watch.
+                    </div>
+                    {% endif %}
+                    
+                    <p class="text-muted mb-4">
+                        Track your wellness metrics to get personalized self-care recommendations. 
+                        Your data helps AI-BUDDY understand your current state and provide tailored suggestions.
+                    </p>
+
+                    <!-- Add special form detection for PWA mode -->
+                    <form method="POST" id="wellness-check-in-form" action="/self-care/wellness-check-in">
+                        {{ form.hidden_tag() }}
+                        <!-- Hidden field to track if we're in PWA mode -->
+                        <input type="hidden" id="is_pwa" name="is_pwa" value="false">
+                        
+                        <!-- Debug info for mobile testing -->
+                        <div class="alert alert-warning" style="border: 2px solid #ff6b35; background-color: #fff3cd; font-weight: bold;">
+                            <small>📱 MOBILE DEBUG: Form will submit to /self-care/wellness-check-in</small>
+                            <br><small id="mobile-debug-info">🔧 Page loaded successfully</small>
+                        </div>
+                        <h5 class="text-primary mb-3">Physical Wellness</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="energy_level" class="form-label">Energy Level</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Low</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="energy_level" name="energy_level">
+                                    <span class="ms-2 small">High</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="physical_comfort" class="form-label">Physical Comfort</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Poor</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="physical_comfort" name="physical_comfort">
+                                    <span class="ms-2 small">Great</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="sleep_quality" class="form-label">Sleep Quality</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Poor</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="sleep_quality" name="sleep_quality">
+                                    <span class="ms-2 small">Great</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="breathing_quality" class="form-label">Breathing Quality</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Difficult</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="breathing_quality" name="breathing_quality">
+                                    <span class="ms-2 small">Easy</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="physical_tension" class="form-label">Physical Tension</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Relaxed</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="physical_tension" name="physical_tension">
+                                    <span class="ms-2 small">Tense</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary mb-3">Mental Wellness</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="stress_level" class="form-label">Stress Level</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Calm</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="stress_level" name="stress_level">
+                                    <span class="ms-2 small">Stressed</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="focus_level" class="form-label">Focus Level</label>
+                                <div class="d-flex align-items-center">
+                                    <span class="me-2 small">Scattered</span>
+                                    <input type="range" class="form-range" min="1" max="10" value="5" id="focus_level" name="focus_level">
+                                    <span class="ms-2 small">Focused</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="mood" class="form-label">Current Mood</label>
+                                <select class="form-select" id="mood" name="mood">
+                                    <option value="happy">Happy</option>
+                                    <option value="calm">Calm</option>
+                                    <option value="content" selected>Content</option>
+                                    <option value="neutral">Neutral</option>
+                                    <option value="tired">Tired</option>
+                                    <option value="sad">Sad</option>
+                                    <option value="anxious">Anxious</option>
+                                    <option value="irritated">Irritated</option>
+                                    <option value="frustrated">Frustrated</option>
+                                    <option value="stressed">Stressed</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h5 class="text-primary mb-3">Daily Activities</h5>
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label for="exercise_minutes" class="form-label">Exercise Today (minutes)</label>
+                                <input type="number" class="form-control" id="exercise_minutes" name="exercise_minutes" min="0" max="300" placeholder="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="water_glasses" class="form-label">Water Intake (glasses)</label>
+                                <input type="number" class="form-control" id="water_glasses" name="water_glasses" min="0" max="20" placeholder="0">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="weather_condition" class="form-label">Weather Condition</label>
+                                <select class="form-select" id="weather_condition" name="weather_condition">
+                                    <option value="" selected>Select weather</option>
+                                    <option value="sunny">Sunny</option>
+                                    <option value="cloudy">Cloudy</option>
+                                    <option value="rainy">Rainy</option>
+                                    <option value="stormy">Stormy</option>
+                                    <option value="snowy">Snowy</option>
+                                    <option value="windy">Windy</option>
+                                    <option value="hot">Hot</option>
+                                    <option value="cold">Cold</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="location_type" class="form-label">Current Location</label>
+                                <select class="form-select" id="location_type" name="location_type">
+                                    <option value="" selected>Select location</option>
+                                    <option value="home">Home</option>
+                                    <option value="work">Work</option>
+                                    <option value="outdoors">Outdoors</option>
+                                    <option value="transit">In Transit</option>
+                                    <option value="public">Public Place</option>
+                                    <option value="social">Social Gathering</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="notes" class="form-label">Additional Notes</label>
+                            <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any additional context about how you're feeling today..."></textarea>
+                        </div>
+
+                        <div class="text-center">
+                            <!-- Mobile-compatible submit button with event listener -->
+                            <button type="button" id="mobile-submit-btn" class="btn btn-primary px-4 py-2" style="font-size: 16px; min-height: 48px;">
+                                Submit Wellness Check-In
+                            </button>
+                            
+                            <!-- Backup touchstart button for mobile -->
+                            <div class="mt-2">
+                                <button type="button" id="mobile-backup-btn" class="btn btn-success btn-sm" style="background-color: #28a745; border-color: #28a745;">
+                                    Mobile Touch Submit
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Processing Modal -->
+                        <div class="modal fade" id="processingModal" tabindex="-1" aria-labelledby="processingModalLabel" aria-hidden="true" data-bs-backdrop="static">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-body text-center p-4">
+                                        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+                                            <span class="visually-hidden">Loading...</span>
+                                        </div>
+                                        <h5 class="modal-title mb-3" id="processingModalLabel">Recording Your Check-In</h5>
+                                        <p class="mb-0">Your wellness data is being saved and your recommendations are being updated...</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if recent_check_ins %}
+            <div class="card shadow-sm">
+                <div class="card-header bg-light">
+                    <h3 class="h5 m-0">Recent Check-Ins</h3>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Mood</th>
+                                    <th>Stress</th>
+                                    <th>Energy</th>
+                                    <th>Sleep</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for check_in in recent_check_ins %}
+                                <tr>
+                                    <td data-timestamp="{{ check_in.timestamp_with_timezone.isoformat() }}">{{ check_in.recorded_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                    <td>{{ check_in.mood|capitalize }}</td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar {% if check_in.stress_level > 7 %}bg-danger{% elif check_in.stress_level > 4 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.stress_level * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.stress_level }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-primary" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.energy_level * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.energy_level }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="progress" style="height: 10px;">
+                                            <div class="progress-bar bg-info" 
+                                                role="progressbar" 
+                                                style="width: {{ check_in.sleep_quality * 10 }}%;" 
+                                                aria-valuenow="{{ check_in.sleep_quality }}" 
+                                                aria-valuemin="0" 
+                                                aria-valuemax="10">
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<!-- Load mobile JSON handler that uses stress logging pattern -->
+<script src="{{ url_for('static', filename='js/mobile-wellness-json.js') }}"></script>
+<script>
+// Clean template - let mobile-wellness-json.js handle everything
+        
+        try {
+            // Collect form data
+            const formData = {
+                energy_level: document.getElementById('energy_level').value,
+                physical_comfort: document.getElementById('physical_comfort').value,
+                stress_level: document.getElementById('stress_level').value,
+                mood: document.getElementById('mood').value,
+                focus: document.getElementById('focus').value,
+                notes: document.getElementById('notes').value
+            };
+            
+            console.log('Collected form data:', formData);
+            
+            // Submit using fetch to API endpoint (same pattern as stress logging)
+            fetch('/self-care/api/wellness-check-in', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Cache-Control': 'no-cache'
+                },
+                body: JSON.stringify(formData),
+                credentials: 'include'
+            })
+            .then(response => {
+                console.log('API response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('API response data:', data);
+                if (data.status === 'success') {
+                    alert('Wellness check-in saved successfully!');
+                    window.location.reload();
+                } else {
+                    throw new Error(data.message || 'Submission failed');
+                }
+            })
+            .catch(error => {
+                console.error('API submission error:', error);
+                alert('Error saving wellness check-in. Please try again.');
+            });
+            
+        } catch (error) {
+            console.error('Form collection error:', error);
+            alert('Error collecting form data. Please try again.');
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // Set up mobile submit button with multiple event types
+        const mobileSubmitBtn = document.getElementById('mobile-submit-btn');
+        const backupBtn = document.getElementById('mobile-backup-btn');
+        
+        if (mobileSubmitBtn) {
+            console.log('Setting up mobile submit button events');
+            
+            // Update debug info to show button setup worked
+            const debugInfo = document.getElementById('mobile-debug-info');
+            if (debugInfo) {
+                debugInfo.innerHTML = '✅ Mobile buttons are ready!';
+            }
+            
+            // Add multiple event listeners for maximum mobile compatibility
+            mobileSubmitBtn.addEventListener('click', function(e) {
+                console.log('Mobile submit: CLICK event triggered');
+                if (debugInfo) {
+                    debugInfo.innerHTML = '🚀 Mobile button clicked!';
+                }
+                e.preventDefault();
+                submitWellnessCheckIn();
+            });
+            
+            mobileSubmitBtn.addEventListener('touchstart', function(e) {
+                console.log('Mobile submit: TOUCHSTART event triggered');
+                e.preventDefault();
+                submitWellnessCheckIn();
+            });
+            
+            mobileSubmitBtn.addEventListener('touchend', function(e) {
+                console.log('Mobile submit: TOUCHEND event triggered');
+                e.preventDefault();
+                submitWellnessCheckIn();
+            });
+        }
+        
+        if (backupBtn) {
+            console.log('Setting up backup submit button events');
+            
+            backupBtn.addEventListener('click', function(e) {
+                console.log('Backup submit: CLICK event triggered');
+                e.preventDefault();
+                submitWellnessCheckIn();
+            });
+            
+            backupBtn.addEventListener('touchstart', function(e) {
+                console.log('Backup submit: TOUCHSTART event triggered');
+                e.preventDefault();
+                submitWellnessCheckIn();
+            });
+        }
+        
+        // Show current value of sliders
+        const sliders = document.querySelectorAll('input[type="range"]');
+        const valueDisplays = {};
+        
+        sliders.forEach(slider => {
+            // Create value display element
+            const valueDisplay = document.createElement('span');
+            valueDisplay.className = 'ms-2 badge bg-primary';
+            valueDisplay.textContent = slider.value;
+            slider.parentNode.appendChild(valueDisplay);
+            
+            valueDisplays[slider.id] = valueDisplay;
+            
+            // Update on input change
+            slider.addEventListener('input', function() {
+                valueDisplays[this.id].textContent = this.value;
+            });
+        });
+        
+        // Setup form submission with processing modal
+        const checkInForm = document.querySelector('form');
+        const submitBtn = document.getElementById('submit-btn');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const submitText = document.getElementById('submit-text');
+        const processingModal = new bootstrap.Modal(document.getElementById('processingModal'));
+        
+        // Mobile and desktop unified wellness check-in handler
+        if (checkInForm) {
+            console.log('Setting up form handler for:', checkInForm.id);
+            checkInForm.addEventListener('submit', function(event) {
+                console.log('FORM SUBMIT EVENT TRIGGERED!');
+                event.preventDefault();
+                
+                // Show processing modal
+                processingModal.show();
+                
+                // Show loading state
+                if (submitBtn && submitText && loadingSpinner) {
+                    submitBtn.disabled = true;
+                    submitText.textContent = 'Submitting...';
+                    loadingSpinner.classList.remove('d-none');
+                }
+                
+                // Get form data and send as FormData (same as desktop)
+                const formData = new FormData(checkInForm);
+                
+                console.log('Mobile form submission started');
+                
+                // Submit form data exactly like desktop
+                fetch('/self-care/wellness-check-in', {
+                    method: 'POST',
+                    body: formData,
+                    credentials: 'include'
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success') {
+                        // Show success message
+                        const alert = document.createElement('div');
+                        alert.className = 'alert alert-success mt-3';
+                        alert.innerHTML = '<i class="fas fa-check-circle me-2"></i><strong>Success!</strong> Your wellness check-in has been recorded.';
+                        checkInForm.prepend(alert);
+                        
+                        // Reset form
+                        checkInForm.reset();
+                        
+                        // Update slider displays to 0
+                        Object.values(valueDisplays).forEach(display => {
+                            display.textContent = '0';
+                        });
+                        
+                        // Reload page after delay
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        throw new Error(result.message || 'Submission failed');
+                    }
+                })
+                .catch(error => {
+                    console.error('Wellness check-in error:', error);
+                    
+                    // Show error message
+                    const alert = document.createElement('div');
+                    alert.className = 'alert alert-danger mt-3';
+                    alert.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i><strong>Error!</strong> Please try again.';
+                    checkInForm.prepend(alert);
+                })
+                .finally(() => {
+                    // Reset button state
+                    if (submitBtn && submitText && loadingSpinner) {
+                        submitBtn.disabled = false;
+                        submitText.textContent = 'Submit Check-in';
+                        loadingSpinner.classList.add('d-none');
+                    }
+                    
+                    // Hide processing modal
+                    processingModal.hide();
+                });
+            });
+        }
+        
+        // ADDITIONAL: Direct button click handler for mobile
+        const mobileSubmitBtn = document.getElementById('submit-btn');
+        if (mobileSubmitBtn) {
+            console.log('Adding direct click handler for mobile');
+            mobileSubmitBtn.addEventListener('click', function(event) {
+                console.log('MOBILE SUBMIT BUTTON CLICKED!');
+                if (event.target.form) {
+                    console.log('Submitting form directly');
+                    event.target.form.submit();
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}
