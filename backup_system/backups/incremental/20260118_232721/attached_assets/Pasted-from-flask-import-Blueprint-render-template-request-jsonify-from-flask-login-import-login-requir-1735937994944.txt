@@ -1,0 +1,169 @@
+from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user
+from models import ChatHistory, db
+import logging
+from datetime import datetime
+import os
+import openai
+
+chat_bp = Blueprint('chat', __name__)
+logger = logging.getLogger(__name__)
+
+# Initialize OpenAI client
+client = openai.OpenAI(api_key=os.environ.get('OPENAI_API_KEY'))
+
+def generate_ai_response(message: str, emotion: str = None) -> str:
+    """Generate AI response using GPT-4."""
+    try:
+        logger.debug(f"Generating response for message: {message}, emotion: {emotion}")
+
+        if not os.environ.get('OPENAI_API_KEY'):
+            logger.error("OpenAI API key not configured")
+            return "I apologize, but I'm having trouble processing your message right now. Please try again later."
+
+        # Create a context-aware system message
+        emotion_context = f"The user is feeling {emotion}. " if emotion else ""
+        system_message = (
+            "You are an empathetic AI wellness assistant named AI-BUDDY. " +
+            "Provide supportive, understanding responses that incorporate CBT principles. " +
+            "Keep responses concise but caring. " + emotion_context +
+            "Focus on emotional support and practical guidance."
+        )
+
+        try:
+            # Call GPT API with specified model
+            response = client.chat.completions.create(
+                model="gpt-4-1106-preview",  # Using the latest GPT-4 model
+                messages=[
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": message}
+                ],
+                temperature=0.7,
+                max_tokens=150,
+                response_format={"type": "text"}
+            )
+
+            if not response.choices:
+                logger.error("No response choices received from OpenAI")
+                return "I apologize, but I'm having trouble generating a response. Please try again."
+
+            return response.choices[0].message.content
+
+        except openai.RateLimitError:
+            logger.error("OpenAI rate limit exceeded")
+            return "I'm receiving too many requests right now. Please try again in a moment."
+        except openai.BadRequestError as e:
+            logger.error(f"OpenAI bad request error: {str(e)}")
+            return "I encountered an error processing your request. Please try again."
+
+    except openai.APIError as e:
+        logger.error(f"OpenAI API error: {str(e)}", exc_info=True)
+        return f"I apologize, but I encountered an error: {str(e)}"
+    except Exception as e:
+        logger.error(f"Error generating AI response: {str(e)}", exc_info=True)
+        return "I apologize, but I'm having trouble processing your message right now. Please try again in a moment."
+
+@chat_bp.route('/')
+def index():
+    """Render the main chat interface."""
+    if current_user.is_authenticated:
+        logger.debug(f"Rendering chat.html for user: {current_user.username}")
+        return render_template('chat.html', username=current_user.username)
+    logger.debug("User not authenticated, rendering index.html")
+    return render_template('index.html')
+
+@chat_bp.route('/chat', methods=['POST'])
+@login_required
+def chat():
+    """Handle chat messages and generate responses."""
+    try:
+        data = request.get_json()
+        if not data:
+            logger.error("No JSON data received in chat request")
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+
+        message = data.get('message', '').strip()
+        emotion = data.get('emotion', 'neutral')
+
+        logger.debug(f"Processing chat request - Message: {message}, Emotion: {emotion}")
+
+        if not message:
+            logger.error("No message provided in chat request")
+            return jsonify({
+                'status': 'error',
+                'message': 'No message provided'
+            }), 400
+
+        ai_response = generate_ai_response(message, emotion)
+
+        if not ai_response:
+            return jsonify({
+                'status': 'error',
+                'message': 'Failed to generate response'
+            }), 500
+
+        # Create chat history entry
+        chat_history = ChatHistory(
+            user_id=current_user.id,
+            message=message,
+            response=ai_response,
+            emotion=emotion,
+            timestamp=datetime.utcnow()
+        )
+
+        db.session.add(chat_history)
+        db.session.commit()
+        logger.debug(f"Chat history saved - ID: {chat_history.id}")
+
+        return jsonify({
+            'status': 'success',
+            'response': ai_response
+        })
+
+    except Exception as e:
+        logger.error(f"Error in chat endpoint: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': 'An unexpected error occurred. Please try again.'
+        }), 500
+
+@chat_bp.route('/history')
+@login_required
+def get_history():
+    """Retrieve chat history for the current user."""
+    try:
+        logger.debug(f"Fetching chat history for user: {current_user.id}")
+
+        # Query last 6 messages with only needed fields
+        history = db.session.query(
+            ChatHistory.message,
+            ChatHistory.response,
+            ChatHistory.timestamp,
+            ChatHistory.emotion
+        ).filter_by(user_id=current_user.id)\
+            .order_by(ChatHistory.timestamp.desc())\
+            .limit(6)\
+            .all()
+
+        logger.debug(f"Found {len(history)} chat history entries")
+
+        # Reverse the order so newest messages appear at the bottom
+        history = history[::-1]
+
+        return jsonify([{
+            'message': h.message,
+            'response': h.response,
+            'timestamp': h.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+            'emotion': h.emotion
+        } for h in history])
+
+    except Exception as e:
+        logger.error(f"Error fetching chat history: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch chat history'
+        }), 500
