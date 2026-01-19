@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>Extended Fasting History</h1>
+
+    <!-- Extended Fasting History -->
+    <div>
+        <div id="extended-fasting-history" class="mt-4">
+            <div id="loading-extended" class="text-center d-none">
+                <div class="spinner-border" role="status">
+                    <span class="sr-only">Loading...</span>
+                </div>
+            </div>
+            <div class="accordion" id="extendedHistoryAccordion">
+                <!-- History items will be populated here -->
+            </div>
+            <div id="noExtendedHistory" class="alert alert-info d-none">
+                No extended fasting history available.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadExtendedFastingHistory();
+});
+
+function loadExtendedFastingHistory() {
+    const loading = document.getElementById('loading-extended');
+    const noHistory = document.getElementById('noExtendedHistory');
+    const accordion = document.getElementById('extendedHistoryAccordion');
+
+    loading.classList.remove('d-none');
+
+    fetch('/api/fasting/history')
+        .then(response => response.json())
+        .then(data => {
+            loading.classList.add('d-none');
+
+            if (data.status === 'success' && data.history && data.history.length > 0) {
+                accordion.innerHTML = data.history.map((session, index) => `
+                    <div class="card mb-3">
+                        <div class="card-header" id="extendedHeading${index}">
+                            <h2 class="mb-0">
+                                <button class="btn btn-link btn-block text-left" type="button" 
+                                        data-toggle="collapse" data-target="#extendedCollapse${index}">
+                                    ${session.program}
+                                    <small class="text-muted">
+                                        (${session.date})
+                                        <span class="badge badge-${session.status === 'completed' ? 'success' : 'warning'} ml-2">
+                                            ${session.status}
+                                        </span>
+                                    </small>
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="extendedCollapse${index}" class="collapse ${index === 0 ? 'show' : ''}" 
+                             data-parent="#extendedHistoryAccordion">
+                            <div class="card-body">
+                                <p><strong>Duration:</strong> ${session.duration}</p>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                noHistory.classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching extended fasting history:', error);
+            loading.classList.add('d-none');
+            accordion.innerHTML = `
+                <div class="alert alert-danger">
+                    Error loading extended fasting history. Please try again later.
+                </div>
+            `;
+        });
+}
+</script>
+
+<style>
+.card-header button {
+    text-decoration: none;
+    color: inherit;
+}
+
+.card-header button:hover {
+    text-decoration: none;
+    color: inherit;
+}
+</style>
+{% endblock %}
