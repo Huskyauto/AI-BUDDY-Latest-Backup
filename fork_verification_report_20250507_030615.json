@@ -1,0 +1,147 @@
+{
+  "timestamp": "2025-05-07T03:06:15.062184",
+  "issues": [
+    {
+      "component": "Files",
+      "description": "Required file not found: templates/self_care/recommendation.html",
+      "severity": "HIGH",
+      "fix_instructions": "Restore templates/self_care/recommendation.html from the original repository",
+      "timestamp": "2025-05-07T03:06:08.872318"
+    },
+    {
+      "component": "Files",
+      "description": "Required file not found: templates/self_care/wellness_check_in.html",
+      "severity": "HIGH",
+      "fix_instructions": "Restore templates/self_care/wellness_check_in.html from the original repository",
+      "timestamp": "2025-05-07T03:06:08.872473"
+    },
+    {
+      "component": "Environment",
+      "description": "Required environment variable not set: FLASK_APP",
+      "severity": "HIGH",
+      "fix_instructions": "Set the FLASK_APP environment variable in .env file",
+      "timestamp": "2025-05-07T03:06:08.873230"
+    },
+    {
+      "component": "Database",
+      "description": "Error verifying database schema: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set.",
+      "severity": "HIGH",
+      "fix_instructions": null,
+      "timestamp": "2025-05-07T03:06:11.999039"
+    },
+    {
+      "component": "breathing",
+      "description": "Pattern not found in static/js/breathing.js: 478\\s+Breathing",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern '478\\s+Breathing' in static/js/breathing.js",
+      "timestamp": "2025-05-07T03:06:12.000708"
+    },
+    {
+      "component": "Files",
+      "description": "Required file not found: templates/self_care/recommendation.html",
+      "severity": "HIGH",
+      "fix_instructions": "Restore templates/self_care/recommendation.html from the original repository",
+      "timestamp": "2025-05-07T03:06:12.001468"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: generate_self_care_recommendation",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'generate_self_care_recommendation' in self_care.py",
+      "timestamp": "2025-05-07T03:06:12.001821"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: get_user_recommendations",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'get_user_recommendations' in self_care.py",
+      "timestamp": "2025-05-07T03:06:12.002063"
+    },
+    {
+      "component": "Breathing",
+      "description": "Incorrect timing for box breathing pattern (should be 4-4-4-4)",
+      "severity": "HIGH",
+      "fix_instructions": "Set all box breathing timers to 4000ms (4 seconds) in breathing.js",
+      "timestamp": "2025-05-07T03:06:12.002928"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/meditation/stress returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-07T03:06:15.022607"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/478?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-07T03:06:15.032015"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/box?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-07T03:06:15.041433"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/ring/data returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-07T03:06:15.051710"
+    }
+  ],
+  "summary": {
+    "total_issues": 13,
+    "high_severity": 9,
+    "medium_severity": 4,
+    "low_severity": 0
+  },
+  "documentation": {
+    "files": {
+      "docs/BIOMETRIC_DATA_SETUP.md": {
+        "exists": true,
+        "size": 4055
+      },
+      "docs/location_wellness_documentation.md": {
+        "exists": true,
+        "size": 11798
+      },
+      "docs/meditation_challenges_documentation.md": {
+        "exists": true,
+        "size": 19230
+      },
+      "docs/FORK_INITIALIZATION_GUIDE_2025_05_03.md": {
+        "exists": true,
+        "size": 4697
+      },
+      "docs/DUAL_SERVER_ARCHITECTURE.md": {
+        "exists": true,
+        "size": 3982
+      }
+    },
+    "dual_server_architecture": true,
+    "fork_initialization_guide": true,
+    "biometric_data_setup": true,
+    "meditation_challenges_docs": true,
+    "location_wellness_docs": true
+  },
+  "configuration": {
+    "files": {
+      "start_dual_servers.sh": {
+        "exists": true,
+        "executable": true
+      },
+      "run_virtual_server.sh": {
+        "exists": true,
+        "executable": true
+      },
+      "run_virtual_server_5002.sh": {
+        "exists": true,
+        "executable": true
+      }
+    }
+  }
+}
