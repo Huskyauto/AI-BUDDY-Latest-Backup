@@ -1,0 +1,503 @@
+from flask import Blueprint, render_template, request, jsonify
+from flask_login import login_required, current_user
+from models import db, FoodLog, WaterLog, WeightLog, WellnessQuotes # Added WellnessQuotes import
+from datetime import datetime, date, timedelta
+import logging
+import os
+import requests
+from zoneinfo import ZoneInfo
+from sqlalchemy import text
+
+food_tracker_bp = Blueprint('food_tracker', __name__)
+logger = logging.getLogger(__name__)
+
+EDAMAM_APP_ID = '61918ce5'
+EDAMAM_APP_KEY = '0b3a85b13b064636810880fe24b72aca'
+EDAMAM_API_URL = "https://api.edamam.com/api/food-database/v2/parser"
+
+def get_cst_datetime():
+    """Get current time in Central Time"""
+    return datetime.now(ZoneInfo("America/Chicago"))
+
+def get_current_tracking_date():
+    """
+    Get the current tracking date, considering 5 AM CST as the start of a new day
+    Returns date object for the current tracking period
+    """
+    current_cst = get_cst_datetime()
+    if current_cst.hour < 5:
+        # If it's before 5 AM, use previous day's date
+        return (current_cst - timedelta(days=1)).date()
+    return current_cst.date()
+
+def get_tracking_date_bounds():
+    """
+    Get the datetime bounds for the current tracking period
+    Returns tuple of (start_datetime, end_datetime) in CST
+    """
+    tracking_date = get_current_tracking_date()
+    start_datetime = datetime.combine(tracking_date, datetime.min.time().replace(hour=5))
+    end_datetime = datetime.combine(tracking_date + timedelta(days=1), datetime.min.time().replace(hour=5))
+
+    # Convert to CST
+    cst = ZoneInfo("America/Chicago")
+    return (
+        start_datetime.replace(tzinfo=cst),
+        end_datetime.replace(tzinfo=cst)
+    )
+
+@food_tracker_bp.route('/food-tracker')
+@login_required
+def index():
+    return render_template('food_tracker/index.html')
+
+@food_tracker_bp.route('/api/search-food')
+@login_required
+def search_food():
+    if not EDAMAM_APP_ID or not EDAMAM_APP_KEY:
+        logger.error("Edamam API credentials are missing")
+        return jsonify({
+            'error': 'Food search is currently unavailable. Please configure your Edamam API credentials.',
+            'setup_required': True
+        }), 503
+
+    query = request.args.get('query', '')
+    try:
+        logger.info(f"Searching for food with query: {query}")
+        response = requests.get(EDAMAM_API_URL, params={
+            'app_id': EDAMAM_APP_ID,
+            'app_key': EDAMAM_APP_KEY,
+            'ingr': query
+        })
+
+        if response.status_code == 200:
+            data = response.json()
+            foods = []
+            for hint in data.get('hints', []):
+                food = hint.get('food', {})
+                foods.append({
+                    'name': food.get('label'),
+                    'nutrients': food.get('nutrients', {}),
+                    'category': food.get('category'),
+                    'image': food.get('image')
+                })
+            logger.info(f"Found {len(foods)} food items")
+            return jsonify({'results': foods})
+        else:
+            logger.error(f"Edamam API error: {response.status_code}")
+            return jsonify({
+                'error': 'Unable to search for food items. Please try again later.',
+                'details': f'API returned status code: {response.status_code}'
+            }), 503
+    except requests.RequestException as e:
+        logger.error(f"Network error searching food: {e}")
+        return jsonify({
+            'error': 'Network error while searching for food. Please check your internet connection.',
+            'details': str(e)
+        }), 503
+    except Exception as e:
+        logger.error(f"Error searching food: {e}")
+        return jsonify({
+            'error': 'An unexpected error occurred while searching for food.',
+            'details': str(e)
+        }), 500
+
+@food_tracker_bp.route('/api/log-food', methods=['POST'])
+@login_required
+def log_food():
+    try:
+        data = request.get_json()
+        food_log = FoodLog(
+            user_id=current_user.id,
+            food_name=data['foodName'],
+            serving_size=float(data['servingSize']),
+            serving_unit=data['unit'],
+            meal_type=data['mealType'],
+            location=data.get('location', ''),
+            mindful_eating_rating=int(data.get('mindfulRating', 3)),
+            hunger_before=int(data.get('hungerBefore', 5)),
+            fullness_after=int(data.get('fullnessAfter', 5)),
+            emotional_state=data.get('emotionalState', ''),
+            satisfaction_level=int(data.get('satisfactionLevel', 3)),
+            notes=data.get('notes', ''),
+            calories=float(data.get('calories', 0)),
+            protein=float(data.get('protein', 0)),
+            carbs=float(data.get('carbs', 0)),
+            fat=float(data.get('fat', 0)),
+            timestamp=get_cst_datetime()
+        )
+        db.session.add(food_log)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error logging food: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@food_tracker_bp.route('/api/log-water', methods=['POST'])
+@login_required
+def log_water():
+    try:
+        data = request.get_json()
+        water_log = WaterLog(
+            user_id=current_user.id,
+            amount=float(data['amount']),
+            timestamp=get_cst_datetime()
+        )
+        db.session.add(water_log)
+        db.session.commit()
+        return jsonify({'status': 'success'})
+    except Exception as e:
+        logger.error(f"Error logging water: {e}")
+        return jsonify({'error': str(e)}), 400
+
+@food_tracker_bp.route('/api/update-water-settings', methods=['POST'])
+@login_required
+def update_water_settings():
+    """Dedicated endpoint for updating water settings"""
+    try:
+        data = request.get_json()
+        logger.info(f"Received water settings update request with data: {data}")
+
+        if 'weight' not in data:
+            return jsonify({'error': 'Weight is required'}), 400
+
+        new_weight = float(data['weight'])
+        if new_weight <= 0:
+            return jsonify({'error': 'Weight must be greater than 0'}), 400
+
+        # Calculate water goal
+        water_goal = round(new_weight * 0.67, 1)
+        MIN_WATER_GOAL = 64.0
+        final_goal = max(water_goal, MIN_WATER_GOAL)
+
+        try:
+            # Update weight and water goal using a single transaction
+            db.session.execute(
+                text("UPDATE users SET weight_lbs = :weight, daily_water_goal = :goal WHERE id = :user_id"),
+                {'weight': new_weight, 'goal': final_goal, 'user_id': current_user.id}
+            )
+
+            # Commit the changes
+            db.session.commit()
+
+            # Verify the update
+            result = db.session.execute(
+                text("SELECT weight_lbs, daily_water_goal FROM users WHERE id = :user_id"),
+                {'user_id': current_user.id}
+            ).fetchone()
+
+            logger.info(f"Update successful - Weight: {result[0]}, Goal: {result[1]}")
+
+            return jsonify({
+                'status': 'success',
+                'weight': float(result[0]),
+                'goal': float(result[1])
+            })
+
+        except Exception as e:
+            logger.error(f"Database update failed: {e}", exc_info=True)
+            db.session.rollback()
+            raise
+
+    except Exception as e:
+        logger.error(f"Error updating water settings: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 400
+
+@food_tracker_bp.route('/api/update-water-goal', methods=['POST'])
+@login_required
+def update_water_goal():
+    try:
+        data = request.get_json()
+        logger.info(f"Received water goal update request with data: {data}")
+
+        # Begin transaction with explicit session management
+        session = db.session
+        session.begin()
+
+        try:
+            if 'weight' in data:
+                new_weight = float(data['weight'])
+                logger.info(f"Current weight before update: {current_user.weight_lbs}")
+                logger.info(f"Attempting to update weight to: {new_weight}")
+
+                # Update user's weight directly in the database first
+                session.execute(
+                    text("UPDATE users SET weight_lbs = :weight WHERE id = :user_id"),
+                    {'weight': new_weight, 'user_id': current_user.id}
+                )
+                session.flush()
+
+                # Refresh user object to get updated weight
+                session.refresh(current_user)
+                logger.info(f"Weight after refresh: {current_user.weight_lbs}")
+
+                # Calculate and update water goal
+                new_goal = current_user.calculate_water_goal()
+                logger.info(f"Calculated new water goal: {new_goal}")
+
+                # Update water goal directly in database
+                session.execute(
+                    text("UPDATE users SET daily_water_goal = :goal WHERE id = :user_id"),
+                    {'goal': new_goal, 'user_id': current_user.id}
+                )
+                session.flush()
+
+                # Commit all changes
+                session.commit()
+                logger.info("Transaction committed successfully")
+
+                # Refresh user object again to verify changes
+                session.refresh(current_user)
+                logger.info(f"Final values - Weight: {current_user.weight_lbs}, Goal: {current_user.daily_water_goal}")
+
+            elif 'goal' in data:
+                new_goal = float(data['goal'])
+                logger.info(f"Directly updating water goal to: {new_goal}")
+                current_user.daily_water_goal = new_goal
+                session.commit()
+                session.refresh(current_user)
+
+            response_data = {
+                'status': 'success',
+                'goal': current_user.daily_water_goal,
+                'weight': current_user.weight_lbs
+            }
+            logger.info(f"Sending response: {response_data}")
+            return jsonify(response_data)
+
+        except Exception as e:
+            logger.error(f"Error in transaction, rolling back: {e}", exc_info=True)
+            session.rollback()
+            raise
+
+    except Exception as e:
+        logger.error(f"Error updating water goal: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 400
+
+@food_tracker_bp.route('/api/daily-summary')
+@login_required
+def get_daily_summary():
+    try:
+        # Get the current tracking period bounds in CST
+        start_datetime, end_datetime = get_tracking_date_bounds()
+        logger.info(f"Fetching daily summary for user {current_user.id} between {start_datetime} and {end_datetime}")
+
+        # Get water logs within the current tracking period
+        water_logs = WaterLog.query.filter(
+            WaterLog.user_id == current_user.id,
+            WaterLog.timestamp >= start_datetime,
+            WaterLog.timestamp < end_datetime
+        ).all()
+
+        total_water = sum(log.amount for log in water_logs)
+        logger.info(f"Total water intake: {total_water} oz")
+
+        # Get food logs within the current tracking period
+        food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= start_datetime,
+            FoodLog.timestamp < end_datetime
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        # Calculate total calories and create food log entries
+        total_calories = 0
+        food_log_entries = []
+
+        cst = ZoneInfo("America/Chicago")
+        for log in food_logs:
+            if log.calories:
+                total_calories += log.calories
+
+            # Convert timestamp to CST
+            cst_timestamp = log.timestamp.astimezone(cst)
+
+            food_log_entries.append({
+                'id': log.id,
+                'foodName': log.food_name,
+                'servingSize': log.serving_size,
+                'unit': log.serving_unit,
+                'mealType': log.meal_type,
+                'calories': log.calories,
+                'protein': log.protein,
+                'carbs': log.carbs,
+                'fat': log.fat,
+                'timestamp': cst_timestamp.isoformat(),
+                'emotionalState': log.emotional_state,
+                'satisfactionLevel': log.satisfaction_level,
+                'notes': log.notes
+            })
+
+        logger.info(f"Found {len(food_logs)} food logs, total calories: {total_calories}")
+
+        return jsonify({
+            'totalWater': total_water,
+            'waterGoal': current_user.daily_water_goal,
+            'totalCalories': total_calories,
+            'calorieGoal': current_user.calculate_calorie_goal(),
+            'foodLogs': food_log_entries
+        })
+    except Exception as e:
+        logger.error(f"Error getting daily summary: {str(e)}")
+        return jsonify({'error': str(e)}), 400
+
+@food_tracker_bp.route('/api/log-weight', methods=['POST'])
+@login_required
+def log_weight():
+    try:
+        data = request.get_json()
+        logger.info(f"Received weight logging request with data: {data}")
+
+        # Input validation
+        if 'weight' not in data:
+            return jsonify({'error': 'Weight is required'}), 400
+
+        weight = float(data['weight'])
+        if weight <= 0:
+            return jsonify({'error': 'Weight must be greater than 0'}), 400
+
+        # Create new weight log
+        weight_log = WeightLog(
+            user_id=current_user.id,
+            weight=weight,
+            notes=data.get('notes', ''),
+            timestamp=get_cst_datetime()
+        )
+
+        try:
+            # Update user's current weight and water goal in a single transaction
+            db.session.add(weight_log)
+            db.session.execute(
+                text("UPDATE users SET weight_lbs = :weight WHERE id = :user_id"),
+                {'weight': weight, 'user_id': current_user.id}
+            )
+            db.session.commit()
+
+            # Update water goal after committing weight change
+            current_user.update_water_goal()
+
+            logger.info(f"Weight logged successfully: {weight} lbs for user {current_user.id}")
+            return jsonify({'status': 'success', 'weight': weight})
+        except Exception as e:
+            logger.error(f"Database error while logging weight: {str(e)}")
+            db.session.rollback()
+            return jsonify({'error': 'Failed to save weight log. Please try again.'}), 500
+
+    except ValueError as e:
+        logger.error(f"Invalid weight value: {str(e)}")
+        return jsonify({'error': 'Please enter a valid number for weight'}), 400
+    except Exception as e:
+        logger.error(f"Error logging weight: {str(e)}")
+        return jsonify({'error': 'An unexpected error occurred. Please try again.'}), 500
+
+@food_tracker_bp.route('/api/weight-history')
+@login_required
+def get_weight_history():
+    try:
+        # Get all weight logs for the user, ordered by timestamp
+        logger.info(f"Fetching weight history for user {current_user.id}")
+        logs = WeightLog.query\
+            .filter_by(user_id=current_user.id)\
+            .order_by(WeightLog.timestamp.desc())\
+            .all()
+
+        logger.info(f"Found {len(logs)} weight logs")
+        weight_data = []
+
+        # Ensure each log is properly converted to dict format
+        for log in logs:
+            try:
+                # Convert timestamp to CST for consistency
+                cst_timestamp = log.timestamp.astimezone(ZoneInfo("America/Chicago"))
+                weight_data.append({
+                    'id': log.id,
+                    'weight': float(log.weight),
+                    'notes': log.notes,
+                    'timestamp': cst_timestamp.isoformat()
+                })
+            except Exception as e:
+                logger.error(f"Error converting weight log {log.id}: {str(e)}")
+                continue
+
+        if not weight_data:
+            logger.info("No weight data found")
+            return jsonify({
+                'status': 'success',
+                'data': [],
+                'message': 'No weight data available yet. Start logging your weight to see your progress!'
+            })
+
+        # Calculate progress metrics if we have data
+        initial_weight = float(logs[-1].weight)  # First recorded weight
+        current_weight = float(logs[0].weight)   # Most recent weight
+        total_change = current_weight - initial_weight
+
+        # Generate milestone message for significant changes
+        milestone_message = None
+        if abs(total_change) >= 5:
+            direction = "lost" if total_change < 0 else "gained"
+            milestone_message = f"🎉 Congratulations! You've {direction} {abs(total_change):.1f} lbs since starting!"
+
+        logger.info(f"Weight history summary: initial={initial_weight}, current={current_weight}, change={total_change}")
+        return jsonify({
+            'status': 'success',
+            'data': weight_data,
+            'summary': {
+                'initial_weight': initial_weight,
+                'current_weight': current_weight,
+                'total_change': total_change,
+                'milestone_message': milestone_message
+            } if len(weight_data) >= 2 else None
+        })
+    except Exception as e:
+        logger.error(f"Error getting weight history: {str(e)}")
+        return jsonify({
+            'status': 'error',
+            'message': 'An error occurred while fetching weight history'
+        }), 500
+
+@food_tracker_bp.route('/api/get-wellness-quote')
+@login_required
+def get_wellness_quote():
+    try:
+        # Get current tracking period to determine context
+        start_datetime, end_datetime = get_tracking_date_bounds()
+
+        # Get user's food logs for the period to determine context
+        food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= start_datetime,
+            FoodLog.timestamp < end_datetime
+        ).all()
+
+        # Determine the most relevant category based on user's activity
+        category = 'emotional_eating'  # default category that matches our database
+        if not food_logs:
+            category = 'motivation'
+        elif any(log.emotional_state in ['stressed', 'anxious'] for log in food_logs):
+            category = 'mindfulness'
+
+        # Get a random quote from the appropriate category
+        quote = db.session.query(WellnessQuotes)\
+            .filter(WellnessQuotes.category == category)\
+            .order_by(db.func.random())\
+            .first()
+
+        if quote:
+            return jsonify({
+                'status': 'success',
+                'quote': quote.quote_text,  # Changed from quote to quote_text
+                'author': quote.author,
+                'category': quote.category
+            })
+
+        # Fallback quote if none found
+        return jsonify({
+            'status': 'success',
+            'quote': "Every step towards healthy eating is a step towards your goals.",
+            'author': "Wellness Team",
+            'category': "motivation"
+        })
+
+    except Exception as e:
+        logger.error(f"Error getting wellness quote: {str(e)}")
+        return jsonify({'error': str(e)}), 400
