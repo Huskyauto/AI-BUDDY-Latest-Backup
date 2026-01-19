@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Real-time Stress Monitor -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Real-time Stress Monitor</h4>
+                </div>
+                <div class="card-body">
+                    <div class="stress-gauge mb-4" id="stressGauge"></div>
+                    <div class="alert" id="stressAlert" style="display: none;"></div>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5>Current Stress Level: <span id="currentStress">--</span></h5>
+                            <p>Last Updated: <span id="lastUpdated">--</span></p>
+                        </div>
+                        <div>
+                            <h5>HRV: <span id="currentHRV">--</span></h5>
+                            <p>Recovery Index: <span id="recoveryIndex">--</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommendations Panel -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Recommendations</h4>
+                </div>
+                <div class="card-body">
+                    <div id="recommendationsPanel">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historical Data -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Stress Level History</h4>
+                </div>
+                <div class="card-body">
+                    <canvas id="stressHistoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Meditation Recommendation Modal -->
+<div class="modal fade" id="meditationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Meditation Recommendation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="meditationRecommendation">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="startMeditation">Start Meditation</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', filename='js/stress_monitoring.js') }}"></script>
+{% endblock %}
