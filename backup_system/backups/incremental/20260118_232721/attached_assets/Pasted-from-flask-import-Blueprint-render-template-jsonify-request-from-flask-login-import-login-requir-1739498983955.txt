@@ -1,0 +1,855 @@
+from flask import Blueprint, render_template, jsonify, request
+from flask_login import login_required, current_user
+from models import Mood, db, FoodLog
+import logging
+from datetime import datetime, timedelta
+
+cbt_bp = Blueprint('cbt', __name__)
+logger = logging.getLogger(__name__)
+
+@cbt_bp.route('/api/mood-patterns')
+@login_required
+def get_mood_patterns():
+    """Get mood data for visualization."""
+    try:
+        logger.info(f"Fetching mood patterns for user {current_user.id}")
+        # Get moods from the last 30 days
+        thirty_days_ago = datetime.utcnow() - timedelta(days=30)
+        moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= thirty_days_ago
+        ).order_by(Mood.timestamp.asc()).all()
+
+        logger.info(f"Found {len(moods)} mood entries for user {current_user.id}")
+
+        # Convert mood string to numeric value for visualization
+        def mood_to_value(mood):
+            mood_values = {
+                'Peaceful': 4, 'Happy': 4, 'Excited': 5, 'Grateful': 4,
+                'Relaxed': 4, 'Thoughtful': 3, 'Neutral': 3,
+                'Uncertain': 2, 'Sad': 1, 'Stressed': 1, 'Frustrated': 1,
+                'Anxious': 1, 'Tired': 2, 'Unwell': 1, 'Numb': 2
+            }
+            return mood_values.get(mood, 3)  # Default to 3 for unknown moods
+
+        if not moods:
+            logger.info("No mood data found")
+            return jsonify({
+                'dates': [],
+                'values': [],
+                'moods': []
+            })
+
+        # Format data for the chart
+        dates = [mood.timestamp.strftime('%Y-%m-%d') for mood in moods]
+        values = [mood_to_value(mood.mood) for mood in moods]
+        mood_labels = [mood.mood for mood in moods]
+
+        mood_data = {
+            'dates': dates,
+            'values': values,
+            'moods': mood_labels
+        }
+
+        logger.info(f"Returning mood data: {mood_data}")
+        return jsonify(mood_data)
+
+    except Exception as e:
+        logger.error(f"Error fetching mood patterns: {str(e)}", exc_info=True)
+        return jsonify({
+            'error': 'Failed to fetch mood patterns',
+            'dates': [],
+            'values': [],
+            'moods': []
+        }), 500
+
+@cbt_bp.route('/api/save-mood', methods=['POST'])
+@login_required
+def save_mood():
+    """Save a new mood entry."""
+    try:
+        data = request.get_json()
+        if not data:
+            logger.error("No JSON data received in request")
+            return jsonify({
+                'status': 'error',
+                'message': 'No data provided'
+            }), 400
+
+        mood = data.get('mood')
+        notes = data.get('notes', '')
+
+        if not mood:
+            logger.error("No mood value provided in request")
+            return jsonify({
+                'status': 'error',
+                'message': 'Mood is required'
+            }), 400
+
+        # Log the incoming data for debugging
+        logger.info(f"Attempting to save mood entry: {mood} with notes: {notes} for user {current_user.id}")
+
+        new_mood = Mood(
+            user_id=current_user.id,
+            mood=mood,
+            notes=notes,
+            timestamp=datetime.utcnow()
+        )
+
+        try:
+            db.session.add(new_mood)
+            db.session.commit()
+            logger.info(f"Successfully saved new mood entry: {mood} for user {current_user.id}")
+        except Exception as db_error:
+            logger.error(f"Database error while saving mood: {str(db_error)}")
+            db.session.rollback()
+            return jsonify({
+                'status': 'error',
+                'message': 'Database error while saving mood'
+            }), 500
+
+        # Return success response with the saved data
+        return jsonify({
+            'status': 'success',
+            'message': 'Mood saved successfully',
+            'data': {
+                'mood': mood,
+                'notes': notes,
+                'timestamp': datetime.utcnow().isoformat()
+            }
+        })
+
+    except Exception as e:
+        logger.error(f"Error saving mood: {str(e)}", exc_info=True)
+        db.session.rollback()
+        return jsonify({
+            'status': 'error',
+            'message': f'Failed to save mood: {str(e)}'
+        }), 500
+
+@cbt_bp.route('/cbt-coaching')
+@login_required
+def cbt_coaching():
+    """Render the CBT coaching page with accordion insights."""
+    try:
+        # Get user's recent moods from the last 7 days
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        # Get recent food logs for mindful eating insights
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        # Process mood data
+        insights = analyze_mood_patterns(recent_moods, recent_food_logs)
+
+        # Add debug logging
+        logger.debug(f"Generated insights structure: {insights}")
+
+        return render_template('cbt_coaching.html', insights=insights)
+    except Exception as e:
+        logger.error(f"Error generating CBT insights: {str(e)}", exc_info=True)
+        return render_template('cbt_coaching.html', error="Unable to load insights at this time.")
+
+def analyze_mood_patterns(moods, food_logs):
+    """Analyze mood patterns and generate insights with detailed explanations."""
+    if not moods:
+        return {
+            'mood_patterns': {
+                'summary': 'No recent mood data available. Start tracking your moods to get personalized insights.',
+                'patterns': []
+            },
+            'behavioral_insights': [],
+            'exercises': [],
+            'mindful_eating': [],
+            'reframing_examples': [],
+            'next_steps': []
+        }
+
+    try:
+        # Calculate mood frequencies and trends
+        mood_counts = {}
+        mood_values = []
+        timestamps = []
+
+        for mood in moods:
+            mood_counts[mood.mood] = mood_counts.get(mood.mood, 0) + 1
+            mood_values.append(mood_to_value(mood.mood))
+            timestamps.append(mood.timestamp)
+
+        # Find predominant mood
+        predominant_mood = max(mood_counts.items(), key=lambda x: x[1])[0] if mood_counts else 'neutral'
+
+        # Calculate trend
+        if len(mood_values) >= 2:
+            trend = 'improving' if mood_values[-1] > mood_values[0] else 'declining' if mood_values[-1] < mood_values[0] else 'stable'
+        else:
+            trend = 'stable'
+
+        # Generate personalized insights with detailed explanations
+        patterns = []
+
+        # Mood stability insight
+        unique_moods = len(mood_counts)
+        if unique_moods > 3:
+            patterns.append({
+                'summary': f"Your mood has been varying between {unique_moods} different states, suggesting emotional variability",
+                'detail': f"Having {unique_moods} different mood states over a short period can indicate heightened emotional sensitivity. This variability might be influenced by external factors or internal processing patterns. Understanding these variations can help develop more effective coping strategies."
+            })
+        else:
+            patterns.append({
+                'summary': f"Your mood has been relatively consistent, primarily {predominant_mood}",
+                'detail': f"A consistent mood state of {predominant_mood} suggests emotional stability. This could indicate either effective emotional regulation or potential emotional suppression. Consider exploring what contributes to this stability and whether it reflects your true emotional experience."
+            })
+
+        # Trend insight
+        patterns.append({
+            'summary': f"Your emotional well-being appears to be {trend} based on recent entries",
+            'detail': f"The {trend} trend in your emotional state over time suggests patterns in your emotional processing and coping mechanisms. This trend might be influenced by recent life events, changes in routine, or developing coping strategies. Understanding this pattern can help maintain positive momentum or identify areas needing attention."
+        })
+
+        # Time pattern insight
+        if len(timestamps) >= 2:
+            time_diff = max(timestamps) - min(timestamps)
+            if time_diff.days <= 1:
+                patterns.append({
+                    'summary': "You're tracking moods multiple times per day, which is great for self-awareness",
+                    'detail': "Frequent mood tracking throughout the day helps identify triggers and patterns in your emotional responses. This detailed monitoring can reveal connections between daily activities, interactions, and emotional states, leading to more effective emotional regulation strategies."
+                })
+            else:
+                patterns.append({
+                    'summary': f"You've been tracking moods over {time_diff.days} days, helping build a clearer pattern",
+                    'detail': f"Consistent mood tracking over {time_diff.days} days provides valuable insights into your emotional patterns. This longer-term view can reveal weekly cycles, response patterns to regular events, and the effectiveness of your coping strategies over time."
+                })
+
+        # Add therapeutic suggestions
+        if trend == 'declining':
+            patterns.append({
+                'summary': "Consider practicing mindfulness or reaching out for support",
+                'detail': "When experiencing a declining mood trend, mindfulness practices can help ground you in the present moment and reduce anxiety about the future. Additionally, seeking support from trusted friends, family, or professionals can provide new perspectives and coping strategies."
+            })
+        elif trend == 'improving':
+            patterns.append({
+                'summary': "Keep maintaining the positive practices that are working for you",
+                'detail': "Your improving mood trend suggests your current coping strategies and lifestyle choices are effective. Take note of what activities, thoughts, or interactions contribute to this positive trend and consider ways to incorporate them more consistently into your routine."
+            })
+        else:
+            patterns.append({
+                'summary': "Maintain your current emotional awareness practices",
+                'detail': "A stable mood trend indicates consistent emotional regulation. While stability is generally positive, also consider if there are areas where emotional growth or increased flexibility might be beneficial. Continue practicing self-awareness while exploring new coping strategies."
+            })
+
+
+        behavioral_insights = [
+            {
+                'summary': "Notice and log emotional reactions to daily events",
+                'detail': "Take time to write down your emotional reactions to different situations. This helps identify patterns in how you respond and builds awareness of your emotional triggers."
+            },
+            {
+                'summary': "Practice mindful observation of thoughts",
+                'detail': "When you notice a strong emotion, pause and observe the thoughts that accompany it. This helps break the automatic cycle between thoughts and reactions."
+            },
+            {
+                'summary': "Identify triggers and response patterns",
+                'detail': "Keep track of situations that trigger strong emotions. Understanding these patterns allows you to prepare coping strategies in advance."
+            },
+            {
+                'summary': "Monitor physical responses to stress",
+                'detail': "Pay attention to how your body responds to different emotional states. This awareness helps you recognize stress earlier and respond more effectively."
+            }
+        ]
+
+        exercises = [
+            {
+                'summary': "Thought Record Exercise",
+                'detail': "Write down challenging situations, your automatic thoughts, and evidence for and against these thoughts. This helps develop a more balanced perspective and challenges cognitive distortions."
+            },
+            {
+                'summary': "Behavioral Activation",
+                'detail': "Schedule and engage in activities that bring a sense of accomplishment or pleasure. This helps break cycles of inactivity and low mood by building positive momentum."
+            },
+            {
+                'summary': "Worry Time Scheduling",
+                'detail': "Set aside specific times for addressing worries. This technique helps contain excessive worry and allows you to focus on other activities during the day."
+            },
+            {
+                'summary': "Progressive Muscle Relaxation",
+                'detail': "Practice tensing and relaxing different muscle groups. This physical exercise helps reduce anxiety and improves body awareness."
+            }
+        ]
+
+        mindful_eating = [
+            {
+                'summary': "Observe hunger and fullness cues",
+                'detail': "Practice paying attention to your body's natural signals of hunger and satiety. This helps develop a more intuitive relationship with eating and better portion control."
+            },
+            {
+                'summary': "Notice emotional triggers for eating",
+                'detail': "Track when eating is driven by emotions rather than physical hunger. Understanding these patterns helps develop alternative coping strategies for emotional needs."
+            },
+            {
+                'summary': "Practice mindful meal times",
+                'detail': "Focus fully on your meals without distractions. Notice the flavors, textures, and your body's responses to different foods to build a healthier relationship with eating."
+            },
+            {
+                'summary': "Identify stress-related eating patterns",
+                'detail': "Notice how stress affects your eating habits. This awareness helps you develop more conscious choices around food during stressful periods."
+            }
+        ]
+
+        reframing_examples = [
+            {
+                'summary': "Challenge all-or-nothing thinking",
+                'detail': "When you catch yourself thinking in extremes, practice finding the middle ground. Instead of 'I always fail,' try 'I have both successes and areas for improvement.'"
+            },
+            {
+                'summary': "Question catastrophic predictions",
+                'detail': "When worried about future outcomes, examine the evidence for and against your predictions. Consider multiple possible scenarios, not just the worst case."
+            },
+            {
+                'summary': "Reframe self-critical thoughts",
+                'detail': "Replace harsh self-judgment with more balanced and compassionate self-evaluation. Focus on learning and growth rather than perfection."
+            },
+            {
+                'summary': "Address overgeneralization",
+                'detail': "Notice when you're making broad conclusions from single events. Practice looking for exceptions and alternative viewpoints."
+            }
+        ]
+
+        next_steps = [
+            {
+                'summary': "Set small, achievable goals",
+                'detail': "Break down larger objectives into smaller, manageable steps. This makes progress more visible and maintains motivation throughout your journey."
+            },
+            {
+                'summary': "Schedule regular check-ins",
+                'detail': "Plan specific times to review your progress and adjust strategies as needed. Regular reflection helps maintain focus and identify what's working well."
+            },
+            {
+                'summary': "Build a support system",
+                'detail': "Identify people who can support your journey and specific ways they can help. Having support increases accountability and provides encouragement when needed."
+            },
+            {
+                'summary': "Create an action plan",
+                'detail': "Develop a concrete plan for implementing new coping strategies. Include specific situations where you'll practice these skills."
+            }
+        ]
+
+        logger.info(f"Generated {len(patterns)} mood insights for user {current_user.id}")
+
+        return {
+            'mood_patterns': {
+                'summary': f"Recent mood tracking shows a {trend} trend, predominantly {predominant_mood}.",
+                'patterns': patterns
+            },
+            'behavioral_insights': behavioral_insights,
+            'exercises': exercises,
+            'mindful_eating': mindful_eating,
+            'reframing_examples': reframing_examples,
+            'next_steps': next_steps
+        }
+
+    except Exception as e:
+        logger.error(f"Error analyzing mood patterns: {str(e)}", exc_info=True)
+        return {
+            'mood_patterns': {
+                'summary': 'Error analyzing mood patterns',
+                'patterns': []
+            },
+            'behavioral_insights': [],
+            'exercises': [],
+            'mindful_eating': [],
+            'reframing_examples': [],
+            'next_steps': []
+        }
+
+def mood_to_value(mood):
+    """Convert mood string to numeric value for trend analysis."""
+    mood_values = {
+        'Peaceful': 4, 'Happy': 4, 'Excited': 5, 'Grateful': 4,
+        'Relaxed': 4, 'Thoughtful': 3, 'Neutral': 3,
+        'Uncertain': 2, 'Sad': 1, 'Stressed': 1, 'Frustrated': 1,
+        'Anxious': 1, 'Tired': 2, 'Unwell': 1, 'Numb': 2
+    }
+    return mood_values.get(mood, 3)  # Default to 3 for unknown moods
+
+def analyze_food_patterns(food_logs):
+    """Analyze food patterns and generate mindful eating insights."""
+    if not food_logs:
+        return {
+            'summary': 'No recent food logs available. Start tracking your meals to get personalized insights.',
+            'patterns': []
+        }
+
+    patterns = []
+    total_logs = len(food_logs)
+    mindful_ratings = [log.mindful_eating_rating for log in food_logs if log.mindful_eating_rating]
+    avg_mindful_rating = sum(mindful_ratings) / len(mindful_ratings) if mindful_ratings else 0
+
+    patterns.extend([
+        "Observed patterns in eating habits during stressful periods",
+        "Identified emotional triggers leading to mindless eating",
+        "Notice tendency to skip meals when feeling overwhelmed",
+        "Recognize comfort food patterns during anxiety"
+    ])
+
+    if avg_mindful_rating:
+        if avg_mindful_rating < 3:
+            patterns.append("Focus on increasing mindful eating practices")
+        else:
+            patterns.append("Good progress with mindful eating awareness")
+
+    return {
+        'summary': 'Analysis of your eating patterns reveals opportunities for mindful eating practice.',
+        'patterns': patterns
+    }
+
+@cbt_bp.route('/api/cbt/insights')
+@login_required
+def get_insights():
+    """Get updated insights based on latest mood and food data."""
+    try:
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        return jsonify({
+            'status': 'success',
+            'insights': {
+                'mood_patterns': analyze_mood_patterns(recent_moods, recent_food_logs),
+                'food_insights': analyze_food_patterns(recent_food_logs)
+            }
+        })
+    except Exception as e:
+        logger.error(f"Error getting CBT insights: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch insights'
+        }), 500
+
+@cbt_bp.route('/dbt-coaching')
+@login_required
+def dbt_coaching():
+    """Render the DBT coaching page with accordion insights."""
+    try:
+        # Get user's recent moods from the last 7 days
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        # Get recent food logs for mindful eating insights
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        # Process mood data for DBT-specific insights
+        dbt_insights = analyze_dbt_patterns(recent_moods, recent_food_logs)
+
+        return render_template('dbt_coaching.html', insights=dbt_insights)
+    except Exception as e:
+        logger.error(f"Error generating DBT insights: {str(e)}", exc_info=True)
+        return render_template('dbt_coaching.html', error="Unable to load insights at this time.")
+
+def analyze_dbt_patterns(moods, food_logs):
+    """Analyze patterns and generate DBT-specific insights."""
+    if not moods:
+        return {
+            'mindfulness': {
+                'summary': 'Start tracking your moods to receive personalized DBT insights.',
+                'practices': []
+            },
+            'emotion_regulation': {
+                'summary': 'Track your emotional responses to receive targeted DBT strategies.',
+                'strategies': []
+            },
+            'distress_tolerance': {
+                'summary': 'Log your experiences to get customized distress tolerance techniques.',
+                'techniques': []
+            },
+            'interpersonal_effectiveness': {
+                'summary': 'Record your interactions to receive interpersonal effectiveness guidance.',
+                'skills': []
+            }
+        }
+
+    # Analyze mood patterns for DBT insights
+    mood_frequencies = {}
+    for mood in moods:
+        mood_frequencies[mood.mood] = mood_frequencies.get(mood.mood, 0) + 1
+
+    # Find predominant mood
+    predominant_mood = max(mood_frequencies.items(), key=lambda x: x[1])[0] if mood_frequencies else 'neutral'
+
+    # Generate DBT-specific insights
+    return {
+        'mindfulness': {
+            'summary': 'Practice being present in the moment',
+            'practices': [
+                {
+                    'summary': 'Observe your thoughts without judgment',
+                    'detail': 'Watch your thoughts as they come and go, like clouds in the sky. Notice them without trying to change or evaluate them. This helps create distance from overwhelming thoughts.'
+                },
+                {
+                    'summary': 'Focus on your breath for grounding',
+                    'detail': 'When feeling overwhelmed, use your breath as an anchor to the present moment. Count each breath cycle or notice the physical sensations of breathing to maintain focus.'
+                },
+                {
+                    'summary': 'Notice physical sensations during activities',
+                    'detail': 'Pay attention to the physical experience of daily activities - the temperature of water while washing hands, the texture of food while eating, the pressure of your feet while walking.'
+                },
+                {
+                    'summary': 'Practice mindful eating during meals',
+                    'detail': 'Eat slowly and mindfully, noticing the taste, texture, and aroma of each bite. This helps develop awareness and can improve your relationship with food.'
+                },
+                {
+                    'summary': 'Use the PLEASE skills',
+                    'detail': 'PL: treat PhysicaL illness, E: balanced Eating, A: avoid mood-Altering substances, S: balanced Sleep, E: get Exercise. Taking care of your body helps maintain emotional balance.'
+                }
+            ]
+        },
+        'emotion_regulation': {
+            'summary': f'Based on your mood patterns showing {predominant_mood} states',
+            'strategies': [
+                {
+                    'summary': 'Identify and label emotions accurately',
+                    'detail': 'Use specific emotion words to describe your feelings. Instead of "bad," try "disappointed," "frustrated," or "anxious." This precision helps in choosing appropriate coping strategies.'
+                },
+                {
+                    'summary': 'Track triggers and emotional responses',
+                    'detail': 'Keep a log of situations that trigger strong emotions. Note what happened, your thoughts, and your reaction. This helps identify patterns and plan better responses.'
+                },
+                {
+                    'summary': 'Build positive experiences mindfully',
+                    'detail': 'Actively plan and engage in activities that bring joy or satisfaction. Pay full attention during these moments to maximize their positive impact.'
+                },
+                {
+                    'summary': 'Take opposite action to emotional urges',
+                    'detail': 'When emotions drive unhelpful behaviors, deliberately choose to act differently. If anxiety makes you want to avoid, gently approach. If anger makes you want to attack, practice gentleness.'
+                },
+                {
+                    'summary': 'Problem solve difficult situations',
+                    'detail': 'Break down challenging situations into manageable steps. Identify the problem, brainstorm solutions, evaluate options, and create an action plan.'
+                }
+            ]
+        },
+        'distress_tolerance': {
+            'summary': 'Skills for managing difficult moments',
+            'techniques': [
+                {
+                    'summary': 'Use TIPP skills',
+                    'detail': 'T: Temperature (cold water on face), I: Intense exercise, P: Paced breathing, P: Paired muscle relaxation. These skills help reduce emotional intensity quickly.'
+                },
+                {
+                    'summary': 'Practice radical acceptance',
+                    'detail': 'Accept reality as it is, without fighting against what cannot be changed. This doesn\'t mean approval, but acknowledging what is, reducing suffering caused by resistance.'
+                },
+                {
+                    'summary': 'Use self-soothing techniques',
+                    'detail': 'Engage your senses to comfort yourself: listen to calming music, hold a soft object, look at beautiful images, smell a pleasant scent, or taste a soothing drink.'
+                },
+                {
+                    'summary': 'Find meaning in current experiences',
+                    'detail': 'Look for ways your current challenges might help you grow, learn, or become stronger. Connect difficult experiences to your values or larger life goals.'
+                },
+                {
+                    'summary': 'Create a crisis survival plan',
+                    'detail': 'Develop a written plan for managing crisis moments. Include contact numbers, coping skills to try, and reminders of reasons to persist through difficulty.'
+                }
+            ]
+        },
+        'interpersonal_effectiveness': {
+            'summary': 'Enhance relationships and self-respect',
+            'skills': [
+                {
+                    'summary': 'Use DEAR MAN skills for objectives',
+                    'detail': 'Describe situation, Express feelings, Assert wishes, Reinforce (reward), stay Mindful, Appear confident, Negotiate. These skills help in getting needs met while maintaining relationships.'
+                },
+                {
+                    'summary': 'Balance wants vs. shoulds',
+                    'detail': 'Consider both immediate desires and long-term values when making decisions. Find ways to meet both current needs and future goals.'
+                },
+                {
+                    'summary': 'Maintain relationships mindfully',
+                    'detail': 'Pay attention to the balance of give and take in relationships. Notice patterns in interactions and adjust to maintain healthy connections.'
+                },
+                {
+                    'summary': 'Build mastery and self-respect',
+                    'detail': 'Set and achieve small goals to build confidence. Stand up for your values while respecting others. Say no when needed and yes when aligned with your values.'
+                },
+                {
+                    'summary': 'Practice validation skills',
+                    'detail': 'Acknowledge others\' emotions and experiences as understandable, even if you disagree. This helps build stronger connections and mutual understanding.'
+                }
+            ]
+        }
+    }
+
+@cbt_bp.route('/api/dbt/insights')
+@login_required
+def get_dbt_insights():
+    """Get updated DBT insights based on latest mood and food data."""
+    try:
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        insights = analyze_dbt_patterns(recent_moods, recent_food_logs)
+
+        return jsonify({
+            'status': 'success',
+            'insights': insights
+        })
+    except Exception as e:
+        logger.error(f"Error getting DBT insights: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch DBT insights'
+        }), 500
+
+@cbt_bp.route('/act-coaching')
+@login_required
+def act_coaching():
+    """Render the ACT coaching page with accordion insights."""
+    try:
+        # Get user's recent moods from the last 7 days
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        # Add detailed mood logging
+        logger.debug("==================== ACT MOOD DATA DEBUG ====================")
+        logger.debug(f"User ID: {current_user.id}")
+        logger.debug(f"Time range: From {week_ago} to {datetime.utcnow()}")
+        logger.debug(f"Number of mood entries found: {len(recent_moods)}")
+        if recent_moods:
+            logger.debug("Recent moods:")
+            for mood in recent_moods[:5]:  # Log the 5 most recent moods
+                logger.debug(f"Mood: {mood.mood}, Time: {mood.timestamp}")
+        else:
+            logger.debug("No mood entries found in the last 7 days")
+        logger.debug("=========================================================")
+
+        # Get recent food logs for mindful eating insights
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        # Process mood data for ACT-specific insights
+        act_insights = analyze_act_patterns(recent_moods, recent_food_logs)
+
+        # Add detailed insights logging
+        logger.debug("==================== ACT INSIGHTS DEBUG ====================")
+        logger.debug(f"Values section content: {act_insights.get('values', {})}")
+        logger.debug(f"Values practices: {act_insights.get('values', {}).get('practices', [])}")
+        logger.debug("=========================================================")
+
+        return render_template('act_coaching.html', insights=act_insights)
+    except Exception as e:
+        logger.error(f"Error generating ACT insights: {str(e)}", exc_info=True)
+        return render_template('act_coaching.html', error="Unable to load insights at this time.")
+
+def analyze_act_patterns(moods, food_logs):
+    """Analyze patterns and generate ACT-specific insights."""
+    # Always provide default insights structure even when no moods exist
+    default_insights = {
+        'values': {
+            'summary': 'Explore and connect with your personal values',
+            'practices': [
+                {
+                    'summary': 'Values identification exercise',
+                    'detail': 'Take time to list and describe your core personal values across different life domains.'
+                },
+                {
+                    'summary': 'Values prioritization',
+                    'detail': 'Rank your values in order of importance and reflect on how they guide your decisions.'
+                },
+                {
+                    'summary': 'Values in action',
+                    'detail': 'Identify specific ways you can express your values through daily actions and choices.'
+                },
+                {
+                    'summary': 'Values conflicts exploration',
+                    'detail': 'Examine situations where values might conflict and develop strategies for balance.'
+                }
+            ]
+        }
+    }
+
+    if not moods:
+        return default_insights
+
+    try:
+        # Calculate mood frequencies
+        mood_frequencies = {}
+        for mood in moods:
+            mood_frequencies[mood.mood] = mood_frequencies.get(mood.mood, 0) + 1
+
+        # Find predominant mood
+        predominant_mood = max(mood_frequencies.items(), key=lambda x: x[1])[0] if mood_frequencies else 'neutral'
+
+        # Generate ACT-specific insights with consistent structure
+        return {
+            'present_moment': {
+                'summary': 'Enhance your present-moment awareness',
+                'practices': [
+                    {
+                        'summary': 'Practice mindful breathing',
+                        'detail': 'Focus on your breath as an anchor to the present moment, noticing the sensations of each inhale and exhale.'
+                    },
+                    {
+                        'summary': 'Engage in mindful activities',
+                        'detail': 'Choose one daily activity (like eating or walking) to do with full attention, noticing all sensations and experiences.'
+                    },
+                    {
+                        'summary': 'Body scan meditation',
+                        'detail': 'Take time to systematically notice sensations throughout your body, developing awareness without judgment.'
+                    },
+                    {
+                        'summary': 'Five senses exercise',
+                        'detail': 'Ground yourself by noticing 5 things you can see, 4 you can touch, 3 you can hear, 2 you can smell, and 1 you can taste.'
+                    }
+                ]
+            },
+            'values': {
+                'summary': 'Connect with your personal values',
+                'practices': [
+                    {
+                        'summary': 'Identify core values',
+                        'detail': 'Reflect on what truly matters to you in different life domains (relationships, career, personal growth, etc.).'
+                    },
+                    {
+                        'summary': 'Values clarification exercise',
+                        'detail': 'List your top 5 values and write specific ways you can live them out daily.'
+                    },
+                    {
+                        'summary': 'Life compass exercise',
+                        'detail': 'Visualize your values as directions on a compass, guiding your choices and actions.'
+                    },
+                    {
+                        'summary': 'Values-based goal setting',
+                        'detail': 'Create specific goals that align with your identified values, making them meaningful and motivating.'
+                    }
+                ]
+            },
+            'acceptance': {
+                'summary': 'Develop psychological flexibility',
+                'strategies': [
+                    {
+                        'summary': 'Welcome difficult emotions',
+                        'detail': 'Practice allowing emotions to be present without trying to change or avoid them.'
+                    },
+                    {
+                        'summary': 'Expand your awareness',
+                        'detail': 'Notice when you\'re resisting experience and practice opening up to it instead.'
+                    },
+                    {
+'summary': 'Use metaphors',
+                        'detail': 'Think of emotions like weather - they naturally come and go, and fighting them only creates more struggle'
+                    },
+                    {
+                        'summary': 'Practice self-compassion',
+                        'detail': 'Treat yourself with the same kindness you\'d offer a good friend during difficult times.'
+                    }
+                ]
+            },
+            'committed_action': {
+                'summary': 'Take value-guided actions',
+                'actions': [
+                    {
+                        'summary': 'Set specific goals',
+                        'detail': 'Choose concrete actions that move you toward your values, starting with small, manageable steps.'
+                    },
+                    {
+                        'summary': 'Create action plans',
+                        'detail': 'Break down larger goals into smaller, specific actions with clear what, when, and where details.'
+                    },
+                    {
+                        'summary': 'Monitor progress',
+                        'detail': 'Track your actions while focusing on the process rather than just outcomes.'
+                    },
+                    {
+                        'summary': 'Handle setbacks',
+                        'detail': 'View setbacks as learning opportunities and adjust your approach while staying committed to your values.'
+                    }
+                ]
+            },
+            'defusion': {
+                'summary': 'Learn to see thoughts as just thoughts',
+                'techniques': [
+                    {
+                        'summary': 'Label your thinking',
+                        'detail': 'Practice saying "I\'m having the thought that..." to create distance from difficult thoughts.'
+                    },
+                    {
+                        'summary': 'Thank your mind',
+                        'detail': 'When your mind offers unhelpful thoughts, thank it for trying to protect you and continue with valued actions.'
+                    },
+                    {
+                        'summary': 'Use visualization',
+                        'detail': 'Imagine thoughts as leaves on a stream, clouds in the sky, or cars passing by - watching them come and go.'
+                    },
+                    {
+                        'summary': 'Name the story',
+                        'detail': 'Identify recurring thought patterns and give them names, like "the not good enough story."'
+                    }
+                ]
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error in analyze_act_patterns: {str(e)}", exc_info=True)
+        return default_insights
+
+@cbt_bp.route('/api/act/insights')
+@login_required
+def get_act_insights():
+    """Get updated ACT insights based on latest mood and food data."""
+    try:
+        week_ago = datetime.utcnow() - timedelta(days=7)
+        recent_moods = Mood.query.filter(
+            Mood.user_id == current_user.id,
+            Mood.timestamp >= week_ago
+        ).order_by(Mood.timestamp.desc()).all()
+
+        recent_food_logs = FoodLog.query.filter(
+            FoodLog.user_id == current_user.id,
+            FoodLog.timestamp >= week_ago
+        ).order_by(FoodLog.timestamp.desc()).all()
+
+        insights = analyze_act_patterns(recent_moods, recent_food_logs)
+
+        return jsonify({
+            'status': 'success',
+            'insights': insights
+        })
+    except Exception as e:
+        logger.error(f"Error getting ACT insights: {str(e)}", exc_info=True)
+        return jsonify({
+            'status': 'error',
+            'message': 'Failed to fetch ACT insights'
+        }), 500
