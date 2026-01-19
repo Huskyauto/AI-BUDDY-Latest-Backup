@@ -1,0 +1,282 @@
+{% extends "base.html" %}
+
+{% block title %}{{ recommendation.title }} | AI-BUDDY{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Completely disable the loading overlay functionality
+        // This prevents the hanging "Preparing Your Recommendation..." screen
+        
+        // Remove any loading overlay if it exists
+        const loadingOverlay = document.getElementById('loading-overlay');
+        if (loadingOverlay) {
+            // Force it to be hidden and remove from DOM entirely
+            loadingOverlay.style.display = 'none !important';
+            loadingOverlay.remove();
+        }
+        
+        // Override any attempts to show the loading overlay
+        // This is a safety mechanism so that no code can trigger the overlay
+        window.showLoadingOverlay = function() {
+            console.log("Loading overlay display prevented");
+            return false;
+        };
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Loading Overlay is now static to prevent hanging -->
+<div id="loading-overlay" class="position-fixed w-100 h-100 bg-white d-flex justify-content-center align-items-center" style="top: 0; left: 0; z-index: 9999; opacity: 0.9; display: none !important;">
+    <div class="text-center">
+        <div class="spinner-border text-primary mb-3" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="text-primary">Preparing Your Recommendation...</h5>
+        <p class="text-muted">We're personalizing your experience based on your wellness data.</p>
+        <small class="text-muted d-block mt-2">If you have connected smart rings, we're retrieving live biometric data.</small>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('self_care.self_care_index') }}">Self-Care</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">Recommendation</li>
+                </ol>
+            </nav>
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">{{ recommendation.title }}</h4>
+                    <span class="badge rounded-pill 
+                        {% if recommendation.priority >= 4 %}bg-danger
+                        {% elif recommendation.priority == 3 %}bg-warning
+                        {% else %}bg-info{% endif %}">
+                        {{ recommendation.recommendation_type|capitalize }}
+                    </span>
+                </div>
+                <div class="card-body">
+                    <p class="lead">{{ recommendation.description }}</p>
+                    
+                    {% if recommendation.reasoning %}
+                        <div class="card mt-3 mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0">Why This Recommendation?</h5>
+                            </div>
+                            <div class="card-body">
+                                <p>{{ recommendation.reasoning }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="recommendation-status mt-4">
+                        <h5>Status: <span class="badge 
+                            {% if recommendation.status == 'pending' %}bg-secondary
+                            {% elif recommendation.status == 'accepted' %}bg-primary
+                            {% elif recommendation.status == 'completed' %}bg-success
+                            {% elif recommendation.status == 'declined' %}bg-danger
+                            {% endif %}">
+                            {{ recommendation.status|capitalize }}
+                        </span></h5>
+                        
+                        {% if recommendation.suggested_at %}
+                            <p>Suggested: {{ recommendation.suggested_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        {% endif %}
+                        
+                        {% if recommendation.status == 'pending' or recommendation.status == 'accepted' %}
+                            <div class="mt-4">
+                                <form method="POST" action="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="accept">
+                                    <button type="submit" class="btn btn-success me-2" {% if recommendation.status == 'accepted' %}disabled{% endif %}>Accept Recommendation</button>
+                                </form>
+                                <form method="POST" action="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}" class="d-inline">
+                                    <input type="hidden" name="action" value="decline">
+                                    <button type="submit" class="btn btn-outline-danger">Decline Recommendation</button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Mark as Complete</h5>
+                </div>
+                <div class="card-body">
+                    {% if recommendation.status == 'completed' %}
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle-fill me-2"></i> This recommendation has been completed.
+                            {% if recommendation.effectiveness %}
+                                <p class="mt-2 mb-0">Your rating: 
+                                    {% for i in range(1, 6) %}
+                                        {% if i <= recommendation.effectiveness %}
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-star text-muted"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </p>
+                            {% endif %}
+                        </div>
+                    {% elif recommendation.status == 'declined' %}
+                        <div class="alert alert-secondary">
+                            <i class="bi bi-x-circle-fill me-2"></i> This recommendation was declined.
+                        </div>
+                    {% else %}
+                        <form method="POST" action="{{ url_for('self_care.view_recommendation', recommendation_id=recommendation.id) }}">
+                            <input type="hidden" name="action" value="complete">
+                            
+                            <div class="mb-3">
+                                <label for="duration" class="form-label">How long did you spend on this activity?</label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="duration" name="duration" min="1" max="120" value="10" required>
+                                    <span class="input-group-text">minutes</span>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="mood_before" class="form-label">Mood before activity</label>
+                                <select class="form-select" id="mood_before" name="mood_before" required>
+                                    <option value="very_negative">Very Negative</option>
+                                    <option value="negative">Negative</option>
+                                    <option value="neutral" selected>Neutral</option>
+                                    <option value="positive">Positive</option>
+                                    <option value="very_positive">Very Positive</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="mood_after" class="form-label">Mood after activity</label>
+                                <select class="form-select" id="mood_after" name="mood_after" required>
+                                    <option value="very_negative">Very Negative</option>
+                                    <option value="negative">Negative</option>
+                                    <option value="neutral">Neutral</option>
+                                    <option value="positive" selected>Positive</option>
+                                    <option value="very_positive">Very Positive</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="rating" class="form-label">How effective was this activity?</label>
+                                <div class="rating-input">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating1" value="1" required>
+                                        <label class="form-check-label" for="rating1">1</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating2" value="2">
+                                        <label class="form-check-label" for="rating2">2</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating3" value="3" checked>
+                                        <label class="form-check-label" for="rating3">3</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating4" value="4">
+                                        <label class="form-check-label" for="rating4">4</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="rating" id="rating5" value="5">
+                                        <label class="form-check-label" for="rating5">5</label>
+                                    </div>
+                                </div>
+                                <small class="form-text text-muted">1 = Not effective, 5 = Very effective</small>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="notes" class="form-label">Notes (optional)</label>
+                                <textarea class="form-control" id="notes" name="notes" rows="3" placeholder="Any thoughts or observations?"></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">Mark as Complete</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if context_data %}
+                <div class="card mt-3">
+                    <div class="card-header">
+                        <h5 class="mb-0">Recommendation Context</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if context_data.data_source %}
+                            <div class="alert alert-info mb-3">
+                                <i class="bi bi-info-circle me-2"></i>
+                                <strong>Data Source:</strong> 
+                                {% if context_data.data_source == 'smart_rings' or context_data.data_source == 'oura_api' or context_data.data_source == 'ultrahuman_api' %}
+                                    <span>Real-time biometric data from your smart ring</span>
+                                {% elif context_data.data_source == 'manual_check_in' %}
+                                    <span>Your manual wellness check-in data</span>
+                                {% elif context_data.data_source == 'default_values' or context_data.data_source == 'no_data' %}
+                                    <span>Standard wellness estimates based on time of day</span>
+                                {% else %}
+                                    <span>{{ context_data.data_source|replace('_', ' ')|capitalize }}</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                        
+                        <ul class="list-group list-group-flush">
+                            {% if context_data.time_of_day %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Time of day:</span>
+                                    <span class="text-muted">{{ context_data.time_of_day|capitalize }}</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.stress_level %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Stress level:</span>
+                                    <span class="text-muted">{{ context_data.stress_level|capitalize }}</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.activity_level %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Activity level:</span>
+                                    <span class="text-muted">{{ context_data.activity_level|capitalize }}</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.weekday %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Day:</span>
+                                    <span class="text-muted">{{ context_data.weekday }}</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.heart_rate %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Heart rate:</span>
+                                    <span class="text-muted">{{ context_data.heart_rate }} bpm</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.hrv %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Heart rate variability:</span>
+                                    <span class="text-muted">{{ context_data.hrv }} ms</span>
+                                </li>
+                            {% endif %}
+                            {% if context_data.is_biometric_user is defined %}
+                                <li class="list-group-item d-flex justify-content-between">
+                                    <span>Biometric user:</span>
+                                    <span class="text-muted">
+                                        {% if context_data.is_biometric_user %}Yes{% else %}No{% endif %}
+                                    </span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
