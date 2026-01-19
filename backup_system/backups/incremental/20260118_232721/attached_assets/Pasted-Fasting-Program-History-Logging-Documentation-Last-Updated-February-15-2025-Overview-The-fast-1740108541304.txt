@@ -1,0 +1,200 @@
+Fasting Program History Logging Documentation
+Last Updated: February 15, 2025
+
+Overview
+The fasting program history logging system is a comprehensive feature that allows users to track their fasting journey through daily check-ins and historical data visualization. The system ensures accurate tracking of user progress while preventing duplicate entries and maintaining data integrity.
+
+Architecture
+Database Schema
+FastingProgram:
+- id: Primary Key
+- name: String
+- duration_days: Integer
+- description: Text
+- benefits: Text
+- instructions: Text
+- daily_guidance: JSON
+- contraindications: Text
+FastingSession:
+- id: Primary Key
+- user_id: Foreign Key (User)
+- program_id: Foreign Key (FastingProgram)
+- start_date: DateTime
+- end_date: DateTime
+- status: String ('active', 'completed', 'cancelled')
+FastingCheckIn:
+- id: Primary Key
+- session_id: Foreign Key (FastingSession)
+- day_number: Integer
+- check_in_time: DateTime
+- completed: Boolean
+- mood: String
+- energy_level: String
+- weight: Float
+- symptoms: Array
+- notes: Text
+API Endpoints
+1. Daily Check-in
+POST /api/fasting/checkin
+Handles daily user check-ins with the following data:
+
+Mood (Required): User's current mood
+Energy Level (Required): Current energy level
+Weight (Optional): Current weight
+Symptoms (Optional): Array of symptoms
+Notes (Optional): Additional notes
+2. Active Session Status
+GET /api/fasting/active
+Returns:
+
+Current session details
+Program information
+Check-in history
+Progress metrics
+3. Fasting History
+GET /api/fasting/history
+Returns complete fasting history with:
+
+All completed sessions
+Check-in details
+Progress statistics
+Implementation Details
+Check-in Validation
+Validates required fields (mood, energy_level)
+Ensures one check-in per day
+Validates data against predefined values:
+valid_moods = ['Happy', 'Calm', 'Energetic', 'Neutral', 'Tired', 'Irritable', 'Anxious']
+valid_energy_levels = ['High', 'Moderate', 'Low', 'Very Low']
+Duplicate Prevention
+The system prevents duplicate entries through:
+
+Database constraints
+API-level validation
+Frontend validation
+# Backend query to ensure unique check-ins per day
+check_ins_query = FastingCheckIn.query.filter_by(
+    session_id=session.id
+).order_by(FastingCheckIn.day_number.desc()).distinct(FastingCheckIn.day_number)
+Frontend Implementation
+Key components:
+
+Check-in Form (checkin-form)
+History Display (check-in-history)
+Progress Indicators
+Completion Messages
+// Check-in form submission
+const formData = {
+    mood: moodSelect.value,
+    energy_level: energyLevelSelect.value,
+    weight: weightInput.value ? parseFloat(weightInput.value) : null,
+    symptoms: Array.from(this.querySelectorAll('input[name="symptoms[]"]:checked'))
+        .map(cb => cb.value),
+    notes: notes.value
+};
+History Display
+The system displays history with:
+
+Chronological order
+One entry per day
+Detailed check-in information
+Progress tracking
+Error Handling
+Backend
+try:
+    # Validation checks
+    if not data:
+        return jsonify({'status': 'error', 'message': 'No check-in data provided'}), 400
+    # Required field validation
+    required_fields = ['mood', 'energy_level']
+    missing_fields = [field for field in required_fields if field not in data]
+    if missing_fields:
+        return jsonify({'status': 'error', 'message': f'Missing required fields: {", ".join(missing_fields)}'}), 400
+        
+    # Duplicate check
+    existing_checkin = FastingCheckIn.query.filter_by(
+        session_id=session.id,
+        day_number=current_day
+    ).first()
+    
+except Exception as e:
+    logger.error(f"Error recording check-in: {str(e)}", exc_info=True)
+    return jsonify({'status': 'error', 'message': 'Internal server error'}), 500
+Frontend
+try {
+    const response = await fetch('/api/fasting/checkin', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(formData)
+    });
+    
+    const data = await response.json();
+    if (data.status === 'success') {
+        showNotification('Check-in recorded successfully!');
+    } else {
+        showNotification(data.message || 'Failed to record check-in', 'error');
+    }
+} catch (error) {
+    console.error('Error submitting check-in:', error);
+    showNotification('An error occurred while submitting the check-in', 'error');
+}
+Best Practices
+Data Validation
+
+Always validate both frontend and backend
+Use predefined lists for valid values
+Implement proper error handling
+User Experience
+
+Clear feedback messages
+Intuitive form design
+Immediate history updates
+Performance
+
+Optimize database queries
+Implement proper indexing
+Use client-side caching when appropriate
+Troubleshooting Guide
+Common Issues
+Duplicate Entries
+
+Check database constraints
+Verify API validation
+Review frontend submission logic
+Missing Check-ins
+
+Verify active session status
+Check user authentication
+Review form submission process
+Invalid Data
+
+Validate input formats
+Check data type conversions
+Review validation rules
+Maintenance
+Regular Tasks
+Monitor database performance
+Review error logs
+Update validation rules as needed
+Maintain documentation
+Database Maintenance
+Regular backups
+Index optimization
+Query performance monitoring
+Future Improvements
+Enhanced Analytics
+
+Trend analysis
+Progress visualization
+Custom reporting
+User Experience
+
+Mobile optimization
+Offline support
+Real-time updates
+Integration
+
+Export functionality
+Third-party app connections
+Advanced notifications
