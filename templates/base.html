@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI-BUDDY - Emotional Support</title>
+    
+    <!-- DNS Prefetch for external resources -->
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="{{ url_for('static', filename='css/custom.css') }}?v=20260118" as="style">
+    <link rel="preload" href="{{ url_for('static', filename='images/ai-buddy-logo.png') }}" as="image">
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" as="style" crossorigin>
+    
+    <!-- PWA meta tags -->
+    <meta name="description" content="AI-powered wellness companion for personalized mental health support and holistic well-being">
+    <meta name="theme-color" content="#0d6efd">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AI-BUDDY">
+    <meta name="application-name" content="AI-BUDDY">
+    <meta name="msapplication-TileColor" content="#0d6efd">
+    <meta name="msapplication-tap-highlight" content="no">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA icons and manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}?v=20260118">
+    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='icons/icon.svg') }}?v=20260118">
+    <link rel="icon" type="image/png" sizes="192x192" href="{{ url_for('static', filename='icons/icon-192x192.png') }}?v=20260118">
+    <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='icons/icon-512x512.png') }}?v=20260118">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/icon-192x192.png') }}?v=20260118">
+    
+    <!-- Critical CSS first -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/custom.css') }}?v=20260118" rel="stylesheet">
+    <!-- Defer non-critical icon fonts -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet" media="print" onload="this.media='all'">
+    
+    <style>
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .settings-menu {
+        position: absolute;
+        z-index: 1000;
+        display: none;
+        min-width: 10rem;
+        padding: 0.5rem 0;
+        margin: 0;
+        font-size: 1rem;
+        text-align: left;
+        list-style: none;
+        background-color: #fff;
+        background-clip: padding-box;
+        border: 1px solid rgba(0,0,0,.15);
+        border-radius: 0.25rem;
+    }
+    .settings-menu.show {
+        display: block;
+    }
+    .settings-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        color: #212529;
+        text-decoration: none;
+        background-color: transparent;
+        border: 0;
+    }
+    .settings-item:hover {
+        background-color: #f8f9fa;
+        color: #16181b;
+        text-decoration: none;
+    }
+    .modal-body {
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    .feature-list {
+        list-style: none;
+        padding-left: 0;
+    }
+    .feature-list li {
+        margin-bottom: 1rem;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+    .feature-list li:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #0d6efd;
+    }
+    /* Style for fallback data indicators - bold amber color with asterisk */
+    .fallback-data {
+        color: #e29c06 !important; /* Brighter amber/warning color */
+        font-weight: bold;
+        position: relative;
+        text-shadow: 0 0 1px rgba(0,0,0,0.2);
+    }
+    .fallback-data::after {
+        content: "*";
+        position: relative;
+        top: -0.5em;
+        font-size: 1em;
+        color: #dc3545;
+        margin-left: 3px;
+        font-weight: bolder;
+    }
+    
+    /* PWA Install button styles */
+    #install-button {
+        display: none;
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    #notification-permission-button {
+        display: none;
+        margin-top: 10px;
+        padding: 8px 16px;
+        background-color: #0d6efd;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    </style>
+</head>
+<body>
+    <!-- Learn More Modal -->
+    <div class="modal fade" id="learnMoreModal" tabindex="-1" aria-labelledby="learnMoreModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="learnMoreModalLabel">About AI-BUDDY</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h3>Your Journey to Mindful Wellness</h3>
+                    <p class="lead mb-4">
+                        AI-BUDDY is a revolutionary digital wellness platform that combines artificial intelligence
+                        with proven psychological approaches to help you develop a healthier relationship with
+                        food and emotions.
+                    </p>
+
+                    <h4 class="mb-3">Comprehensive Features:</h4>
+                    <ul class="feature-list mb-4">
+                        <li><strong>Personalized AI Coaching:</strong> Receive tailored guidance based on your unique patterns and needs</li>
+                        <li><strong>Mood & Food Tracking:</strong> Understanding the connection between emotions and eating habits</li>
+                        <li><strong>Extended Fasting Programs:</strong> Guided fasting experiences with daily support</li>
+                        <li><strong>CBT & Mindfulness Tools:</strong> Evidence-based techniques for emotional regulation</li>
+                        <li><strong>Progress Visualization:</strong> Track your journey with intuitive charts and insights</li>
+                    </ul>
+
+                    <h4 class="mb-3">Our Approach:</h4>
+                    <p>We combine cutting-edge AI technology with established psychological principles to provide:</p>
+                    <ul class="feature-list">
+                        <li>Real-time emotional support and guidance</li>
+                        <li>Personalized strategies for managing emotional eating</li>
+                        <li>Comprehensive wellness tracking and insights</li>
+                        <li>Community support and shared experiences</li>
+                    </ul>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Get Started</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('chat.index') }}">
+                <img src="{{ url_for('static', filename='images/ai-buddy-logo.png') }}" alt="AI-BUDDY Logo" height="40" class="me-2">
+                AI-BUDDY
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+                <span class="menu-label">MENU</span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <!-- Core features available to all users -->
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('chat.') else '' }}" href="{{ url_for('chat.index') }}">💬 Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('dashboard.') else '' }}" href="{{ url_for('dashboard.index') }}">📊 Dashboard</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('wellness_toolbox.') else '' }}" href="{{ url_for('wellness_toolbox.index') }}">🧘 Wellness Toolbox</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('self_care.') else '' }}" href="{{ url_for('self_care.self_care_index') }}">❤️ Self-Care</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint == 'self_care.wellness_check_in' else '' }}" href="{{ url_for('self_care.wellness_check_in') }}">📋 Wellness Check-In</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('journal.') else '' }}" href="{{ url_for('journal.index') }}">📝 Journal</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('food_tracker.') else '' }}" href="{{ url_for('food_tracker.index') }}">🍎 Food Tracker</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('forum.') else '' }}" href="{{ url_for('forum.index') }}">👥 Community</a>
+                    </li>
+                    
+                    <!-- Features available only to users with biometric device access -->
+                    {% if current_user.is_authenticated and current_user.is_biometric_user() %}
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('stress.') else '' }}" href="{{ url_for('stress.stress_monitoring') }}">📊 Stress Monitor</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.endpoint and request.endpoint.startswith('health_prediction.') else '' }}" href="{{ url_for('health_prediction.index') }}">🏥 Health Prediction</a>
+                    </li>
+                    {% endif %}
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    {% if current_user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link mobile-menu-item" href="#" role="button" id="settingsDropdown" onclick="toggleSettingsMenu(event)">
+                                <div class="mobile-menu-content">
+                                    <span class="menu-icon">⚙️</span>
+                                    <span class="menu-text d-block d-lg-none">Settings</span>
+                                    <span class="d-none d-lg-inline">Settings</span>
+                                </div>
+                            </a>
+                            <div id="settingsMenu" class="settings-menu dropdown-menu dropdown-menu-end shadow" style="position: absolute; right: 0;">
+                                <a class="dropdown-item" href="{{ url_for('location_wellness.test_places_interface') }}">
+                                    Test Google Maps API
+                                </a>
+                                {% if current_user.email == "huskyauto@gmail.com" %}
+                                <a class="dropdown-item" href="{{ url_for('admin_dashboard.index') }}">
+                                    Admin Dashboard
+                                </a>
+                                {% endif %}
+                            </div>
+                        </li>
+                        <li class="nav-item">
+                            <span class="nav-link cursor-pointer mobile-menu-item" data-bs-toggle="modal" data-bs-target="#editUsernameModal">
+                                <div class="mobile-menu-content">
+                                    <span class="menu-icon">👤</span>
+                                    <span class="menu-text d-block d-lg-none">Profile</span>
+                                    <span class="d-none d-lg-inline">Welcome, {{ current_user.username }}</span>
+                                </div>
+                            </span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link mobile-menu-item" href="{{ url_for('auth.logout') }}">
+                                <div class="mobile-menu-content">
+                                    <span class="menu-icon">🚪</span>
+                                    <span class="menu-text d-block d-lg-none">Sign Out</span>
+                                    <span class="d-none d-lg-inline">Sign Out</span>
+                                </div>
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <button class="btn btn-link nav-link me-2 mobile-menu-item" data-bs-toggle="modal" data-bs-target="#learnMoreModal">
+                                <div class="mobile-menu-content">
+                                    <span class="menu-icon">ℹ️</span>
+                                    <span class="menu-text d-block d-lg-none">Learn More</span>
+                                    <span class="d-none d-lg-inline">Learn More</span>
+                                </div>
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white px-4 mobile-menu-item" href="{{ url_for('auth.login') }}">
+                                <div class="mobile-menu-content">
+                                    <span class="menu-icon">🔑</span>
+                                    <span class="menu-text d-block d-lg-none">Sign In</span>
+                                    <span class="d-none d-lg-inline">Sign In</span>
+                                </div>
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Username Edit Modal -->
+    <div class="modal fade" id="editUsernameModal" tabindex="-1" aria-labelledby="editUsernameModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUsernameModalLabel">Update Username</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="newUsername" class="form-label">New Username</label>
+                        <input type="text" class="form-control" id="newUsername" placeholder="Enter new username">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" onclick="updateUsername()">Update</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4">
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-info alert-dismissible fade show auto-dismiss" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <!-- PWA Installation and Notification Buttons -->
+        <div class="text-center mt-2 mb-3">
+            <button id="install-button" class="btn btn-primary btn-sm d-none">
+                <i class="bi bi-download me-1"></i> Install AI-BUDDY App
+            </button>
+            <button id="notification-permission-button" class="btn btn-primary btn-sm ms-2 d-none">
+                <i class="bi bi-bell me-1"></i> Enable Notifications
+            </button>
+        </div>
+
+        {% block content %}{% endblock %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    function toggleSettingsMenu(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const menu = document.getElementById('settingsMenu');
+        if (menu) {
+            menu.classList.toggle('show');
+        }
+    }
+    
+    // Close the settings menu when clicking outside of it
+    document.addEventListener('click', function(event) {
+        const menu = document.getElementById('settingsMenu');
+        const settingsButton = document.getElementById('settingsDropdown');
+        
+        if (menu && menu.classList.contains('show') && 
+            !menu.contains(event.target) && 
+            !settingsButton.contains(event.target)) {
+            menu.classList.remove('show');
+        }
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize all Bootstrap components with data-bs attributes
+        console.log('Bootstrap loaded successfully, initializing dropdowns');
+        
+        // Add manual click handler for the settings dropdown
+        const settingsDropdown = document.getElementById('settingsDropdown');
+        if (settingsDropdown) {
+            console.log('Found settings dropdown, adding manual click handler');
+        }
+            
+        // Initialize all dropdowns using Bootstrap's native method as a fallback
+        const dropdownElementList = document.querySelectorAll('.dropdown-toggle');
+        console.log('Found dropdown elements:', dropdownElementList.length);
+        
+        dropdownElementList.forEach(function(element) {
+            try {
+                new bootstrap.Dropdown(element);
+                console.log('Initialized dropdown for:', element.id || element.textContent.trim());
+            } catch (e) {
+                console.error('Error initializing dropdown:', e);
+            }
+        });
+
+        // Auto-dismiss alerts after 3 seconds
+        const autoDissmissAlerts = document.querySelectorAll('.auto-dismiss');
+        autoDissmissAlerts.forEach(alert => {
+            setTimeout(() => {
+                const bsAlert = new bootstrap.Alert(alert);
+                bsAlert.close();
+            }, 3000);
+        });
+    });
+
+    function updateUsername() {
+        const newUsername = document.getElementById('newUsername').value;
+        if (!newUsername) return;
+
+        fetch('{{ url_for("auth.update_username") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username: newUsername })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();  // Refresh to show new username
+            } else {
+                alert(data.message || 'Failed to update username');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to update username');
+        });
+    }
+    </script>
+    <!-- Non-critical scripts loaded with defer for better performance -->
+    <script defer src="{{ url_for('static', filename='js/pwa-cache-buster.js') }}?v=20260118"></script>
+    <script defer src="{{ url_for('static', filename='js/global_scroll_manager.js') }}?v=20260118"></script>
+    <script defer src="{{ url_for('static', filename='js/timezone_handler.js') }}?v=20260118"></script>
+    <script defer src="{{ url_for('static', filename='js/pwa-init.js') }}?v=20260118"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
