@@ -1,0 +1,641 @@
+document.addEventListener('DOMContentLoaded', function() {
+    // Add API Key testing functionality
+    const testApiKeyButton = document.getElementById('testApiKey');
+    const apiKeyStatus = document.getElementById('apiKeyStatus');
+
+    // Map initialization
+    let map = null;
+    let markers = [];
+
+    // Initialize map immediately if we're on the places page
+    if (document.getElementById('map')) {
+        console.log('Map element found, initializing...');
+        initMap();
+    }
+
+    function initMap() {
+        try {
+            console.log('Starting map initialization');
+            // Default to a central location (will be immediately updated with user location)
+            const initialLocation = { lat: 0, lng: 0 };
+
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: initialLocation,
+                zoom: 14,
+                styles: [
+                    {
+                        featureType: "poi",
+                        elementType: "labels",
+                        stylers: [{ visibility: "on" }]
+                    }
+                ]
+            });
+
+            // Add loading indicator
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'alert alert-info';
+            loadingDiv.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Getting your current location...';
+            document.getElementById('places-list').innerHTML = '';
+            document.getElementById('places-list').appendChild(loadingDiv);
+
+            // Try to get user's current location with high accuracy
+            if (navigator.geolocation) {
+                const locationOptions = {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                };
+
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        console.log('Got user location:', position.coords);
+                        const userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+
+                        // Center map on user location
+                        map.setCenter(userLocation);
+
+                        // Add user marker
+                        new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            title: 'Your Location',
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 10,
+                                fillColor: '#4285F4',
+                                fillOpacity: 1,
+                                strokeColor: '#ffffff',
+                                strokeWeight: 2
+                            }
+                        });
+
+                        // Search nearby places using user's location
+                        searchNearbyPlaces(userLocation);
+                    },
+                    (error) => {
+                        console.error('Geolocation error:', error);
+                        let errorMessage = 'Could not get your location. ';
+
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage += 'Please enable location access in your browser settings to see nearby places.';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage += 'Location information is unavailable.';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage += 'Location request timed out.';
+                                break;
+                            default:
+                                errorMessage += error.message;
+                        }
+
+                        document.getElementById('places-list').innerHTML = `
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                ${errorMessage}
+                            </div>
+                        `;
+                    },
+                    locationOptions
+                );
+            } else {
+                console.error('Geolocation not supported by browser');
+                document.getElementById('places-list').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Geolocation is not supported by your browser. Please use a modern browser with location support.
+                    </div>
+                `;
+            }
+        } catch (error) {
+            console.error('Error initializing map:', error);
+            document.getElementById('places-list').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Error initializing map: ${error.message}
+                </div>
+            `;
+        }
+    }
+
+    function searchNearbyPlaces(location) {
+        console.log('Searching nearby places at:', location);
+        document.getElementById('places-list').innerHTML = `
+            <div class="alert alert-info">
+                <i class="fas fa-spinner fa-spin me-2"></i>
+                Searching for nearby places...
+            </div>
+        `;
+
+        // Update the endpoint URL to include the location-wellness prefix
+        fetch('/location-wellness/api/test-places', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                latitude: location.lat,
+                longitude: location.lng
+            }),
+            credentials: 'same-origin'
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Places API response:', data);
+            // Clear existing markers
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+
+            // Clear existing list
+            document.getElementById('places-list').innerHTML = '';
+
+            if (data.status === 'success' && data.raw_results && data.raw_results.length > 0) {
+                data.raw_results.forEach(place => {
+                    const location = place.geometry.location;
+                    const marker = new google.maps.Marker({
+                        position: location,
+                        map: map,
+                        title: place.name,
+                        animation: google.maps.Animation.DROP
+                    });
+                    markers.push(marker);
+
+                    // Add to list
+                    const listItem = document.createElement('div');
+                    listItem.className = 'list-group-item';
+                    listItem.innerHTML = `
+                        <h6 class="mb-1">${place.name}</h6>
+                        <p class="mb-1 small">${place.vicinity || ''}</p>
+                        ${place.types ? `<p class="mb-0 small text-muted">${place.types.join(', ')}</p>` : ''}
+                    `;
+                    document.getElementById('places-list').appendChild(listItem);
+
+                    // Add click listener to marker
+                    marker.addListener('click', () => {
+                        map.panTo(marker.getPosition());
+                        listItem.scrollIntoView({ behavior: 'smooth' });
+                    });
+                });
+            } else {
+                document.getElementById('places-list').innerHTML = `
+                    <div class="alert alert-warning">
+                        <i class="fas fa-info-circle me-2"></i>
+                        No places found nearby
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching places:', error);
+            document.getElementById('places-list').innerHTML = `
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle me-2"></i>
+                    Error fetching nearby places: ${error.message}
+                </div>
+            `;
+        });
+    }
+
+    // Event listeners and API key testing
+    if (testApiKeyButton) {
+        testApiKeyButton.addEventListener('click', async function() {
+            try {
+                // Show loading state
+                apiKeyStatus.innerHTML = `
+                    <div class="alert alert-info mt-2">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Testing API key...
+                    </div>
+                `;
+
+                const response = await fetch('/location-wellness/api/test-api-key', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    apiKeyStatus.innerHTML = `
+                        <div class="alert alert-success mt-2">
+                            <i class="fas fa-check-circle me-2"></i>API key is valid and working
+                        </div>
+                    `;
+                } else {
+                    apiKeyStatus.innerHTML = `
+                        <div class="alert alert-danger mt-2">
+                            <i class="fas fa-exclamation-circle me-2"></i>${data.message || 'Failed to validate API key'}
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error testing API key:', error);
+                apiKeyStatus.innerHTML = `
+                    <div class="alert alert-danger mt-2">
+                        <i class="fas fa-exclamation-circle me-2"></i>Error testing API key: ${error.message}
+                    </div>
+                `;
+            }
+        });
+    }
+    // State variables
+    let watchId = null;
+    let speedWatchId = null;
+    let lastPosition = null;
+    let speedBuffer = [];
+    let lastAlertTime = 0;
+    let lastAlertLocation = null;
+    let isAudioPlaying = false;
+    let currentRestaurant = null;
+    let speechSynthesisInitialized = false;
+    let isTrackingActive = false;
+
+    // Constants (in km/h)
+    const ALERT_COOLDOWN = 60000; // 1 minute cooldown between alerts
+    const AUTO_START_SPEED_THRESHOLD = 24.14; // 15 mph
+    const TRIGGER_SPEED_THRESHOLD = 16.1; // 10 mph
+    const SPEED_BUFFER_SIZE = 5;
+    const MIN_ACCURACY = 100; // Increased from 20 to 100 meters to be more lenient
+    const MIN_SPEED_MEASUREMENTS = 3;
+
+    // Initialize UI elements
+    const startTrackingBtn = document.getElementById('start-location-tracking');
+    const stopTrackingBtn = document.getElementById('stop-location-tracking');
+    const lastUpdateSpan = document.getElementById('location-last-update');
+    const trackingActiveMessage = document.getElementById('tracking-active-message');
+    const locationStatusActive = document.getElementById('location-status-active');
+    const mindfulEatingSuggestions = document.getElementById('mindful-eating-suggestions');
+    const alertLocationDisplay = document.createElement('div');
+    alertLocationDisplay.id = 'alert-location';
+    alertLocationDisplay.className = 'alert-location';
+    mindfulEatingSuggestions.parentNode.insertBefore(alertLocationDisplay, mindfulEatingSuggestions);
+
+
+    function updateLastUpdateTime() {
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        lastUpdateSpan.textContent = timeString;
+    }
+
+    function updateSuggestionsDisplay(suggestions = null, forceShow = false) {
+        if (mindfulEatingSuggestions) {
+            if (!isTrackingActive && !forceShow) return;
+
+            const suggestionsToShow = suggestions || defaultSuggestions;
+
+            mindfulEatingSuggestions.innerHTML = `
+                <h3 class="h6 mb-3">Mindful Eating Suggestions:</h3>
+                <ul class="list-unstyled mb-0">
+                    ${suggestionsToShow.map(suggestion => `
+                        <li class="mb-2">• ${suggestion}</li>
+                    `).join('')}
+                </ul>
+            `;
+
+            mindfulEatingSuggestions.style.display = 'block';
+        }
+    }
+
+    function calculateSpeed(lat1, lon1, lat2, lon2, timeDiff) {
+        try {
+            if (timeDiff <= 0) return 0;
+
+            const R = 6371; // Earth's radius in km
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            const distance = R * c;
+
+            const speed = (distance / (timeDiff / 3600));
+            return speed;
+        } catch (error) {
+            console.error('Error calculating speed:', error);
+            return 0;
+        }
+    }
+
+    function getAverageSpeed() {
+        if (speedBuffer.length < MIN_SPEED_MEASUREMENTS) {
+            console.log('Not enough speed measurements yet:', speedBuffer.length);
+            return 0;
+        }
+
+        // Remove outliers (speeds that are significantly higher or lower)
+        const sortedSpeeds = [...speedBuffer].sort((a, b) => a - b);
+        const validSpeeds = sortedSpeeds.slice(1, -1); // Remove highest and lowest
+
+        if (validSpeeds.length === 0) return 0;
+
+        const sum = validSpeeds.reduce((a, b) => a + b, 0);
+        const avg = sum / validSpeeds.length;
+        return avg;
+    }
+
+    function startSpeedMonitoring() {
+        if (speedWatchId) {
+            console.log('Speed monitoring already active');
+            return;
+        }
+
+        console.log('Starting speed monitoring for auto-start detection...');
+        speedBuffer = [];
+        lastPosition = null;
+
+        try {
+            speedWatchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    const { latitude, longitude, accuracy } = position.coords;
+
+                    if (accuracy > MIN_ACCURACY) {
+                        console.log('GPS accuracy too low:', accuracy);
+                        return;
+                    }
+
+                    if (lastPosition) {
+                        const timeDiff = (position.timestamp - lastPosition.timestamp) / 1000;
+                        const speed = calculateSpeed(
+                            lastPosition.coords.latitude,
+                            lastPosition.coords.longitude,
+                            latitude,
+                            longitude,
+                            timeDiff
+                        );
+
+                        if (speed > 0) {
+                            speedBuffer.push(speed);
+                            if (speedBuffer.length > SPEED_BUFFER_SIZE) {
+                                speedBuffer.shift();
+                            }
+
+                            const averageSpeed = getAverageSpeed();
+                            console.log('Speed monitoring:', {
+                                currentSpeed: speed.toFixed(2),
+                                averageSpeed: averageSpeed.toFixed(2),
+                                autoStartThreshold: AUTO_START_SPEED_THRESHOLD,
+                                speedBufferSize: speedBuffer.length,
+                                isTracking: isTrackingActive
+                            });
+
+                            // Auto-start tracking when speed threshold is met
+                            if (!isTrackingActive && averageSpeed >= AUTO_START_SPEED_THRESHOLD) {
+                                console.log('Auto-start condition met:', {
+                                    averageSpeed: averageSpeed.toFixed(2),
+                                    threshold: AUTO_START_SPEED_THRESHOLD,
+                                    isTracking: isTrackingActive
+                                });
+                                startLocationTracking(true);
+                            }
+                        }
+                    }
+
+                    lastPosition = position;
+                },
+                (error) => {
+                    console.error('Error monitoring speed:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 5000,
+                    maximumAge: 0
+                }
+            );
+            console.log('Speed monitoring initialized successfully');
+        } catch (error) {
+            console.error('Failed to start speed monitoring:', error);
+        }
+    }
+
+    function stopSpeedMonitoring() {
+        if (speedWatchId) {
+            try {
+                navigator.geolocation.clearWatch(speedWatchId);
+                speedWatchId = null;
+                speedBuffer = [];
+                lastPosition = null;
+                console.log('Speed monitoring stopped');
+            } catch (error) {
+                console.error('Error stopping speed monitoring:', error);
+            }
+        }
+    }
+
+    function speakInsight(text) {
+        if (!window.speechSynthesis || isAudioPlaying) return;
+
+        try {
+            window.speechSynthesis.cancel();
+            isAudioPlaying = true;
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            utterance.pitch = 1.0;
+            utterance.volume = 1.0;
+
+            utterance.onend = () => {
+                console.log('Audio completed');
+                isAudioPlaying = false;
+            };
+
+            utterance.onerror = (event) => {
+                console.error('Audio playback error:', event);
+                isAudioPlaying = false;
+            };
+
+            const voices = window.speechSynthesis.getVoices();
+            const preferredVoice = voices.find(voice =>
+                voice.name.includes('Google US English Female') ||
+                voice.name.includes('Samantha') ||
+                voice.name.includes('Microsoft Zira') ||
+                voice.name.includes('Karen')
+            );
+
+            if (preferredVoice) {
+                utterance.voice = preferredVoice;
+            }
+
+            const processedText = text.replace(/([.,!?])\s/g, '$1... ');
+            utterance.text = processedText;
+
+            window.speechSynthesis.speak(utterance);
+            console.log('Speaking insight:', processedText);
+        } catch (error) {
+            console.error('Error in speech synthesis:', error);
+            isAudioPlaying = false;
+        }
+    }
+
+    function handleLocationError(error) {
+        console.error('Error getting location:', error);
+        alert('Unable to get your location. Please ensure location services are enabled.');
+        stopLocationTracking();
+    }
+
+    function startLocationTracking(isAutoStart = false) {
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        console.log('Starting location tracking...');
+        isTrackingActive = true;
+
+        // Add initial voice notification
+        speakInsight("Location tracking started. I will notify you when you are near relevant locations.");
+
+        try {
+            watchId = navigator.geolocation.watchPosition(
+                (position) => {
+                    console.log('Received position update:', {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude,
+                        accuracy: position.coords.accuracy,
+                        speed: position.coords.speed
+                    });
+
+                    updateLocation(position);
+                },
+                (error) => {
+                    console.error('Error getting location:', error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
+
+            startTrackingBtn.style.display = 'none';
+            stopTrackingBtn.style.display = 'block';
+            trackingActiveMessage.style.display = 'block';
+            locationStatusActive.style.display = 'inline';
+            updateLastUpdateTime();
+
+            // Show initial suggestions
+            mindfulEatingSuggestions.style.display = 'block';
+            updateSuggestionsDisplay(defaultSuggestions, true);
+
+        } catch (error) {
+            console.error('Error starting location tracking:', error);
+            alert('Failed to start location tracking: ' + error.message);
+        }
+    }
+
+    function updateLocation(position) {
+        const currentTime = Date.now();
+        updateLastUpdateTime();
+
+        console.log('Processing location update:', {
+            accuracy: position.coords.accuracy,
+            minAccuracy: MIN_ACCURACY,
+            timeSinceLastAlert: (currentTime - lastAlertTime) / 1000
+        });
+
+        // Send update to server regardless of accuracy
+        fetch('/api/location-status', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString()
+            }),
+            credentials: 'same-origin'
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log('Server response:', data);
+
+            if (data.status === 'active' && data.restaurant_name && 
+                currentTime - lastAlertTime > ALERT_COOLDOWN) {
+
+                console.log('New restaurant detected:', data.restaurant_name);
+
+                // Update UI with restaurant information
+                mindfulEatingSuggestions.style.display = 'block';
+                if (data.suggestions) {
+                    updateSuggestionsDisplay(data.suggestions, true);
+                }
+
+                // Update alert time and location
+                lastAlertTime = currentTime;
+                lastAlertLocation = data.restaurant_name;
+                alertLocationDisplay.innerHTML = data.restaurant_name ?
+                    `<div class="alert alert-info">
+                        <h3><i class="fas fa-location-arrow me-2"></i>${data.restaurant_name}</h3>
+                        <p class="mb-0"></p>
+                    </div>` : '';
+
+            }
+        })
+        .catch(error => {
+            console.error('Error sending location update:', error);
+        });
+    }
+
+
+
+    function stopLocationTracking() {
+        console.log('Stopping location tracking');
+
+        if (watchId) {
+            navigator.geolocation.clearWatch(watchId);
+            watchId = null;
+        }
+
+        isTrackingActive = false;
+        lastPosition = null;
+        lastAlertTime = 0;
+        lastAlertLocation = null;
+        currentRestaurant = null;
+
+        startTrackingBtn.style.display = 'block';
+        stopTrackingBtn.style.display = 'none';
+        trackingActiveMessage.style.display = 'none';
+        locationStatusActive.style.display = 'none';
+        mindfulEatingSuggestions.style.display = 'none';
+        alertLocationDisplay.innerHTML = '';
+    }
+
+    // Default suggestions
+    const defaultSuggestions = [
+        "Take a moment to check your hunger level (1-10)",
+        "Consider if you're eating from physical hunger or emotional needs",
+        "Remember your health goals and values",
+        "Think about how you'll feel after eating - will it align with your goals?",
+        "Practice mindful eating by taking smaller bites and eating slowly",
+        "Listen to your body's natural hunger and fullness signals",
+        "Consider going for a short walk or drinking water first",
+        "Remember that every meal is an opportunity to nourish your body"
+    ];
+
+    // Event listeners
+    startTrackingBtn.addEventListener('click', () => startLocationTracking(false));
+    stopTrackingBtn.addEventListener('click', stopLocationTracking);
+
+    // Initialize map functionality if we're on the standalone page
+    if (document.getElementById('map')) {
+        initMap();
+    }
+
+    // Initialize speed monitoring immediately
+    startSpeedMonitoring();
+});
