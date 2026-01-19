@@ -1,0 +1,95 @@
+{
+  "timestamp": "2025-05-04T00:13:56.335900",
+  "issues": [
+    {
+      "component": "Environment",
+      "description": "Required environment variable not set: FLASK_APP",
+      "severity": "HIGH",
+      "fix_instructions": "Set the FLASK_APP environment variable in .env file",
+      "timestamp": "2025-05-04T00:13:49.016221"
+    },
+    {
+      "component": "Database",
+      "description": "Error verifying database schema: Either 'SQLALCHEMY_DATABASE_URI' or 'SQLALCHEMY_BINDS' must be set.",
+      "severity": "HIGH",
+      "fix_instructions": null,
+      "timestamp": "2025-05-04T00:13:53.274133"
+    },
+    {
+      "component": "breathing",
+      "description": "Pattern not found in static/js/breathing.js: 478\\s+Breathing",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern '478\\s+Breathing' in static/js/breathing.js",
+      "timestamp": "2025-05-04T00:13:53.276008"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: generate_self_care_recommendation",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'generate_self_care_recommendation' in self_care.py",
+      "timestamp": "2025-05-04T00:13:53.277053"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in self_care.py: get_user_recommendations",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'get_user_recommendations' in self_care.py",
+      "timestamp": "2025-05-04T00:13:53.277316"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in templates/self_care/recommendation.html: recommendation-card",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'recommendation-card' in templates/self_care/recommendation.html",
+      "timestamp": "2025-05-04T00:13:53.277600"
+    },
+    {
+      "component": "self_care",
+      "description": "Pattern not found in templates/self_care/recommendation.html: recommendation-source",
+      "severity": "HIGH",
+      "fix_instructions": "Restore the code matching pattern 'recommendation-source' in templates/self_care/recommendation.html",
+      "timestamp": "2025-05-04T00:13:53.277904"
+    },
+    {
+      "component": "Breathing",
+      "description": "Incorrect timing for box breathing pattern (should be 4-4-4-4)",
+      "severity": "HIGH",
+      "fix_instructions": "Set all box breathing timers to 4000ms (4 seconds) in breathing.js",
+      "timestamp": "2025-05-04T00:13:53.279133"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/meditation/stress returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-04T00:13:56.306096"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/478?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-04T00:13:56.315816"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/breathing/guidance/box?duration=2 returned invalid JSON response",
+      "severity": "MEDIUM",
+      "fix_instructions": null,
+      "timestamp": "2025-05-04T00:13:56.323600"
+    },
+    {
+      "component": "API",
+      "description": "Endpoint /api/ring/data returned status code 404",
+      "severity": "HIGH",
+      "fix_instructions": null,
+      "timestamp": "2025-05-04T00:13:56.329328"
+    }
+  ],
+  "summary": {
+    "total_issues": 12,
+    "high_severity": 9,
+    "medium_severity": 3,
+    "low_severity": 0
+  }
+}
