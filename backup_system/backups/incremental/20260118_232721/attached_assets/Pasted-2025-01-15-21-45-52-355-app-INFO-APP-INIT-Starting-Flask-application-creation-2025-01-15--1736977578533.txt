@@ -1,0 +1,22 @@
+2025-01-15 21:45:52,355 - app - INFO - [APP_INIT] Starting Flask application creation...
+2025-01-15 21:45:52,356 - app - INFO - [APP_INIT] Initializing Flask extensions...
+2025-01-15 21:45:52,368 - app - INFO - [APP_INIT] Testing database connection...
+2025-01-15 21:45:54,868 - app - INFO - [APP_INIT] Database connection test successful
+2025-01-15 21:45:54,890 - app - INFO - [APP_INIT] Registering blueprints...
+2025-01-15 21:45:55,354 - food_tracker - INFO - Edamam API configuration - App ID present: True
+2025-01-15 21:45:55,354 - food_tracker - INFO - Edamam API configuration - API Key present: True
+2025-01-15 21:45:55,369 - ring_routes - INFO - OpenAI client initialized successfully
+2025-01-15 21:45:55,371 - location_wellness - ERROR - GOOGLE_MAPS_API_KEY environment variable is not set!
+2025-01-15 21:45:55,373 - app - INFO - [APP_INIT] Registered Authentication blueprint successfully
+2025-01-15 21:45:55,374 - app - INFO - [APP_INIT] Registered Chat blueprint successfully
+2025-01-15 21:45:55,379 - app - INFO - [APP_INIT] Registered Food Tracker blueprint successfully
+2025-01-15 21:45:55,379 - app - INFO - [APP_INIT] Registered Dashboard blueprint successfully
+2025-01-15 21:45:55,380 - app - INFO - [APP_INIT] Registered Ring Integration blueprint successfully
+2025-01-15 21:45:55,382 - app - INFO - [APP_INIT] Registered CBT blueprint successfully
+2025-01-15 21:45:55,383 - app - INFO - [APP_INIT] Registered Journal blueprint successfully
+2025-01-15 21:45:55,384 - app - INFO - [APP_INIT] Registered Forum blueprint successfully
+2025-01-15 21:45:55,385 - app - INFO - [APP_INIT] Registered Location Wellness blueprint successfully
+2025-01-15 21:45:55,386 - app - INFO - [APP_INIT] Flask application created and configured successfully
+2025-01-15 21:45:55,600 - backup_system.system_snapshot - INFO - System snapshot created successfully at backup_system/backups/system_snapshot_20250115_214555.json
+2025-01-15 21:45:55,804 - backup_system.system_snapshot - INFO - System functionality verification results: {'database': True, 'auth': True, 'backup': True, 'api_integration': True}
+System verification completed. All checks passed: True
